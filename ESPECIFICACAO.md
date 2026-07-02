@@ -358,6 +358,10 @@ u.formatar("olá")             // acesso com prefixo do módulo
 | `paraInteiro(x)` | Converte para inteiro (trunca decimais) |
 | `intervalo(inicio, fim)` | Lista de inteiros `[inicio, fim)` |
 | `agora()` | Segundos inteiros desde 1970 (tempo Unix) |
+| `relogio()` | Milissegundos desde 1970 (para medir durações) |
+| `formatarData(seg)` | `"AAAA-MM-DD HH:MM:SS"` em UTC |
+| `paraJSON(x)` | Serializa um valor em texto JSON |
+| `deJSON(texto)` | Converte texto JSON em valor kaju |
 
 ### 10.2 Matemática
 

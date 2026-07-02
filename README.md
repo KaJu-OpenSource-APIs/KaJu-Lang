@@ -23,7 +23,8 @@ Já funciona:
   - dicionário: `chaves`, `valores`, `tem`, `obtem`, `remova`, `tamanho`
 - Comparação `< > <= >=` entre textos (ordem alfabética), além de números
 - `se` / `senaose` / `senao` (aceita também o legado `senao se`)
-- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`
+- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`, `relogio`, `formatarData`
+- JSON: `paraJSON`, `deJSON`
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `arredondePara`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
 - Arquivos: `leiaArquivo`, `escrevaArquivo`, `existeArquivo`
 - **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`

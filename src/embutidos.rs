@@ -1,6 +1,7 @@
 //! Funções embutidas (biblioteca padrão mínima da Fase 1) — §10.
 
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::ambiente::Ambiente;
@@ -20,7 +21,12 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "paraInteiro", para_inteiro);
     registrar_uma(&mut a, "intervalo", intervalo);
     registrar_uma(&mut a, "agora", agora);
+    registrar_uma(&mut a, "relogio", relogio);
+    registrar_uma(&mut a, "formatarData", formatar_data);
     registrar_uma(&mut a, "arredondePara", arredonde_para);
+    // JSON
+    registrar_uma(&mut a, "paraJSON", para_json);
+    registrar_uma(&mut a, "deJSON", de_json);
     // Matemática (na Fase 2 vira o módulo 'matematica' via importe)
     registrar_uma(&mut a, "raiz", raiz);
     registrar_uma(&mut a, "absoluto", absoluto);
@@ -276,6 +282,123 @@ fn arredonde_para(args: Vec<Valor>) -> Result<Valor, String> {
     }
     let fator = 10f64.powi(casas as i32);
     Ok(Valor::Decimal((n * fator).round() / fator))
+}
+
+/// relogio() -> milissegundos desde 1970 (útil para medir durações).
+fn relogio(args: Vec<Valor>) -> Result<Valor, String> {
+    if !args.is_empty() {
+        return Err(format!("'relogio' não espera argumentos, mas recebeu {}", args.len()));
+    }
+    let ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as i64)
+        .unwrap_or(0);
+    Ok(Valor::Inteiro(ms))
+}
+
+/// formatarData(segundos) -> "AAAA-MM-DD HH:MM:SS" em UTC.
+fn formatar_data(args: Vec<Valor>) -> Result<Valor, String> {
+    let seg = como_inteiro("formatarData", um_argumento("formatarData", &args)?)?;
+    let dias = seg.div_euclid(86400);
+    let resto = seg.rem_euclid(86400);
+    let (h, m, s) = (resto / 3600, (resto % 3600) / 60, resto % 60);
+    let (ano, mes, dia) = civil_de_dias(dias);
+    Ok(Valor::Texto(format!(
+        "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
+        ano, mes, dia, h, m, s
+    )))
+}
+
+/// Converte dias desde 1970-01-01 em (ano, mês, dia). Algoritmo de Howard Hinnant.
+fn civil_de_dias(dias: i64) -> (i64, i64, i64) {
+    let z = dias + 719468;
+    let era = if z >= 0 { z } else { z - 146096 } / 146097;
+    let doe = z - era * 146097;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    (if m <= 2 { y + 1 } else { y }, m, d)
+}
+
+// ---- JSON ----
+
+fn para_json(args: Vec<Valor>) -> Result<Valor, String> {
+    let v = valor_para_json(um_argumento("paraJSON", &args)?)?;
+    Ok(Valor::Texto(v.to_string()))
+}
+
+fn valor_para_json(v: &Valor) -> Result<serde_json::Value, String> {
+    use serde_json::Value;
+    Ok(match v {
+        Valor::Inteiro(i) => Value::from(*i),
+        Valor::Decimal(f) => serde_json::Number::from_f64(*f)
+            .map(Value::Number)
+            .ok_or("número não finito não pode virar JSON")?,
+        Valor::Texto(t) => Value::from(t.clone()),
+        Valor::Logico(b) => Value::from(*b),
+        Valor::Nulo => Value::Null,
+        Valor::Lista(l) => {
+            let mut arr = Vec::new();
+            for it in l.borrow().iter() {
+                arr.push(valor_para_json(it)?);
+            }
+            Value::Array(arr)
+        }
+        Valor::Dicionario(d) => {
+            let mut mapa = serde_json::Map::new();
+            for (k, val) in d.borrow().iter() {
+                mapa.insert(k.clone(), valor_para_json(val)?);
+            }
+            Value::Object(mapa)
+        }
+        outro => {
+            return Err(format!(
+                "não é possível converter '{}' para JSON",
+                outro.tipo_nome()
+            ))
+        }
+    })
+}
+
+fn de_json(args: Vec<Valor>) -> Result<Valor, String> {
+    let texto = match um_argumento("deJSON", &args)? {
+        Valor::Texto(t) => t.clone(),
+        outro => {
+            return Err(format!(
+                "'deJSON' espera um 'texto', mas recebeu um '{}'",
+                outro.tipo_nome()
+            ))
+        }
+    };
+    let v: serde_json::Value =
+        serde_json::from_str(&texto).map_err(|e| format!("JSON inválido: {}", e))?;
+    Ok(json_para_valor(v))
+}
+
+fn json_para_valor(v: serde_json::Value) -> Valor {
+    use serde_json::Value;
+    match v {
+        Value::Null => Valor::Nulo,
+        Value::Bool(b) => Valor::Logico(b),
+        Value::Number(n) => match n.as_i64() {
+            Some(i) => Valor::Inteiro(i),
+            None => Valor::Decimal(n.as_f64().unwrap_or(0.0)),
+        },
+        Value::String(s) => Valor::Texto(s),
+        Value::Array(a) => {
+            Valor::Lista(Rc::new(RefCell::new(a.into_iter().map(json_para_valor).collect())))
+        }
+        Value::Object(o) => {
+            let mut m = HashMap::new();
+            for (k, val) in o {
+                m.insert(k, json_para_valor(val));
+            }
+            Valor::Dicionario(Rc::new(RefCell::new(m)))
+        }
+    }
 }
 
 fn para_inteiro(args: Vec<Valor>) -> Result<Valor, String> {

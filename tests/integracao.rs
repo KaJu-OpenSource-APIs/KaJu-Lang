@@ -254,6 +254,37 @@ fn metodos_lista_ordem_superior() {
 }
 
 #[test]
+fn json_ida_e_volta() {
+    let (out, err, ok) = rodar(
+        r#"
+        var d = {"nome": "Ana", "idade": 30, "tags": ["a", "b"]}
+        var t = paraJSON(d)
+        escreva(t)
+        var v = deJSON(t)
+        escreva(v["nome"], v["idade"], v["tags"][1])
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    // serde_json usa chaves ordenadas por padrão
+    assert_eq!(
+        out,
+        "{\"idade\":30,\"nome\":\"Ana\",\"tags\":[\"a\",\"b\"]}\nAna 30 b\n"
+    );
+}
+
+#[test]
+fn formatar_data_utc() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(formatarData(0))
+        escreva(formatarData(1700000000))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "1970-01-01 00:00:00\n2023-11-14 22:13:20\n");
+}
+
+#[test]
 fn stdlib_intervalo_soma_arredonde() {
     let (out, err, ok) = rodar(
         r#"
