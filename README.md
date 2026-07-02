@@ -9,6 +9,7 @@ Linguagem de programação de alto nível, **interpretada**, de **uso geral** e 
 
 Já funciona:
 - Tipos `numero`, `texto`, `logico`, `lista`, `dicionario`, `funcao`, `nulo`
+  - `numero` distingue internamente **inteiro** (i64, exato) e **decimal** (f64): `2+2` é inteiro exato, `10/2` é `5.0`, inteiros grandes não perdem precisão; `tipo()` sempre diz `"numero"`
 - `var` / `constante`, aritmética, `+` que concatena texto
 - Comparações e operadores lógicos em português (`e`, `ou`, `nao`) com curto-circuito
 - `se` / `senao` / `senao se`, `enquanto`, `para X de A ate B`, `para cada X em lista/dicionario`

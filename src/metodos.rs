@@ -49,7 +49,8 @@ fn arg_texto(nome: &str, args: &[Valor], i: usize) -> Result<String, String> {
 
 fn arg_indice(nome: &str, args: &[Valor], i: usize) -> Result<usize, String> {
     match &args[i] {
-        Valor::Numero(n) if n.fract() == 0.0 && *n >= 0.0 => Ok(*n as usize),
+        Valor::Inteiro(n) if *n >= 0 => Ok(*n as usize),
+        Valor::Decimal(f) if f.fract() == 0.0 && *f >= 0.0 => Ok(*f as usize),
         outro => Err(format!(
             "o método '{}' espera um índice inteiro não negativo, mas recebeu um '{}'",
             nome,
@@ -82,7 +83,7 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Str
         }
         "tamanho" => {
             checar_aridade(nome, &args, 0)?;
-            Ok(Valor::Numero(l.borrow().len() as f64))
+            Ok(Valor::Inteiro(l.borrow().len() as i64))
         }
         "contem" => {
             checar_aridade(nome, &args, 1)?;
@@ -119,7 +120,7 @@ fn metodo_texto(t: &str, nome: &str, args: Vec<Valor>) -> Result<Valor, String> 
         }
         "tamanho" => {
             checar_aridade(nome, &args, 0)?;
-            Ok(Valor::Numero(t.chars().count() as f64))
+            Ok(Valor::Inteiro(t.chars().count() as i64))
         }
         "contem" => {
             checar_aridade(nome, &args, 1)?;
@@ -181,7 +182,7 @@ fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, String>
         }
         "tamanho" => {
             checar_aridade(nome, &args, 0)?;
-            Ok(Valor::Numero(d.borrow().len() as f64))
+            Ok(Valor::Inteiro(d.borrow().len() as i64))
         }
         outro => Err(format!("o tipo 'dicionario' não tem o método '{}'", outro)),
     }

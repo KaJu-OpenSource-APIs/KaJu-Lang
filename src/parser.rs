@@ -748,9 +748,13 @@ impl Parser {
     fn primario(&mut self) -> Result<Expr, Diagnostico> {
         let tok = self.atual().clone();
         match &tok.tipo {
-            TipoToken::Numero(n) => {
+            TipoToken::Inteiro(n) => {
                 self.avancar();
-                Ok(Expr::Numero(*n, tok.span))
+                Ok(Expr::Inteiro(*n, tok.span))
+            }
+            TipoToken::Decimal(n) => {
+                self.avancar();
+                Ok(Expr::Decimal(*n, tok.span))
             }
             TipoToken::Texto(t) => {
                 self.avancar();

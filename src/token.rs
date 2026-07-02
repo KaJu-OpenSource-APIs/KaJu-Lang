@@ -19,7 +19,8 @@ impl Span {
 #[derive(Clone, Debug, PartialEq)]
 pub enum TipoToken {
     // Literais
-    Numero(f64),
+    Inteiro(i64),
+    Decimal(f64),
     Texto(String),
     Identificador(String),
 

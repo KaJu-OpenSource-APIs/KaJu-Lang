@@ -192,6 +192,28 @@ fn metodos_de_dicionario() {
 }
 
 #[test]
+fn inteiro_e_decimal() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(2 + 2)
+        escreva(10 / 2)
+        escreva(10 / 3)
+        escreva(5 + 2.5)
+        escreva(9007199254740993)
+        escreva(potencia(2, 10))
+        escreva(10 % 3)
+        escreva(5 == 5.0)
+        escreva(tipo(5), tipo(5.0))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "4\n5.0\n3.3333333333333335\n7.5\n9007199254740993\n1024\n1\nverdadeiro\nnumero numero\n"
+    );
+}
+
+#[test]
 fn matematica() {
     let (out, _, ok) = rodar(
         r#"
@@ -204,7 +226,8 @@ fn matematica() {
     "#,
     );
     assert!(ok);
-    assert_eq!(out, "4\n3 4\n1024\n5\nverdadeiro\n");
+    // raiz -> decimal (4.0); piso/teto -> inteiro; potencia int -> inteiro
+    assert_eq!(out, "4.0\n3 4\n1024\n5\nverdadeiro\n");
 }
 
 #[test]

@@ -35,7 +35,8 @@ pub enum OpUnaria {
 /// Expressões: produzem um valor.
 #[derive(Clone, Debug)]
 pub enum Expr {
-    Numero(f64, Span),
+    Inteiro(i64, Span),
+    Decimal(f64, Span),
     Texto(String, Span),
     Booleano(bool, Span),
     Nulo(Span),
@@ -109,7 +110,8 @@ impl Expr {
     /// O span (posição) desta expressão, para diagnósticos.
     pub fn span(&self) -> Span {
         match self {
-            Expr::Numero(_, s)
+            Expr::Inteiro(_, s)
+            | Expr::Decimal(_, s)
             | Expr::Texto(_, s)
             | Expr::Booleano(_, s)
             | Expr::Nulo(s)

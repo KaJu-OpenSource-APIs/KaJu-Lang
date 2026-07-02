@@ -297,16 +297,25 @@ impl Interpretador {
             } => {
                 let de_v = self.numero(de, amb, "o início do laço 'para'")?;
                 let ate_v = self.numero(ate, amb, "o fim do laço 'para'")?;
-                let mut i = de_v;
-                while i <= ate_v {
+                // Se ambos os limites são inteiros, a variável do laço é inteira.
+                let inteiros = matches!(de_v, Valor::Inteiro(_)) && matches!(ate_v, Valor::Inteiro(_));
+                let inicio = de_v.como_f64().unwrap();
+                let fim = ate_v.como_f64().unwrap();
+                let mut passo = inicio;
+                while passo <= fim {
+                    let valor = if inteiros {
+                        Valor::Inteiro(passo as i64)
+                    } else {
+                        Valor::Decimal(passo)
+                    };
                     let filho = Ambiente::com_pai(amb.clone());
-                    filho.borrow_mut().definir(variavel.clone(), Valor::Numero(i), false);
+                    filho.borrow_mut().definir(variavel.clone(), valor, false);
                     match self.executar_bloco(corpo, &filho)? {
                         Fluxo::Segue | Fluxo::Continue => {}
                         Fluxo::Pare => break,
                         Fluxo::Retorna(v) => return Ok(Fluxo::Retorna(v)),
                     }
-                    i += 1.0;
+                    passo += 1.0;
                 }
                 Ok(Fluxo::Segue)
             }
@@ -442,15 +451,17 @@ impl Interpretador {
         expr: &Expr,
         amb: &Rc<RefCell<Ambiente>>,
         contexto: &str,
-    ) -> Result<f64, Diagnostico> {
-        match self.avaliar(expr, amb)? {
-            Valor::Numero(n) => Ok(n),
-            outro => Err(Diagnostico::novo(
+    ) -> Result<Valor, Diagnostico> {
+        let v = self.avaliar(expr, amb)?;
+        if v.como_f64().is_some() {
+            Ok(v)
+        } else {
+            Err(Diagnostico::novo(
                 "K205",
-                format!("{} precisa ser um 'numero', mas é um '{}'", contexto, outro.tipo_nome()),
+                format!("{} precisa ser um 'numero', mas é um '{}'", contexto, v.tipo_nome()),
                 expr.span(),
             )
-            .com_rotulo("esperava um 'numero' aqui")),
+            .com_rotulo("esperava um 'numero' aqui"))
         }
     }
 
@@ -458,7 +469,8 @@ impl Interpretador {
 
     fn avaliar(&mut self, expr: &Expr, amb: &Rc<RefCell<Ambiente>>) -> Result<Valor, Diagnostico> {
         match expr {
-            Expr::Numero(n, _) => Ok(Valor::Numero(*n)),
+            Expr::Inteiro(n, _) => Ok(Valor::Inteiro(*n)),
+            Expr::Decimal(n, _) => Ok(Valor::Decimal(*n)),
             Expr::Texto(t, _) => Ok(Valor::Texto(t.clone())),
             Expr::Booleano(b, _) => Ok(Valor::Logico(*b)),
             Expr::Nulo(_) => Ok(Valor::Nulo),
@@ -882,7 +894,8 @@ impl Interpretador {
         match op {
             OpUnaria::Negacao => Ok(Valor::Logico(!v.eh_verdadeiro())),
             OpUnaria::Negativo => match v {
-                Valor::Numero(n) => Ok(Valor::Numero(-n)),
+                Valor::Inteiro(i) => Ok(Valor::Inteiro(i.wrapping_neg())),
+                Valor::Decimal(f) => Ok(Valor::Decimal(-f)),
                 outro => Err(Diagnostico::novo(
                     "K012",
                     format!("não é possível aplicar '-' a um '{}'", outro.tipo_nome()),
@@ -902,18 +915,15 @@ impl Interpretador {
     ) -> Result<Valor, Diagnostico> {
         use OpBinaria::*;
         match op {
-            Soma => match (&a, &b) {
-                (Valor::Numero(x), Valor::Numero(y)) => Ok(Valor::Numero(x + y)),
-                // '+' concatena quando qualquer lado é texto (§4.1)
-                (Valor::Texto(_), _) | (_, Valor::Texto(_)) => {
-                    Ok(Valor::Texto(format!("{}{}", a.para_texto(), b.para_texto())))
-                }
-                _ => Err(self.erro_tipos("+", &a, &b, span)),
-            },
-            Subtracao => self.aritmetica(&a, &b, span, "-", |x, y| x - y),
-            Multiplicacao => self.aritmetica(&a, &b, span, "*", |x, y| x * y),
-            Divisao => self.divisao(&a, &b, span, false),
-            Resto => self.divisao(&a, &b, span, true),
+            // '+' concatena quando qualquer lado é texto (§4.1); senão soma numérica.
+            Soma if matches!(a, Valor::Texto(_)) || matches!(b, Valor::Texto(_)) => {
+                Ok(Valor::Texto(format!("{}{}", a.para_texto(), b.para_texto())))
+            }
+            Soma => self.num_op(&a, &b, span, "+", |x, y| x.checked_add(y), |x, y| x + y),
+            Subtracao => self.num_op(&a, &b, span, "-", |x, y| x.checked_sub(y), |x, y| x - y),
+            Multiplicacao => self.num_op(&a, &b, span, "*", |x, y| x.checked_mul(y), |x, y| x * y),
+            Divisao => self.divisao_real(&a, &b, span),
+            Resto => self.resto(&a, &b, span),
             Menor => self.comparar(&a, &b, span, "<", |o| o.is_lt()),
             Maior => self.comparar(&a, &b, span, ">", |o| o.is_gt()),
             MenorIgual => self.comparar(&a, &b, span, "<=", |o| o.is_le()),
@@ -923,37 +933,67 @@ impl Interpretador {
         }
     }
 
-    fn aritmetica(
+    /// Operação aritmética com promoção: inteiro∘inteiro = inteiro (decimal em
+    /// caso de estouro); qualquer decimal envolvido resulta em decimal.
+    fn num_op(
         &self,
         a: &Valor,
         b: &Valor,
         span: &Span,
         simbolo: &str,
-        f: impl Fn(f64, f64) -> f64,
+        fi: impl Fn(i64, i64) -> Option<i64>,
+        ff: impl Fn(f64, f64) -> f64,
     ) -> Result<Valor, Diagnostico> {
         match (a, b) {
-            (Valor::Numero(x), Valor::Numero(y)) => Ok(Valor::Numero(f(*x, *y))),
-            _ => Err(self.erro_tipos(simbolo, a, b, span)),
+            (Valor::Inteiro(x), Valor::Inteiro(y)) => Ok(match fi(*x, *y) {
+                Some(r) => Valor::Inteiro(r),
+                None => Valor::Decimal(ff(*x as f64, *y as f64)), // estouro -> decimal
+            }),
+            _ => match (a.como_f64(), b.como_f64()) {
+                (Some(x), Some(y)) => Ok(Valor::Decimal(ff(x, y))),
+                _ => Err(self.erro_tipos(simbolo, a, b, span)),
+            },
         }
     }
 
-    fn divisao(
-        &self,
-        a: &Valor,
-        b: &Valor,
-        span: &Span,
-        resto: bool,
-    ) -> Result<Valor, Diagnostico> {
-        match (a, b) {
-            (Valor::Numero(x), Valor::Numero(y)) => {
-                if *y == 0.0 {
+    /// Divisão real '/': sempre produz decimal (mesmo entre inteiros).
+    fn divisao_real(&self, a: &Valor, b: &Valor, span: &Span) -> Result<Valor, Diagnostico> {
+        match (a.como_f64(), b.como_f64()) {
+            (Some(x), Some(y)) => {
+                if y == 0.0 {
                     return Err(Diagnostico::novo("K020", "divisão por zero", span.clone())
                         .com_rotulo("o divisor vale 0 neste ponto")
                         .com_nota("a divisão por zero não é definida em kaju."));
                 }
-                Ok(Valor::Numero(if resto { x % y } else { x / y }))
+                Ok(Valor::Decimal(x / y))
             }
-            _ => Err(self.erro_tipos(if resto { "%" } else { "/" }, a, b, span)),
+            _ => Err(self.erro_tipos("/", a, b, span)),
+        }
+    }
+
+    /// Resto '%': inteiro se ambos inteiros, decimal caso contrário.
+    fn resto(&self, a: &Valor, b: &Valor, span: &Span) -> Result<Valor, Diagnostico> {
+        let zero = |span: &Span| {
+            Diagnostico::novo("K020", "divisão por zero", span.clone())
+                .com_rotulo("o divisor vale 0 neste ponto")
+                .com_nota("o resto por zero não é definido em kaju.")
+        };
+        match (a, b) {
+            (Valor::Inteiro(x), Valor::Inteiro(y)) => {
+                if *y == 0 {
+                    return Err(zero(span));
+                }
+                Ok(Valor::Inteiro(x % y))
+            }
+            _ => match (a.como_f64(), b.como_f64()) {
+                (Some(x), Some(y)) => {
+                    if y == 0.0 {
+                        return Err(zero(span));
+                    }
+                    Ok(Valor::Decimal(x % y))
+                }
+                _ => Err(self.erro_tipos("%", a, b, span)),
+            },
         }
     }
 
@@ -965,13 +1005,11 @@ impl Interpretador {
         simbolo: &str,
         f: impl Fn(std::cmp::Ordering) -> bool,
     ) -> Result<Valor, Diagnostico> {
-        match (a, b) {
-            (Valor::Numero(x), Valor::Numero(y)) => {
-                match x.partial_cmp(y) {
-                    Some(ord) => Ok(Valor::Logico(f(ord))),
-                    None => Ok(Valor::Logico(false)),
-                }
-            }
+        match (a.como_f64(), b.como_f64()) {
+            (Some(x), Some(y)) => match x.partial_cmp(&y) {
+                Some(ord) => Ok(Valor::Logico(f(ord))),
+                None => Ok(Valor::Logico(false)),
+            },
             _ => Err(self.erro_tipos(simbolo, a, b, span)),
         }
     }
@@ -1065,14 +1103,19 @@ impl Interpretador {
 
     /// Converte um valor em índice de lista/texto (inteiro não negativo).
     fn indice_lista(&self, idx: &Valor, span: &Span) -> Result<usize, Diagnostico> {
-        match idx {
-            Valor::Numero(n) if n.fract() == 0.0 && *n >= 0.0 => Ok(*n as usize),
-            Valor::Numero(_) => Err(Diagnostico::novo(
+        let invalido = || {
+            Diagnostico::novo(
                 "K207",
-                "o índice de uma lista deve ser um número inteiro não negativo",
+                "o índice deve ser um número inteiro não negativo",
                 span.clone(),
             )
-            .com_rotulo("índice inválido")),
+            .com_rotulo("índice inválido")
+        };
+        match idx {
+            Valor::Inteiro(i) if *i >= 0 => Ok(*i as usize),
+            // aceita também um decimal com valor inteiro (ex.: piso(x))
+            Valor::Decimal(f) if f.fract() == 0.0 && *f >= 0.0 => Ok(*f as usize),
+            Valor::Inteiro(_) | Valor::Decimal(_) => Err(invalido()),
             outro => Err(Diagnostico::novo(
                 "K207",
                 format!("o índice deve ser um 'numero', mas é um '{}'", outro.tipo_nome()),

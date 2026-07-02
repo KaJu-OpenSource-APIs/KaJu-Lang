@@ -107,7 +107,7 @@ como
 
 | Tipo kaju | Descrição | Exemplo |
 |-----------|-----------|---------|
-| `numero`  | Número (ponto flutuante 64 bits na v0.1) | `42`, `3.14` |
+| `numero`  | Número inteiro (i64) ou decimal (f64) — ver nota abaixo | `42`, `3.14` |
 | `texto`   | Cadeia de caracteres UTF-8 | `"caju"` |
 | `logico`  | Verdadeiro ou falso | `verdadeiro` |
 | `lista`   | Sequência ordenada e mutável | `[1, "dois", verdadeiro]` |
@@ -119,7 +119,18 @@ como
 
 > `tipo(x)` retorna `"objeto"` para instâncias; para descobrir a classe use `classeDe(x)` (retorna o nome da classe como `texto`).
 
-> **Decisão de projeto (v0.1):** `numero` é único, baseado em `f64`, para simplificar. Inteiros e decimais separados (`inteiro`/`decimal`) ficam como evolução futura. A função `tipo(x)` retorna o nome do tipo como `texto`.
+**Modelo numérico (inteiro/decimal sob um só `numero`, à la Lua 5.3):** existe um único tipo visível `numero` (`tipo(x)` sempre retorna `"numero"`), mas internamente um número é **inteiro** (i64) ou **decimal** (f64):
+
+- Literais sem ponto são inteiros (`5`); com ponto são decimais (`5.0`, `3.14`).
+- `+ - *` entre inteiros dão inteiro (com valor exato, inclusive grandes); se qualquer lado é decimal, o resultado é decimal (`5 + 2.5` → `7.5`).
+- `/` (divisão) **sempre** produz decimal, mesmo entre inteiros (`10 / 2` → `5.0`).
+- `%` (resto) dá inteiro entre inteiros, decimal caso contrário.
+- Comparações são matemáticas: `5 == 5.0` → `verdadeiro`.
+- Ao imprimir, decimais mostram o ponto (`5.0`) para se distinguirem de inteiros (`5`).
+- `piso`, `teto`, `arredonde` retornam inteiro; `raiz` e `aleatorio` retornam decimal; `potencia` retorna inteiro quando base e expoente são inteiros (expoente ≥ 0), senão decimal; `absoluto` preserva o tipo.
+- Em caso de estouro de i64, a operação promove automaticamente para decimal.
+
+> Divisão inteira não usa `//` (que é comentário); use `piso(a / b)`.
 
 **Veracidade (para condições):** são "falsos" apenas `falso` e `nulo`; todo o resto é "verdadeiro" (inclusive `0` e `""`). *(Decisão a revisar — outra opção é `0`/`""` também serem falsos.)*
 

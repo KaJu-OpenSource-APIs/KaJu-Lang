@@ -192,17 +192,27 @@ impl Lexer {
         while self.atual().is_ascii_digit() {
             self.avancar();
         }
-        // parte decimal
+        // parte decimal (só é decimal se houver ponto seguido de dígito)
+        let mut eh_decimal = false;
         if self.atual() == '.' && self.proximo().is_ascii_digit() {
+            eh_decimal = true;
             self.avancar(); // consome '.'
             while self.atual().is_ascii_digit() {
                 self.avancar();
             }
         }
         let lexema: String = self.fonte[inicio..self.pos].iter().collect();
-        let valor: f64 = lexema.parse().unwrap_or(0.0);
         let span = Span::novo(linha, coluna, lexema.chars().count());
-        Token::novo(TipoToken::Numero(valor), lexema, span)
+        // Inteiro se não tem ponto E cabe em i64; senão vira decimal.
+        let tipo = if !eh_decimal {
+            match lexema.parse::<i64>() {
+                Ok(i) => TipoToken::Inteiro(i),
+                Err(_) => TipoToken::Decimal(lexema.parse().unwrap_or(0.0)),
+            }
+        } else {
+            TipoToken::Decimal(lexema.parse().unwrap_or(0.0))
+        };
+        Token::novo(tipo, lexema, span)
     }
 
     fn ler_texto(&mut self, linha: usize, coluna: usize) -> Result<Token, Diagnostico> {

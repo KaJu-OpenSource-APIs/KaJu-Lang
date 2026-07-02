@@ -66,7 +66,10 @@ pub struct Objeto {
 /// Um valor kaju.
 #[derive(Clone)]
 pub enum Valor {
-    Numero(f64),
+    // Número é um único tipo para o usuário ('numero'), mas internamente
+    // distingue inteiro (i64) de decimal (f64), à la Lua 5.3.
+    Inteiro(i64),
+    Decimal(f64),
     Texto(String),
     Logico(bool),
     Lista(ListaRef),
@@ -78,10 +81,11 @@ pub enum Valor {
     Nulo,
 }
 
-/// Formata um número: inteiros sem casas decimais, o resto normalmente.
-pub fn formatar_numero(n: f64) -> String {
-    if n.is_finite() && n.fract() == 0.0 && n.abs() < 1e15 {
-        format!("{}", n as i64)
+/// Formata um decimal. Valores inteiros mostram ".0" para deixar claro que
+/// são decimais (ex.: 10/2 -> "5.0"), distinguindo-os de inteiros de verdade.
+pub fn formatar_decimal(n: f64) -> String {
+    if n.is_finite() && n == n.trunc() && n.abs() < 1e15 {
+        format!("{}.0", n as i64)
     } else {
         format!("{}", n)
     }
@@ -91,7 +95,7 @@ impl Valor {
     /// Nome do tipo, como devolvido por `tipo(x)`.
     pub fn tipo_nome(&self) -> &'static str {
         match self {
-            Valor::Numero(_) => "numero",
+            Valor::Inteiro(_) | Valor::Decimal(_) => "numero",
             Valor::Texto(_) => "texto",
             Valor::Logico(_) => "logico",
             Valor::Lista(_) => "lista",
@@ -108,10 +112,20 @@ impl Valor {
         !matches!(self, Valor::Logico(false) | Valor::Nulo)
     }
 
+    /// Valor numérico como f64 (para operações/comparações mistas). None se não for número.
+    pub fn como_f64(&self) -> Option<f64> {
+        match self {
+            Valor::Inteiro(i) => Some(*i as f64),
+            Valor::Decimal(f) => Some(*f),
+            _ => None,
+        }
+    }
+
     /// Representação textual do valor (usada por `escreva` e `paraTexto`).
     pub fn para_texto(&self) -> String {
         match self {
-            Valor::Numero(n) => formatar_numero(*n),
+            Valor::Inteiro(i) => i.to_string(),
+            Valor::Decimal(f) => formatar_decimal(*f),
             Valor::Texto(t) => t.clone(),
             Valor::Logico(b) => if *b { "verdadeiro" } else { "falso" }.to_string(),
             Valor::Nulo => "nulo".to_string(),
@@ -144,7 +158,11 @@ impl Valor {
     /// Igualdade estrutural (para `==` e `!=`).
     pub fn igual(&self, outro: &Valor) -> bool {
         match (self, outro) {
-            (Valor::Numero(a), Valor::Numero(b)) => a == b,
+            (Valor::Inteiro(a), Valor::Inteiro(b)) => a == b,
+            // Comparação mista/decimal é matemática: 5 == 5.0 é verdadeiro.
+            (Valor::Inteiro(_) | Valor::Decimal(_), Valor::Inteiro(_) | Valor::Decimal(_)) => {
+                self.como_f64() == outro.como_f64()
+            }
             (Valor::Texto(a), Valor::Texto(b)) => a == b,
             (Valor::Logico(a), Valor::Logico(b)) => a == b,
             (Valor::Nulo, Valor::Nulo) => true,

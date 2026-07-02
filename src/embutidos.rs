@@ -25,7 +25,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "teto", teto);
     registrar_uma(&mut a, "arredonde", arredonde);
     registrar_uma(&mut a, "aleatorio", aleatorio);
-    a.definir("PI", Valor::Numero(std::f64::consts::PI), true);
+    a.definir("PI", Valor::Decimal(std::f64::consts::PI), true);
 }
 
 fn registrar_uma(amb: &mut Ambiente, nome: &str, func: fn(Vec<Valor>) -> Result<Valor, String>) {
@@ -48,9 +48,9 @@ fn escreva(args: Vec<Valor>) -> Result<Valor, String> {
 fn tamanho(args: Vec<Valor>) -> Result<Valor, String> {
     let arg = um_argumento("tamanho", &args)?;
     match arg {
-        Valor::Texto(t) => Ok(Valor::Numero(t.chars().count() as f64)),
-        Valor::Lista(l) => Ok(Valor::Numero(l.borrow().len() as f64)),
-        Valor::Dicionario(d) => Ok(Valor::Numero(d.borrow().len() as f64)),
+        Valor::Texto(t) => Ok(Valor::Inteiro(t.chars().count() as i64)),
+        Valor::Lista(l) => Ok(Valor::Inteiro(l.borrow().len() as i64)),
+        Valor::Dicionario(d) => Ok(Valor::Inteiro(d.borrow().len() as i64)),
         outro => Err(format!(
             "'tamanho' espera um 'texto', 'lista' ou 'dicionario', mas recebeu um '{}'",
             outro.tipo_nome()
@@ -82,13 +82,21 @@ fn para_texto(args: Vec<Valor>) -> Result<Valor, String> {
 fn para_numero(args: Vec<Valor>) -> Result<Valor, String> {
     let arg = um_argumento("paraNumero", &args)?;
     match arg {
-        Valor::Numero(n) => Ok(Valor::Numero(*n)),
-        Valor::Logico(b) => Ok(Valor::Numero(if *b { 1.0 } else { 0.0 })),
-        Valor::Texto(t) => t
-            .trim()
-            .parse::<f64>()
-            .map(Valor::Numero)
-            .map_err(|_| format!("não consegui converter o texto \"{}\" em número", t)),
+        Valor::Inteiro(i) => Ok(Valor::Inteiro(*i)),
+        Valor::Decimal(f) => Ok(Valor::Decimal(*f)),
+        Valor::Logico(b) => Ok(Valor::Inteiro(if *b { 1 } else { 0 })),
+        Valor::Texto(t) => {
+            let limpo = t.trim();
+            // Sem ponto/expoente e cabendo em i64 -> inteiro; senão decimal.
+            if let Ok(i) = limpo.parse::<i64>() {
+                Ok(Valor::Inteiro(i))
+            } else {
+                limpo
+                    .parse::<f64>()
+                    .map(Valor::Decimal)
+                    .map_err(|_| format!("não consegui converter o texto \"{}\" em número", t))
+            }
+        }
         outro => Err(format!(
             "não é possível converter um '{}' em número",
             outro.tipo_nome()
@@ -117,39 +125,58 @@ fn raiz(args: Vec<Valor>) -> Result<Valor, String> {
     if x < 0.0 {
         return Err("'raiz' não aceita números negativos".into());
     }
-    Ok(Valor::Numero(x.sqrt()))
+    Ok(Valor::Decimal(x.sqrt()))
 }
 
 fn absoluto(args: Vec<Valor>) -> Result<Valor, String> {
-    Ok(Valor::Numero(um_numero("absoluto", &args)?.abs()))
+    // Preserva o tipo: inteiro -> inteiro, decimal -> decimal.
+    match um_argumento("absoluto", &args)? {
+        Valor::Inteiro(i) => Ok(Valor::Inteiro(i.abs())),
+        Valor::Decimal(f) => Ok(Valor::Decimal(f.abs())),
+        outro => Err(format!(
+            "'absoluto' espera um 'numero', mas recebeu um '{}'",
+            outro.tipo_nome()
+        )),
+    }
 }
 
+// piso/teto/arredonde produzem números inteiros por definição.
 fn piso(args: Vec<Valor>) -> Result<Valor, String> {
-    Ok(Valor::Numero(um_numero("piso", &args)?.floor()))
+    Ok(Valor::Inteiro(um_numero("piso", &args)?.floor() as i64))
 }
 
 fn teto(args: Vec<Valor>) -> Result<Valor, String> {
-    Ok(Valor::Numero(um_numero("teto", &args)?.ceil()))
+    Ok(Valor::Inteiro(um_numero("teto", &args)?.ceil() as i64))
 }
 
 fn arredonde(args: Vec<Valor>) -> Result<Valor, String> {
-    Ok(Valor::Numero(um_numero("arredonde", &args)?.round()))
+    Ok(Valor::Inteiro(um_numero("arredonde", &args)?.round() as i64))
 }
 
 fn potencia(args: Vec<Valor>) -> Result<Valor, String> {
     if args.len() != 2 {
         return Err(format!("'potencia' espera 2 argumentos, mas recebeu {}", args.len()));
     }
+    // inteiro^inteiro(>=0) -> inteiro (decimal em caso de estouro); senão decimal.
+    if let (Valor::Inteiro(base), Valor::Inteiro(exp)) = (&args[0], &args[1]) {
+        if *exp >= 0 {
+            if let Ok(e) = u32::try_from(*exp) {
+                if let Some(r) = base.checked_pow(e) {
+                    return Ok(Valor::Inteiro(r));
+                }
+            }
+        }
+    }
     let base = como_numero("potencia", &args[0])?;
     let exp = como_numero("potencia", &args[1])?;
-    Ok(Valor::Numero(base.powf(exp)))
+    Ok(Valor::Decimal(base.powf(exp)))
 }
 
 fn aleatorio(args: Vec<Valor>) -> Result<Valor, String> {
     if !args.is_empty() {
         return Err(format!("'aleatorio' não espera argumentos, mas recebeu {}", args.len()));
     }
-    Ok(Valor::Numero(proximo_aleatorio()))
+    Ok(Valor::Decimal(proximo_aleatorio()))
 }
 
 /// Gerador pseudoaleatório simples (xorshift64) com semente do relógio.
@@ -195,12 +222,11 @@ fn um_numero(nome: &str, args: &[Valor]) -> Result<f64, String> {
 }
 
 fn como_numero(nome: &str, v: &Valor) -> Result<f64, String> {
-    match v {
-        Valor::Numero(n) => Ok(*n),
-        outro => Err(format!(
+    v.como_f64().ok_or_else(|| {
+        format!(
             "'{}' espera um 'numero', mas recebeu um '{}'",
             nome,
-            outro.tipo_nome()
-        )),
-    }
+            v.tipo_nome()
+        )
+    })
 }
