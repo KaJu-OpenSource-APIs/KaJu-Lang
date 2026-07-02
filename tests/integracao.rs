@@ -220,6 +220,22 @@ fn metodos_lista_ordene_fatie_indice() {
 }
 
 #[test]
+fn metodos_de_texto_novos() {
+    let (out, err, ok) = rodar(
+        r#"
+        var s = "programação"
+        escreva(s.fatie(0, 4))
+        escreva(s.indiceDe("gra"), s.indiceDe("xyz"))
+        escreva(s.comecaCom("prog"), s.terminaCom("ção"))
+        escreva("ab".repita(3))
+        escreva("café".fatie(0, 3))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "prog\n3 -1\nverdadeiro verdadeiro\nababab\ncaf\n");
+}
+
+#[test]
 fn comparacao_de_texto() {
     let (out, err, ok) = rodar(
         r#"

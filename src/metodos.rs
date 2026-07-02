@@ -196,6 +196,41 @@ fn metodo_texto(t: &str, nome: &str, args: Vec<Valor>) -> Result<Valor, String> 
             };
             Ok(Valor::Lista(Rc::new(RefCell::new(partes))))
         }
+        "comecaCom" => {
+            checar_aridade(nome, &args, 1)?;
+            let pre = arg_texto(nome, &args, 0)?;
+            Ok(Valor::Logico(t.starts_with(&pre)))
+        }
+        "terminaCom" => {
+            checar_aridade(nome, &args, 1)?;
+            let suf = arg_texto(nome, &args, 0)?;
+            Ok(Valor::Logico(t.ends_with(&suf)))
+        }
+        "repita" => {
+            checar_aridade(nome, &args, 1)?;
+            let n = arg_indice(nome, &args, 0)?;
+            Ok(Valor::Texto(t.repeat(n)))
+        }
+        "indiceDe" => {
+            checar_aridade(nome, &args, 1)?;
+            let sub = arg_texto(nome, &args, 0)?;
+            // índice em caracteres (não em bytes), ou -1 se não achar
+            let pos = t.find(&sub).map(|byte| t[..byte].chars().count() as i64);
+            Ok(Valor::Inteiro(pos.unwrap_or(-1)))
+        }
+        "fatie" => {
+            checar_aridade(nome, &args, 2)?;
+            let inicio = arg_indice(nome, &args, 0)?;
+            let fim = arg_indice(nome, &args, 1)?;
+            let chars: Vec<char> = t.chars().collect();
+            let fim = fim.min(chars.len());
+            let fatia: String = if inicio >= fim {
+                String::new()
+            } else {
+                chars[inicio..fim].iter().collect()
+            };
+            Ok(Valor::Texto(fatia))
+        }
         outro => Err(format!("o tipo 'texto' não tem o método '{}'", outro)),
     }
 }
