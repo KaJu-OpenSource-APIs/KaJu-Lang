@@ -22,13 +22,44 @@ enum Fluxo {
 
 pub struct Interpretador {
     global: Rc<RefCell<Ambiente>>,
+    /// Classe embutida usada para embrulhar erros capturados por `tente`.
+    classe_erro: Rc<ClasseKaju>,
 }
 
 impl Interpretador {
     pub fn novo() -> Self {
         let global = Ambiente::global();
         embutidos::registrar(&global);
-        Interpretador { global }
+        let classe_erro = Rc::new(ClasseKaju {
+            nome: "Erro".to_string(),
+            construtor: None,
+            metodos: HashMap::new(),
+            superclasse: None,
+        });
+        // Torna a classe Erro visível para o usuário também.
+        global
+            .borrow_mut()
+            .definir("Erro", Valor::Classe(classe_erro.clone()), false);
+        Interpretador {
+            global,
+            classe_erro,
+        }
+    }
+
+    /// Constrói o objeto de erro que será passado ao `capture (erro)`.
+    fn valor_de_erro(&self, diag: Diagnostico) -> Valor {
+        // Se o usuário lançou um objeto, entrega o próprio objeto.
+        if let Some(Valor::Objeto(o)) = &diag.valor_lancado {
+            return Valor::Objeto(o.clone());
+        }
+        // Caso contrário, embrulha num objeto da classe Erro com mensagem/codigo.
+        let mut campos = HashMap::new();
+        campos.insert("mensagem".to_string(), Valor::Texto(diag.mensagem.clone()));
+        campos.insert("codigo".to_string(), Valor::Texto(diag.codigo.clone()));
+        Valor::Objeto(Rc::new(RefCell::new(Objeto {
+            classe: self.classe_erro.clone(),
+            campos,
+        })))
     }
 
     /// Executa um programa inteiro.
@@ -235,6 +266,53 @@ impl Interpretador {
             }
             Cmd::Pare(_) => Ok(Fluxo::Pare),
             Cmd::Continue(_) => Ok(Fluxo::Continue),
+            Cmd::Lance(expr, span) => {
+                let v = self.avaliar(expr, amb)?;
+                let mensagem = match &v {
+                    Valor::Texto(t) => t.clone(),
+                    Valor::Objeto(o) => match o.borrow().campos.get("mensagem") {
+                        Some(Valor::Texto(m)) => m.clone(),
+                        _ => v.para_texto(),
+                    },
+                    outro => outro.para_texto(),
+                };
+                Err(Diagnostico::lancado(mensagem, span.clone(), v))
+            }
+            Cmd::Tente {
+                corpo,
+                erro_nome,
+                captura,
+                finalmente,
+            } => {
+                // Executa o corpo num escopo próprio.
+                let escopo_corpo = Ambiente::com_pai(amb.clone());
+                let resultado = self.executar_bloco(corpo, &escopo_corpo);
+
+                // Se deu erro, executa o bloco 'capture' com o erro ligado.
+                let resultado = match resultado {
+                    Ok(fluxo) => Ok(fluxo),
+                    Err(diag) => {
+                        let valor_erro = self.valor_de_erro(diag);
+                        let escopo_cap = Ambiente::com_pai(amb.clone());
+                        escopo_cap
+                            .borrow_mut()
+                            .definir(erro_nome.clone(), valor_erro, false);
+                        self.executar_bloco(captura, &escopo_cap)
+                    }
+                };
+
+                // O bloco 'finalmente' sempre roda.
+                if let Some(bloco_final) = finalmente {
+                    let escopo_final = Ambiente::com_pai(amb.clone());
+                    match self.executar_bloco(bloco_final, &escopo_final)? {
+                        Fluxo::Segue => {}
+                        // um retorno/pare/continue no 'finalmente' tem prioridade
+                        outro => return Ok(outro),
+                    }
+                }
+
+                resultado
+            }
         }
     }
 

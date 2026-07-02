@@ -299,6 +299,8 @@ impl Parser {
             TipoToken::Se => self.cmd_se(),
             TipoToken::Enquanto => self.cmd_enquanto(),
             TipoToken::Para => self.cmd_para(),
+            TipoToken::Tente => self.cmd_tente(),
+            TipoToken::Lance => self.cmd_lance(),
             TipoToken::Retorne => self.cmd_retorne(),
             TipoToken::Pare => {
                 let t = self.avancar();
@@ -396,6 +398,53 @@ impl Parser {
                 corpo,
             })
         }
+    }
+
+    fn cmd_tente(&mut self) -> Result<Cmd, Diagnostico> {
+        self.avancar(); // 'tente'
+        let corpo = self.bloco()?;
+        self.consumir(
+            &TipoToken::Capture,
+            "K015",
+            "esperava 'capture' após o bloco 'tente'".into(),
+            "todo 'tente' precisa de um 'capture (erro) { ... }'".into(),
+        )?;
+        self.consumir(
+            &TipoToken::ParenEsq,
+            "K015",
+            "esperava '(' após 'capture'".into(),
+            "use 'capture (erro) { ... }'".into(),
+        )?;
+        let erro = self.consumir(
+            &TipoToken::Identificador(String::new()),
+            "K015",
+            "esperava o nome da variável de erro".into(),
+            "dê um nome ao erro capturado, ex.: 'erro'".into(),
+        )?;
+        self.consumir(
+            &TipoToken::ParenDir,
+            "K015",
+            "esperava ')' após o nome do erro".into(),
+            "feche os parênteses aqui".into(),
+        )?;
+        let captura = self.bloco()?;
+        let finalmente = if self.casar(&TipoToken::Finalmente) {
+            Some(self.bloco()?)
+        } else {
+            None
+        };
+        Ok(Cmd::Tente {
+            corpo,
+            erro_nome: erro.lexema.clone(),
+            captura,
+            finalmente,
+        })
+    }
+
+    fn cmd_lance(&mut self) -> Result<Cmd, Diagnostico> {
+        let t = self.avancar(); // 'lance'
+        let expr = self.expressao()?;
+        Ok(Cmd::Lance(expr, t.span))
     }
 
     fn cmd_retorne(&mut self) -> Result<Cmd, Diagnostico> {

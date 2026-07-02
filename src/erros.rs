@@ -5,9 +5,10 @@
 //! `nota:` e `ajuda:` opcionais.
 
 use crate::token::Span;
+use crate::valor::Valor;
 
 /// Um diagnóstico de erro pronto para ser exibido ao usuário.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct Diagnostico {
     /// Código do erro, ex.: "K001".
     pub codigo: String,
@@ -21,6 +22,8 @@ pub struct Diagnostico {
     pub nota: Option<String>,
     /// Sugestão de correção (opcional).
     pub ajuda: Option<String>,
+    /// Valor lançado por `lance` (quando o erro veio do usuário, não do interpretador).
+    pub valor_lancado: Option<Valor>,
 }
 
 impl Diagnostico {
@@ -32,6 +35,20 @@ impl Diagnostico {
             rotulo: None,
             nota: None,
             ajuda: None,
+            valor_lancado: None,
+        }
+    }
+
+    /// Cria um diagnóstico a partir de um valor lançado com `lance`.
+    pub fn lancado(mensagem: impl Into<String>, span: Span, valor: Valor) -> Self {
+        Diagnostico {
+            codigo: "K230".to_string(),
+            mensagem: mensagem.into(),
+            span,
+            rotulo: Some("erro lançado aqui e não capturado".to_string()),
+            nota: None,
+            ajuda: Some("envolva o código em 'tente { ... } capture (erro) { ... }'".to_string()),
+            valor_lancado: Some(valor),
         }
     }
 

@@ -248,6 +248,65 @@ fn objetos_sao_referencias() {
 }
 
 #[test]
+fn captura_erro_de_runtime() {
+    let (out, _, ok) = rodar(
+        r#"
+        tente {
+            var x = 10 / 0
+        } capture (erro) {
+            escreva(erro.mensagem, erro.codigo)
+        }
+        escreva("continuou")
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "divisão por zero K020\ncontinuou\n");
+}
+
+#[test]
+fn lance_captura_e_finalmente() {
+    let (out, _, ok) = rodar(
+        r#"
+        tente {
+            lance "boom"
+            escreva("não roda")
+        } capture (erro) {
+            escreva("peguei:", erro.mensagem)
+        } finalmente {
+            escreva("fim")
+        }
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "peguei: boom\nfim\n");
+}
+
+#[test]
+fn lance_objeto_personalizado() {
+    let (out, _, ok) = rodar(
+        r#"
+        classe MeuErro {
+            construtor(m) { isto.mensagem = m  isto.grave = verdadeiro }
+        }
+        tente {
+            lance novo MeuErro("falhou feio")
+        } capture (erro) {
+            escreva(erro.mensagem, erro.grave)
+        }
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "falhou feio verdadeiro\n");
+}
+
+#[test]
+fn lance_nao_capturado_falha() {
+    let (_, err, ok) = rodar(r#"lance "erro solto""#);
+    assert!(!ok);
+    assert!(err.contains("erro[K230]"), "stderr: {err}");
+}
+
+#[test]
 fn erro_metodo_objeto_inexistente() {
     let (_, err, ok) = rodar("classe A { }\nvar a = novo A()\na.voar()");
     assert!(!ok);

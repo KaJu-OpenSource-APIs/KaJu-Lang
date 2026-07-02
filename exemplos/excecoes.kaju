@@ -1,0 +1,47 @@
+// Capturar um erro de runtime do próprio interpretador (divisão por zero)
+tente {
+    var x = 10 / 0
+} capture (erro) {
+    escreva("capturei:", erro.mensagem, "| código:", erro.codigo)
+}
+
+// Lançar e capturar um erro próprio
+funcao dividir(a, b) {
+    se b == 0 {
+        lance "não é possível dividir por zero"
+    }
+    retorne a / b
+}
+
+tente {
+    escreva("10/2 =", dividir(10, 2))
+    escreva("10/0 =", dividir(10, 0))
+    escreva("esta linha não roda")
+} capture (erro) {
+    escreva("erro:", erro.mensagem)
+} finalmente {
+    escreva("finalmente sempre executa")
+}
+
+// Lançar um objeto de erro personalizado
+classe ErroDeSaldo {
+    construtor(faltam) {
+        isto.mensagem = "saldo insuficiente"
+        isto.faltam = faltam
+    }
+}
+
+funcao sacar(saldo, valor) {
+    se valor > saldo {
+        lance novo ErroDeSaldo(valor - saldo)
+    }
+    retorne saldo - valor
+}
+
+tente {
+    sacar(100, 150)
+} capture (falha) {
+    escreva(falha.mensagem + ", faltam", falha.faltam)
+}
+
+escreva("programa continua normalmente")

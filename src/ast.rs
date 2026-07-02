@@ -190,5 +190,12 @@ pub enum Cmd {
     Retorne(Option<Expr>, Span),
     Pare(Span),
     Continue(Span),
+    Tente {
+        corpo: Vec<Cmd>,
+        erro_nome: String,
+        captura: Vec<Cmd>,
+        finalmente: Option<Vec<Cmd>>,
+    },
+    Lance(Expr, Span),
     Expressao(Expr),
 }

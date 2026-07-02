@@ -23,9 +23,10 @@ Já funciona:
 - Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `paraTexto`, `paraNumero`
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio` e a constante `PI`
 - **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
+- **Exceções**: `tente`/`capture`/`finalmente` e `lance`. O `capture (erro)` recebe um objeto com `.mensagem` e `.codigo`, e pega tanto o que você `lance` quanto os erros de runtime do interpretador (ex.: divisão por zero)
 - **Erros ricos em português** (estilo Rust): código do erro, trecho com `^^^^`, `nota:` e `ajuda:` com sugestão "você quis dizer X?"
 
-**Fase 2 em andamento.** Feito: OOP completa. Falta: exceções `tente`/`capture`/`lance` e módulos `importe`. Ver §14 da especificação.
+**Fase 2 em andamento.** Feito: OOP + exceções. Falta: módulos `importe`. Ver §14 da especificação.
 
 ## Como usar
 
