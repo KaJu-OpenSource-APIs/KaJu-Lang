@@ -11,6 +11,7 @@
   "categories": [
     "Programming Languages"
   ],
+  "icon": "icons/kaju.png",
   "contributes": {
     "languages": [
       {
@@ -24,8 +25,8 @@
         ],
         "configuration": "./language-configuration.json",
         "icon": {
-          "light": "./icons/kaju.svg",
-          "dark": "./icons/kaju.svg"
+          "light": "./icons/kaju.png",
+          "dark": "./icons/kaju.png"
         }
       }
     ],
