@@ -8,6 +8,7 @@ mod ambiente;
 mod ast;
 mod embutidos;
 mod erros;
+mod explicacoes;
 mod interpreter;
 mod lexer;
 mod metodos;
@@ -25,11 +26,46 @@ use token::TipoToken;
 
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
-    match args.get(1) {
+    match args.get(1).map(|s| s.as_str()) {
+        Some("explique") => explicar_codigo(args.get(2)),
         Some(caminho) => executar_arquivo(caminho),
         None => {
             repl();
             ExitCode::SUCCESS
+        }
+    }
+}
+
+/// `kaju explique K016` — mostra a explicação detalhada de um código de erro.
+fn explicar_codigo(codigo: Option<&String>) -> ExitCode {
+    let codigo = match codigo {
+        Some(c) => c,
+        None => {
+            eprintln!("uso: kaju explique <codigo>   (ex.: kaju explique K016)");
+            eprintln!(
+                "códigos com explicação: {}",
+                explicacoes::codigos_conhecidos().join(", ")
+            );
+            return ExitCode::FAILURE;
+        }
+    };
+    // aceita "k016", "016" ou "K016"
+    let mut norm = codigo.trim().to_uppercase();
+    if !norm.starts_with('K') {
+        norm = format!("K{}", norm);
+    }
+    match explicacoes::explicar(&norm) {
+        Some(texto) => {
+            println!("{}", texto);
+            ExitCode::SUCCESS
+        }
+        None => {
+            eprintln!("Ainda não há explicação detalhada para {}.", norm);
+            eprintln!(
+                "códigos com explicação: {}",
+                explicacoes::codigos_conhecidos().join(", ")
+            );
+            ExitCode::FAILURE
         }
     }
 }
@@ -58,6 +94,12 @@ fn executar_arquivo(caminho: &str) -> ExitCode {
             }
             if diags.len() > 1 {
                 eprintln!("({} erros encontrados)", diags.len());
+            }
+            if let Some(primeiro) = diags.first() {
+                eprintln!(
+                    "dica: rode 'kaju explique {}' para entender este erro.",
+                    primeiro.codigo
+                );
             }
             ExitCode::FAILURE
         }

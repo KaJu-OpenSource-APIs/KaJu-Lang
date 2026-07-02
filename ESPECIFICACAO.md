@@ -349,7 +349,9 @@ u.formatar("olá")             // acesso com prefixo do módulo
 | Função | Descrição |
 |--------|-----------|
 | `escreva(...)` | Imprime os argumentos separados por espaço e quebra linha |
+| `escrevaSemQuebra(...)` | Imprime sem quebrar a linha (útil para prompts) |
 | `leia()` | Lê uma linha da entrada como `texto` |
+| `pergunte(texto)` | Mostra `texto` (sem quebra) e lê uma linha da entrada |
 | `tamanho(x)` | Comprimento de `texto`, `lista` ou `dicionario` |
 | `tipo(x)` | Nome do tipo de `x` como `texto` |
 | `classeDe(x)` | Nome da classe de um `objeto` como `texto` |

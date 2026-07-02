@@ -75,6 +75,20 @@ fn rodar_projeto(arquivos: &[(&str, &str)], principal: &str) -> (String, String,
 }
 
 #[test]
+fn comando_explique() {
+    let bin = env!("CARGO_BIN_EXE_kaju");
+    let saida = Command::new(bin).args(["explique", "K016"]).output().unwrap();
+    assert!(saida.status.success());
+    let texto = String::from_utf8_lossy(&saida.stdout);
+    assert!(texto.contains("K016"), "stdout: {texto}");
+    assert!(texto.contains("fluxo"), "stdout: {texto}");
+
+    // forma curta e maiúscula/minúscula
+    let s2 = Command::new(bin).args(["explique", "k020"]).output().unwrap();
+    assert!(String::from_utf8_lossy(&s2.stdout).contains("divisão por zero"));
+}
+
+#[test]
 fn io_terminal_pergunte_e_sem_quebra() {
     let fonte = r#"
         escrevaSemQuebra("a", "b")

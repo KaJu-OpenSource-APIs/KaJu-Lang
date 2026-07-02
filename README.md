@@ -23,7 +23,8 @@ Já funciona:
   - dicionário: `chaves`, `valores`, `tem`, `obtem`, `remova`, `tamanho`
 - Comparação `< > <= >=` entre textos (ordem alfabética), além de números
 - `se` / `senaose` / `senao` (aceita também o legado `senao se`)
-- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`, `relogio`, `formatarData`
+- Embutidos: `escreva`, `escrevaSemQuebra`, `leia`, `pergunte`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`, `relogio`, `formatarData`
+- Diagnóstico de erros: `kaju explique K016` explica um código de erro em detalhe
 - JSON: `paraJSON`, `deJSON`
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `arredondePara`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
 - Arquivos: `leiaArquivo`, `escrevaArquivo`, `existeArquivo`
@@ -47,6 +48,9 @@ cargo run -- exemplos/tour.kaju
 
 # abrir o REPL interativo
 cargo run
+
+# explicar um código de erro em detalhe
+cargo run -- explique K016
 
 # rodar os testes (executam programas .kaju reais e conferem a saída)
 cargo test
