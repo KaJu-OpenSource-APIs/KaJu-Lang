@@ -57,7 +57,8 @@ Depois, o comando funciona em qualquer lugar:
 ```bash
 kaju programa.kaju          # executa um arquivo (.kaju ou .kj)
 kaju                        # abre o REPL interativo
-kaju explique K016          # explica um código de erro
+kaju explique K016          # explica um código de erro (todos os códigos têm explicação)
+kaju --ajuda                # lista os comandos disponíveis
 ```
 
 ### Compilar a partir do código-fonte (precisa de [Rust](https://www.rust-lang.org/pt-BR))

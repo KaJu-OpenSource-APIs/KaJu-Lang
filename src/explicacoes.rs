@@ -235,6 +235,229 @@ Correto:
         escreva(\"tratei:\", erro.mensagem)
     }",
 
+        "K002" => "\
+K002 — nome de variável esperado
+
+Depois de 'var' ou 'constante' vem o nome da variável.
+
+Errado:   var = 10
+Correto:  var x = 10",
+
+        "K003" => "\
+K003 — esperava '=' na declaração
+
+Toda variável recebe um valor inicial com '='.
+
+Errado:   var x 10
+Correto:  var x = 10",
+
+        "K004" => "\
+K004 — parênteses ou parâmetros
+
+Falta '(' , ')' ou o nome de um parâmetro numa função, chamada ou indexação.
+
+Errado:   funcao f a) { }
+Correto:  funcao f(a) { }",
+
+        "K006" => "\
+K006 — laço 'para' mal formado
+
+As formas válidas são:
+    para i de 1 ate 10 { ... }
+    para cada item em lista { ... }",
+
+        "K007" => "\
+K007 — atribuição inválida
+
+Só dá para atribuir a uma variável, a um índice ('a[i] = x') ou a um campo
+('obj.c = x'). O lado esquerdo de '=' precisa ser um desses.
+
+Errado:   3 = x",
+
+        "K010" => "\
+K010 — dicionário mal formado
+
+As chaves de um dicionário são textos, separadas do valor por ':'.
+
+Errado:   {nome: \"Ana\"}
+Correto:  {\"nome\": \"Ana\"}",
+
+        "K011" => "\
+K011 — nome esperado após '.'
+
+Depois de '.' vem o nome de um campo ou método.
+
+Errado:   obj.
+Correto:  obj.nome",
+
+        "K013" => "\
+K013 — corpo de classe mal formado
+
+Dentro de 'classe' só cabem 'construtor', 'metodo' e membros 'estatico'.
+
+    classe Gato {
+        construtor(nome) { isto.nome = nome }
+        metodo falar() { escreva(isto.nome) }
+    }",
+
+        "K014" => "\
+K014 — uso de 'novo' mal formado
+
+'novo' cria uma instância: 'novo NomeDaClasse(argumentos)'.
+
+Errado:   novo ()
+Correto:  novo Gato(\"Félix\")",
+
+        "K015" => "\
+K015 — 'tente' mal formado
+
+Um 'tente' precisa de um 'capture (erro) { ... }'; 'finalmente' é opcional.
+
+    tente { ... } capture (erro) { ... } finalmente { ... }",
+
+        "K017" => "\
+K017 — 'importe' mal formado
+
+O caminho é um texto entre aspas; o apelido (opcional) vem após 'como'.
+
+    importe \"utilidades.kaju\"
+    importe \"mat.kaju\" como mat",
+
+        "K018" => "\
+K018 — erro na interpolação de texto
+
+A expressão dentro de {chaves} num texto $\"...\" é inválida. Verifique-a; para
+uma chave literal, use '{{' e '}}'.
+
+    escreva($\"total: {a + b}\")",
+
+        "K019" => "\
+K019 — operador condicional sem ':'
+
+A forma é 'condicao ? valorSeVerdadeiro : valorSeFalso'.
+
+Errado:   x > 0 ? \"pos\"
+Correto:  x > 0 ? \"pos\" : \"neg\"",
+
+        "K021" => "\
+K021 — 'escolha' mal formado
+
+Dentro de 'escolha' só cabem 'caso' (com um ou mais valores) e um 'padrao'.
+
+    escolha n {
+        caso 1 { ... }
+        caso 2, 3 { ... }
+        padrao { ... }
+    }",
+
+        "K022" => "\
+K022 — desempacotamento incompatível
+
+O número de nomes precisa bater com o de valores (ou com o tamanho da lista),
+e os alvos devem ser nomes de variáveis.
+
+Errado:   var a, b, c = [1, 2]
+Correto:  var a, b = [1, 2]        ou      var a, b, c = 1, 2, 3",
+
+        "K101" => "\
+K101 — caractere inesperado
+
+Apareceu um símbolo que não faz parte da kaju. Confira erros de digitação.
+Para 'diferente de' use '!='; para negação lógica, 'nao'.",
+
+        "K102" => "\
+K102 — comentário de bloco não fechado
+
+Um comentário '/*' precisa terminar com '*/'.",
+
+        "K103" => "\
+K103 — texto não fechado
+
+Um texto \"...\" precisa fechar as aspas na mesma linha.
+
+Errado:   escreva(\"olá)",
+
+        "K104" => "\
+K104 — texto interpolado não fechado
+
+Um texto $\"...\" (ou uma chave '{' dentro dele) não foi fechado na mesma linha.",
+
+        "K202" => "\
+K202 — valor não iterável em 'para cada'
+
+'para cada' percorre listas e dicionários.
+
+Errado:   para cada x em 42 { ... }
+Correto:  para cada x em [1, 2, 3] { ... }",
+
+        "K203" => "\
+K203 — erro numa função embutida
+
+Uma função da biblioteca padrão recebeu algo inesperado (tipo ou quantidade de
+argumentos errada). A mensagem detalha o que a função esperava.",
+
+        "K205" => "\
+K205 — laço 'para' precisa de números
+
+Os limites de 'para i de A ate B' devem ser números.
+
+Errado:   para i de \"a\" ate 10 { ... }",
+
+        "K207" => "\
+K207 — índice inválido
+
+Índices de lista e texto devem ser inteiros não negativos (0, 1, 2, ...).
+
+Errado:   lista[-1]     lista[1.5]",
+
+        "K209" => "\
+K209 — valor não indexável
+
+Apenas listas, textos e dicionários aceitam indexação com [].
+
+Errado:   42[0]",
+
+        "K210" => "\
+K210 — chave de dicionário deve ser texto
+
+As chaves de um dicionário são textos.
+
+Errado:   d[3]
+Correto:  d[\"3\"]",
+
+        "K213" => "\
+K213 — membro inexistente no objeto
+
+O objeto não tem esse campo nem método. Confira o nome e a classe do objeto.
+Lembre-se de que campos nascem ao atribuir 'isto.campo = ...' no construtor.",
+
+        "K215" => "\
+K215 — uso inválido de 'base'
+
+'base' só pode ser usado dentro de um método, para chamar a superclasse
+('base.metodo()'), e a classe precisa ter uma superclasse (declarada com 'herda').",
+
+        "K216" => "\
+K216 — superclasse inválida
+
+O nome após 'herda' precisa ser uma classe já definida.
+
+    classe Animal { ... }
+    classe Gato herda Animal { ... }",
+
+        "K217" => "\
+K217 — atribuição de campo em não-objeto
+
+Só objetos (e classes, para campos estáticos) têm campos atribuíveis com '.'.
+
+Errado:   42.x = 1",
+
+        "K221" => "\
+K221 — erro dentro de um módulo importado
+
+O 'importe' encontrou o arquivo, mas ocorreu um erro ao executá-lo. A nota do
+diagnóstico aponta a linha e o erro interno do módulo.",
+
         _ => return None,
     };
     Some(texto)
@@ -243,7 +466,11 @@ Correto:
 /// Lista os códigos que têm explicação detalhada.
 pub fn codigos_conhecidos() -> &'static [&'static str] {
     &[
-        "K001", "K005", "K008", "K009", "K012", "K016", "K020", "K201", "K204",
-        "K206", "K208", "K211", "K212", "K214", "K218", "K220", "K230",
+        "K001", "K002", "K003", "K004", "K005", "K006", "K007", "K008", "K009",
+        "K010", "K011", "K012", "K013", "K014", "K015", "K016", "K017", "K018",
+        "K019", "K020", "K021", "K022", "K101", "K102", "K103", "K104", "K201",
+        "K202", "K203", "K204", "K205", "K206", "K207", "K208", "K209", "K210",
+        "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218", "K220",
+        "K221", "K230",
     ]
 }

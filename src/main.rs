@@ -28,12 +28,37 @@ fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().collect();
     match args.get(1).map(|s| s.as_str()) {
         Some("explique") => explicar_codigo(args.get(2)),
+        Some("--ajuda") | Some("-a") | Some("ajuda") => {
+            mostrar_ajuda();
+            ExitCode::SUCCESS
+        }
         Some(caminho) => executar_arquivo(caminho),
         None => {
             repl();
             ExitCode::SUCCESS
         }
     }
+}
+
+fn mostrar_ajuda() {
+    println!(
+        "kaju — linguagem de programação interpretada, em português.
+
+USO:
+    kaju                     abre o REPL interativo
+    kaju <arquivo>           executa um arquivo .kaju (ou .kj)
+    kaju explique <codigo>   explica um código de erro (ex.: kaju explique K016)
+    kaju --ajuda             mostra esta ajuda
+
+EXEMPLOS:
+    kaju programa.kaju
+    kaju explique K001
+
+No REPL: digite código e Enter; setas cima/baixo navegam no histórico;
+Ctrl+D sai.
+
+Documentação: o livro em docs/livro e a especificação em ESPECIFICACAO.md."
+    );
 }
 
 /// `kaju explique K016` — mostra a explicação detalhada de um código de erro.
