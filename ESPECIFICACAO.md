@@ -72,21 +72,24 @@ Começam por letra (incluindo acentuadas) ou `_`, seguidos de letras, dígitos o
 Válidos: `nome`, `total_geral`, `número`, `_temp`. Diferenciam maiúsculas de minúsculas.
 
 ### 2.3 Palavras-chave reservadas
+São 37 palavras reservadas:
 ```
 var        constante   funcao      retorne
-se         senao       enquanto    para
+se         senao       senaose     escolha
+caso       padrao      enquanto    para
 cada       em          de          ate
 pare       continue    e           ou
 nao        verdadeiro  falso       nulo
 classe     herda       metodo      construtor
-novo       isto        base        tente
-capture    finalmente  lance       importe
-como
+novo       isto        base        estatico
+tente      capture     finalmente  lance
+importe    como
 ```
 
 ### 2.4 Literais
 - **Número:** `42`, `3.14`, `-7`, `1000` (ver §3).
 - **Texto:** `"entre aspas duplas"`, com escapes `\n`, `\t`, `\\`, `\"`.
+- **Texto interpolado:** `$"Olá, {nome}! Você tem {idade} anos"` — o prefixo `$` habilita interpolação; cada `{expressao}` dentro das aspas é avaliada e concatenada como texto (ver §4.7).
 - **Lógico:** `verdadeiro`, `falso`.
 - **Nulo:** `nulo`.
 - **Lista:** `[1, 2, 3]`.
@@ -94,11 +97,16 @@ como
 
 ### 2.5 Símbolos
 ```
-+  -  *  /  %        (aritméticos)
-== != < > <= >=      (comparação)
-=                    (atribuição)
-( ) { } [ ]          (agrupamento/blocos/coleções)
-,  :  .              (separadores/acesso)
++  -  *  /  %              (aritméticos)
+& | ^ ~ << >>             (bits: e, ou, xor, não, desloca esq./dir.)
+== != < > <= >=           (comparação)
+=                         (atribuição)
++= -= *= /= %=            (atribuição composta)
+? :                       (operador condicional / ternário)
+( ) { } [ ]              (agrupamento/blocos/coleções)
+,  :  .                   (separadores/acesso)
+...                       (parâmetro variádico)
+$"..."                    (prefixo de texto interpolado, com {} internos)
 ```
 
 ---
@@ -139,7 +147,15 @@ como
 ## 4. Expressões e operadores
 
 ### 4.1 Aritméticos
-`+` `-` `*` `/` `%` — sobre `numero`. O `+` também **concatena** `texto`: `"a" + "b"` → `"ab"`.
+`+` `-` `*` `/` `%` — sobre `numero`. O `+` também **concatena** `texto`.
+
+**Coerção do `+`:** quando **qualquer** dos lados é `texto`, o `+` concatena e o outro valor é convertido para texto automaticamente (mesma conversão de `paraTexto`):
+```kaju
+"a" + "b"        // "ab"
+"Total: " + 42   // "Total: 42"
+10 + " itens"    // "10 itens"
+```
+Se nenhum lado é `texto`, o `+` é soma numérica. Os demais operadores aritméticos (`-` `*` `/` `%`) só operam entre `numero` (ver §3 para o modelo inteiro/decimal).
 
 ### 4.2 Comparação
 `==` `!=` `<` `>` `<=` `>=` — retornam `logico`.
@@ -152,16 +168,56 @@ se idade >= 18 e temCarteira {
 }
 ```
 
-### 4.4 Precedência (da maior para a menor)
+### 4.4 Operadores de bits
+Operam **apenas entre inteiros** (usar decimais é erro `K012`):
+
+| Operador | Nome |
+|----------|------|
+| `&` | E bit a bit |
+| `\|` | OU bit a bit |
+| `^` | OU exclusivo (xor) |
+| `~` | NÃO bit a bit (unário) |
+| `<<` | desloca à esquerda |
+| `>>` | desloca à direita |
+
+O deslocamento não aceita quantidade negativa (erro `K012`); a quantidade é tomada módulo 64.
+
+### 4.5 Atribuição e atribuição composta
+`=` atribui a uma variável, índice (`a[i] = ...`) ou campo (`obj.x = ...`). As formas compostas `+= -= *= /= %=` reescrevem `alvo OP= valor` como `alvo = alvo OP valor`:
+```kaju
+contador += 1      // contador = contador + 1
+```
+
+### 4.6 Operador condicional (ternário)
+`condicao ? valorSeVerdadeiro : valorSeFalso` — avalia a condição e devolve um dos dois ramos:
+```kaju
+var rotulo = idade >= 18 ? "adulto" : "menor"
+```
+
+### 4.7 Interpolação de texto
+Um literal `$"..."` avalia cada `{expressao}` interna e concatena tudo como texto (equivale a somar as partes com `+`, sempre em contexto de texto):
+```kaju
+var nome = "Ana"
+escreva($"Olá, {nome}! Daqui a um ano você terá {idade + 1}.")
+```
+
+### 4.8 Precedência (da maior para a menor)
+Segue exatamente a cadeia do analisador sintático:
+
 1. `()` agrupamento, chamada `f(...)`, indexação `a[i]`, acesso `.`
-2. `nao`, `-` unário
+2. `nao`, `-` unário, `~` (não bit a bit)
 3. `*` `/` `%`
 4. `+` `-`
-5. `<` `>` `<=` `>=`
-6. `==` `!=`
-7. `e`
-8. `ou`
-9. `=` atribuição
+5. `<<` `>>` (deslocamento)
+6. `<` `>` `<=` `>=`
+7. `==` `!=`
+8. `&` (e bit a bit)
+9. `^` (xor bit a bit)
+10. `|` (ou bit a bit)
+11. `e`
+12. `ou`
+13. `? :` (ternário)
+14. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
 
 ---
 
@@ -181,10 +237,11 @@ var x, y, z = [10, 20, 30]   // a partir de uma lista
 ```
 
 ### 5.2 Condicional
+A forma canônica do "senão se" é a palavra única **`senaose`**. Por compatibilidade, o parser também aceita o legado **`senao se`** (dois tokens) com o mesmo significado.
 ```kaju
 se nota >= 7 {
     escreva("aprovado")
-} senao se nota >= 5 {
+} senaose nota >= 5 {         // 'senao se' (duas palavras) também é aceito
     escreva("recuperação")
 } senao {
     escreva("reprovado")
@@ -322,6 +379,28 @@ felix.falar()
 - `construtor` da subclasse deve chamar `base.construtor(...)` se quiser reaproveitar a inicialização do pai.
 - Herança **simples** (uma superclasse por classe) na v1.
 
+### 7.4 Membros estáticos
+Um membro marcado com `estatico` pertence à **classe**, não às instâncias. Há duas formas:
+
+- **campo estático:** `estatico nome = valor` — um valor inicial compartilhado.
+- **método estático:** `estatico metodo nome(...) { ... }` — chamado sem instância.
+
+Ambos são acessados pela própria classe, com `Classe.membro`:
+```kaju
+classe Contador {
+    estatico total = 0
+    estatico metodo criar() {
+        Contador.total = Contador.total + 1
+        retorne novo Contador()
+    }
+}
+
+Contador.criar()
+escreva(Contador.total)   // 1
+```
+- `Classe.campo` lê (ou, do lado esquerdo de `=`, escreve) um campo estático.
+- `Classe.metodo(...)` invoca um método estático; acessar um método estático sem `()` é erro (`K211`). Membro estático inexistente é `K213`.
+
 ---
 
 ## 8. Exceções (tente/capture)
@@ -372,10 +451,14 @@ escreva(PI)
 
 importe "utilidades.kaju" como u
 u.formatar("olá")             // acesso com prefixo do módulo
+
+importe "geometria.kaju" como geo
+var p = novo geo.Ponto(1, 2)  // instancia uma classe qualificada pelo módulo
 ```
 
 - `importe "caminho.kaju"` traz os nomes públicos (funções, constantes, classes) do arquivo para o escopo atual.
 - `importe "caminho.kaju" como u` traz tudo sob o prefixo `u.` (evita conflito de nomes).
+- Uma classe importada sob um prefixo é instanciada com o **nome qualificado**: `novo u.Classe(args)` (ver §12; o `novo` aceita tanto `IDENT` simples quanto `IDENT { "." IDENT }`).
 - O caminho é relativo ao arquivo que importa. Cada módulo é executado **uma única vez** (cache), mesmo que importado várias vezes.
 - *(Decisão futura a definir: controle explícito do que é público/privado no módulo.)*
 
@@ -401,6 +484,7 @@ u.formatar("olá")             // acesso com prefixo do módulo
 | `agora()` | Segundos inteiros desde 1970 (tempo Unix) |
 | `relogio()` | Milissegundos desde 1970 (para medir durações) |
 | `formatarData(seg)` | `"AAAA-MM-DD HH:MM:SS"` em UTC |
+| `formateDecimal(n, casas)` | Texto do número com exatamente `casas` casas decimais |
 | `paraJSON(x)` | Serializa um valor em texto JSON |
 | `deJSON(texto)` | Converte texto JSON em valor kaju |
 
@@ -495,9 +579,15 @@ nota: a divisão por zero não é definida em kaju.
 ```
 
 ### 11.3 Categorias e códigos
-- **Léxico (`K1xx`)** — caractere inesperado, texto sem fechar aspas, número mal formado.
-- **Sintaxe (`K0xx`)** — construção mal formada (ex.: `se` sem `{`, vírgula faltando).
-- **Execução (`K2xx`)** — variável indefinida, tipos incompatíveis, divisão por zero, índice fora da lista, argumentos a mais/a menos numa chamada.
+Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **47 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
+
+- **Núcleo — análise e semântica (`K0xx`, K001–K022).** É a faixa mais antiga e mistura:
+  - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla);
+  - **execução** que nasceu junto do núcleo — `K001` variável não definida, `K012` operação entre tipos incompatíveis (também usada por bits/deslocamento), `K020` divisão por zero.
+- **Léxico (`K1xx`, K101–K104).** Caractere inesperado, texto sem fechar aspas, número mal formado, escape/interpolação inválidos.
+- **Execução (`K2xx`, K201–K230).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K206` índice fora da lista, `K211` método estático sem `()`, `K212` método inexistente, `K213` membro estático inexistente, entre outros.
+
+> Cada código tem uma página longa consultável com `kaju explique <codigo>` (ex.: `kaju explique K016`), à la `rustc --explain`. Ao relatar um erro, o interpretador ainda sugere `dica: rode 'kaju explique Kxxx'`.
 
 ### 11.4 Como isso é implementado em Rust
 - Um `struct Diagnostico { severidade, codigo, mensagem, span: Span, rotulos: Vec<Rotulo>, notas, ajudas }` — separa a **estrutura** do erro da sua **renderização**.
@@ -516,25 +606,36 @@ programa      = { declaracao } ;
 declaracao    = decl_var | decl_const | decl_funcao
               | decl_classe | decl_importe | comando ;
 
-decl_var      = "var" IDENT "=" expressao ;
-decl_const    = "constante" IDENT "=" expressao ;
+(* 'var'/'constante' aceitam desempacotamento: vários nomes, vários valores
+   (ou uma única lista à direita) *)
+decl_var      = "var" nomes "=" valores ;
+decl_const    = "constante" nomes "=" valores ;
+nomes         = IDENT { "," IDENT } ;
+valores       = expressao { "," expressao } ;
+
 decl_funcao   = "funcao" IDENT "(" [ params ] ")" bloco ;
-params        = IDENT { "," IDENT } ;
+params        = param { "," param } ;
+param         = [ "..." ] IDENT [ "=" expressao ] ;   (* variádico e/ou valor padrão *)
 
 decl_classe   = "classe" IDENT [ "herda" IDENT ] "{" { membro } "}" ;
-membro        = construtor | metodo ;
+membro        = construtor | metodo | membro_estatico ;
 construtor    = "construtor" "(" [ params ] ")" bloco ;
 metodo        = "metodo" IDENT "(" [ params ] ")" bloco ;
+membro_estatico = "estatico" ( metodo | IDENT "=" expressao ) ;
 
 decl_importe  = "importe" TEXTO [ "como" IDENT ] ;
 
-comando       = cmd_se | cmd_enquanto | cmd_para_num | cmd_para_cada
-              | cmd_retorne | cmd_tente | cmd_lance
-              | "pare" | "continue" | bloco | expressao ;
+comando       = cmd_se | cmd_escolha | cmd_enquanto | cmd_para_num
+              | cmd_para_cada | cmd_retorne | cmd_tente | cmd_lance
+              | "pare" | "continue" | atrib_multi | expressao ;
 
-cmd_se        = "se" expressao bloco
-                { "senao" "se" expressao bloco }
-                [ "senao" bloco ] ;
+cmd_se        = ( "se" | "senaose" ) expressao bloco [ senao_parte ] ;
+senao_parte   = "senaose" expressao bloco [ senao_parte ]      (* palavra única, encadeia *)
+              | "senao" "se" expressao bloco [ senao_parte ]   (* legado: duas palavras *)
+              | "senao" bloco ;
+cmd_escolha   = "escolha" expressao "{"
+                { "caso" expressao { "," expressao } bloco }
+                [ "padrao" bloco ] "}" ;
 cmd_enquanto  = "enquanto" expressao bloco ;
 cmd_para_num  = "para" IDENT "de" expressao "ate" expressao bloco ;
 cmd_para_cada = "para" "cada" IDENT "em" expressao bloco ;
@@ -542,28 +643,39 @@ cmd_retorne   = "retorne" [ expressao ] ;
 cmd_tente     = "tente" bloco "capture" "(" IDENT ")" bloco
                 [ "finalmente" bloco ] ;
 cmd_lance     = "lance" expressao ;
+atrib_multi   = IDENT { "," IDENT } "=" valores ;   (* ex.: a, b = b, a *)
 
 bloco         = "{" { declaracao } "}" ;
 
+(* Precedência crescente, do topo (menor) para a base (maior) — ver §4.8 *)
 expressao     = atribuicao ;
-atribuicao    = ( acesso "=" atribuicao ) | ou_logico ;
+atribuicao    = ternario [ ( "=" | "+=" | "-=" | "*=" | "/=" | "%=" ) atribuicao ] ;
+ternario      = ou_logico [ "?" ternario ":" ternario ] ;
 ou_logico     = e_logico { "ou" e_logico } ;
-e_logico      = igualdade { "e" igualdade } ;
+e_logico      = ou_bit { "e" ou_bit } ;
+ou_bit        = xor_bit { "|" xor_bit } ;
+xor_bit       = e_bit { "^" e_bit } ;
+e_bit         = igualdade { "&" igualdade } ;
 igualdade     = comparacao { ( "==" | "!=" ) comparacao } ;
-comparacao    = soma { ( "<" | ">" | "<=" | ">=" ) soma } ;
+comparacao    = deslocamento { ( "<" | ">" | "<=" | ">=" ) deslocamento } ;
+deslocamento  = soma { ( "<<" | ">>" ) soma } ;
 soma          = produto { ( "+" | "-" ) produto } ;
 produto       = unario { ( "*" | "/" | "%" ) unario } ;
-unario        = ( "nao" | "-" ) unario | novo | acesso ;
-novo          = "novo" IDENT "(" [ args ] ")" ;
-acesso        = primario { "(" [ args ] ")" | "[" expressao "]" | "." IDENT } ;
+unario        = ( "nao" | "-" | "~" ) unario | chamada ;
+chamada       = primario { "(" [ args ] ")" | "[" expressao "]" | "." IDENT } ;
 args          = expressao { "," expressao } ;
 
-primario      = NUMERO | TEXTO | "verdadeiro" | "falso" | "nulo"
-              | "isto" | "base"
+primario      = NUMERO | TEXTO | TEXTO_INTERP
+              | "verdadeiro" | "falso" | "nulo"
+              | "isto" | "base" | novo
               | IDENT | "(" expressao ")" | lista | dicionario | funcao_anon ;
+novo          = "novo" IDENT { "." IDENT } "(" [ args ] ")" ;  (* nome simples ou qualificado por módulo *)
 lista         = "[" [ expressao { "," expressao } ] "]" ;
 dicionario    = "{" [ TEXTO ":" expressao { "," TEXTO ":" expressao } ] "}" ;
 funcao_anon   = "funcao" "(" [ params ] ")" bloco ;
+
+(* TEXTO_INTERP: $"...{expressao}..." — cada trecho {expressao} é analisado como
+   uma expressao e concatenado (como texto) às partes literais vizinhas. *)
 ```
 
 ---
