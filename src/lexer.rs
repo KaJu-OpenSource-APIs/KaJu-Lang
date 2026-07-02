@@ -121,11 +121,15 @@ impl Lexer {
         // Símbolos
         self.avancar();
         let (tipo, comprimento) = match c {
-            '+' => (TipoToken::Mais, 1),
-            '-' => (TipoToken::Menos, 1),
-            '*' => (TipoToken::Estrela, 1),
-            '/' => (TipoToken::Barra, 1),
-            '%' => (TipoToken::Porcento, 1),
+            '+' => self.talvez_igual('+', TipoToken::MaisIgual, TipoToken::Mais),
+            '-' => self.talvez_igual('-', TipoToken::MenosIgual, TipoToken::Menos),
+            '*' => self.talvez_igual('*', TipoToken::EstrelaIgual, TipoToken::Estrela),
+            '/' => self.talvez_igual('/', TipoToken::BarraIgual, TipoToken::Barra),
+            '%' => self.talvez_igual('%', TipoToken::PorcentoIgual, TipoToken::Porcento),
+            '&' => (TipoToken::EBit, 1),
+            '|' => (TipoToken::OuBit, 1),
+            '^' => (TipoToken::OuExclusivo, 1),
+            '~' => (TipoToken::Til, 1),
             '(' => (TipoToken::ParenEsq, 1),
             ')' => (TipoToken::ParenDir, 1),
             '{' => (TipoToken::ChaveEsq, 1),
@@ -161,6 +165,9 @@ impl Lexer {
                 if self.atual() == '=' {
                     self.avancar();
                     (TipoToken::MenorIgual, 2)
+                } else if self.atual() == '<' {
+                    self.avancar();
+                    (TipoToken::DeslocaEsq, 2)
                 } else {
                     (TipoToken::Menor, 1)
                 }
@@ -169,6 +176,9 @@ impl Lexer {
                 if self.atual() == '=' {
                     self.avancar();
                     (TipoToken::MaiorIgual, 2)
+                } else if self.atual() == '>' {
+                    self.avancar();
+                    (TipoToken::DeslocaDir, 2)
                 } else {
                     (TipoToken::Maior, 1)
                 }
@@ -185,6 +195,21 @@ impl Lexer {
 
         let span = Span::novo(ini_linha, ini_coluna, comprimento);
         Ok(Token::novo(tipo, c.to_string(), span))
+    }
+
+    /// Se o próximo caractere for '=', devolve o token composto; senão o simples.
+    fn talvez_igual(
+        &mut self,
+        _c: char,
+        composto: TipoToken,
+        simples: TipoToken,
+    ) -> (TipoToken, usize) {
+        if self.atual() == '=' {
+            self.avancar();
+            (composto, 2)
+        } else {
+            (simples, 1)
+        }
     }
 
     fn ler_numero(&mut self, linha: usize, coluna: usize) -> Token {

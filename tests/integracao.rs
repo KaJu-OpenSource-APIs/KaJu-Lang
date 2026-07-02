@@ -154,6 +154,41 @@ fn pare_dentro_de_funcao_sem_laco_falha() {
 }
 
 #[test]
+fn atribuicao_composta() {
+    let (out, err, ok) = rodar(
+        r#"
+        var x = 10
+        x += 5
+        x *= 2
+        x -= 1
+        escreva(x)
+        var l = [1, 2, 3]
+        l[1] += 10
+        escreva(l)
+        var d = {"n": 0}
+        d["n"] += 7
+        escreva(d["n"])
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "29\n[1, 12, 3]\n7\n");
+}
+
+#[test]
+fn operadores_de_bits() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(5 & 3, 5 | 2, 5 ^ 1)
+        escreva(~5)
+        escreva(1 << 4, 256 >> 2)
+        escreva(1 | 2 & 3)
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "1 7 4\n-6\n16 64\n3\n");
+}
+
+#[test]
 fn senaose_palavra_unica_e_legado() {
     let (out, err, ok) = rodar(
         r#"

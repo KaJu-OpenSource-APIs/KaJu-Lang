@@ -16,6 +16,12 @@ pub enum OpBinaria {
     Maior,
     MenorIgual,
     MaiorIgual,
+    // operadores de bits (só entre inteiros)
+    EBit,
+    OuBit,
+    XorBit,
+    DeslocaEsq,
+    DeslocaDir,
 }
 
 /// Operadores lógicos com curto-circuito.
@@ -30,6 +36,7 @@ pub enum OpLogica {
 pub enum OpUnaria {
     Negacao,   // nao
     Negativo,  // -
+    NaoBit,    // ~
 }
 
 /// Expressões: produzem um valor.

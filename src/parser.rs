@@ -594,49 +594,74 @@ impl Parser {
 
     fn atribuicao(&mut self) -> Result<Expr, Diagnostico> {
         let esq = self.ou_logico()?;
+
+        // atribuição simples: alvo = valor
         if self.verificar(&TipoToken::Igual) {
             let igual = self.avancar();
             let valor = self.atribuicao()?;
-            match esq {
-                Expr::Variavel(nome, span) => {
-                    let span_total = unir_span(&span, &valor.span());
-                    Ok(Expr::Atribuicao {
-                        nome,
-                        valor: Box::new(valor),
-                        span: span_total,
-                    })
-                }
-                Expr::Indice {
-                    alvo,
-                    indice,
-                    span,
-                } => {
-                    let span_total = unir_span(&span, &valor.span());
-                    Ok(Expr::AtribIndice {
-                        alvo,
-                        indice,
-                        valor: Box::new(valor),
-                        span: span_total,
-                    })
-                }
-                Expr::Acesso { alvo, membro, span } => {
-                    let span_total = unir_span(&span, &valor.span());
-                    Ok(Expr::AtribCampo {
-                        alvo,
-                        membro,
-                        valor: Box::new(valor),
-                        span: span_total,
-                    })
-                }
-                _ => Err(Diagnostico::novo(
-                    "K007",
-                    "só é possível atribuir a uma variável ou a um índice",
-                    igual.span,
-                )
-                .com_rotulo("o lado esquerdo de '=' precisa ser um nome ou um acesso com []")),
-            }
-        } else {
-            Ok(esq)
+            return self.montar_atribuicao(esq, valor, igual.span);
+        }
+
+        // atribuição composta: alvo OP= valor  ->  alvo = alvo OP valor
+        if let Some(op) = self.op_composto() {
+            let tok = self.avancar();
+            let direita = self.atribuicao()?;
+            let span = unir_span(&esq.span(), &direita.span());
+            let combinado = Expr::Binaria {
+                op,
+                esq: Box::new(esq.clone()),
+                dir: Box::new(direita),
+                span,
+            };
+            return self.montar_atribuicao(esq, combinado, tok.span);
+        }
+
+        Ok(esq)
+    }
+
+    /// Operador de uma atribuição composta (`+=`, `-=`, ...), se houver.
+    fn op_composto(&self) -> Option<OpBinaria> {
+        match self.atual().tipo {
+            TipoToken::MaisIgual => Some(OpBinaria::Soma),
+            TipoToken::MenosIgual => Some(OpBinaria::Subtracao),
+            TipoToken::EstrelaIgual => Some(OpBinaria::Multiplicacao),
+            TipoToken::BarraIgual => Some(OpBinaria::Divisao),
+            TipoToken::PorcentoIgual => Some(OpBinaria::Resto),
+            _ => None,
+        }
+    }
+
+    /// Monta o nó de atribuição conforme o alvo (variável, índice ou campo).
+    fn montar_atribuicao(
+        &self,
+        alvo: Expr,
+        valor: Expr,
+        span_op: Span,
+    ) -> Result<Expr, Diagnostico> {
+        match alvo {
+            Expr::Variavel(nome, span) => Ok(Expr::Atribuicao {
+                nome,
+                span: unir_span(&span, &valor.span()),
+                valor: Box::new(valor),
+            }),
+            Expr::Indice { alvo, indice, span } => Ok(Expr::AtribIndice {
+                span: unir_span(&span, &valor.span()),
+                alvo,
+                indice,
+                valor: Box::new(valor),
+            }),
+            Expr::Acesso { alvo, membro, span } => Ok(Expr::AtribCampo {
+                span: unir_span(&span, &valor.span()),
+                alvo,
+                membro,
+                valor: Box::new(valor),
+            }),
+            _ => Err(Diagnostico::novo(
+                "K007",
+                "só é possível atribuir a uma variável, índice ou campo",
+                span_op,
+            )
+            .com_rotulo("o lado esquerdo precisa ser um nome, um acesso com [] ou um campo")),
         }
     }
 
@@ -657,10 +682,10 @@ impl Parser {
     }
 
     fn e_logico(&mut self) -> Result<Expr, Diagnostico> {
-        let mut esq = self.igualdade()?;
+        let mut esq = self.ou_bit()?;
         while self.verificar(&TipoToken::E) {
             self.avancar();
-            let dir = self.igualdade()?;
+            let dir = self.ou_bit()?;
             let span = unir_span(&esq.span(), &dir.span());
             esq = Expr::Logica {
                 op: OpLogica::E,
@@ -668,6 +693,40 @@ impl Parser {
                 dir: Box::new(dir),
                 span,
             };
+        }
+        Ok(esq)
+    }
+
+    // Operadores de bits: | (menor precedência) -> ^ -> & (maior)
+    fn ou_bit(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.xor_bit()?;
+        while self.verificar(&TipoToken::OuBit) {
+            self.avancar();
+            let dir = self.xor_bit()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Binaria { op: OpBinaria::OuBit, esq: Box::new(esq), dir: Box::new(dir), span };
+        }
+        Ok(esq)
+    }
+
+    fn xor_bit(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.e_bit()?;
+        while self.verificar(&TipoToken::OuExclusivo) {
+            self.avancar();
+            let dir = self.e_bit()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Binaria { op: OpBinaria::XorBit, esq: Box::new(esq), dir: Box::new(dir), span };
+        }
+        Ok(esq)
+    }
+
+    fn e_bit(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.igualdade()?;
+        while self.verificar(&TipoToken::EBit) {
+            self.avancar();
+            let dir = self.igualdade()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Binaria { op: OpBinaria::EBit, esq: Box::new(esq), dir: Box::new(dir), span };
         }
         Ok(esq)
     }
@@ -694,7 +753,7 @@ impl Parser {
     }
 
     fn comparacao(&mut self) -> Result<Expr, Diagnostico> {
-        let mut esq = self.soma()?;
+        let mut esq = self.deslocamento()?;
         loop {
             let op = match self.atual().tipo {
                 TipoToken::Menor => OpBinaria::Menor,
@@ -704,7 +763,7 @@ impl Parser {
                 _ => break,
             };
             self.avancar();
-            let dir = self.soma()?;
+            let dir = self.deslocamento()?;
             let span = unir_span(&esq.span(), &dir.span());
             esq = Expr::Binaria {
                 op,
@@ -712,6 +771,22 @@ impl Parser {
                 dir: Box::new(dir),
                 span,
             };
+        }
+        Ok(esq)
+    }
+
+    fn deslocamento(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.soma()?;
+        loop {
+            let op = match self.atual().tipo {
+                TipoToken::DeslocaEsq => OpBinaria::DeslocaEsq,
+                TipoToken::DeslocaDir => OpBinaria::DeslocaDir,
+                _ => break,
+            };
+            self.avancar();
+            let dir = self.soma()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Binaria { op, esq: Box::new(esq), dir: Box::new(dir), span };
         }
         Ok(esq)
     }
@@ -763,6 +838,7 @@ impl Parser {
         let op = match self.atual().tipo {
             TipoToken::Nao => Some(OpUnaria::Negacao),
             TipoToken::Menos => Some(OpUnaria::Negativo),
+            TipoToken::Til => Some(OpUnaria::NaoBit),
             _ => None,
         };
         if let Some(op) = op {

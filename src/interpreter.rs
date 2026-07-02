@@ -1051,6 +1051,15 @@ impl Interpretador {
                 )
                 .com_rotulo("esperava um 'numero' aqui")),
             },
+            OpUnaria::NaoBit => match v {
+                Valor::Inteiro(i) => Ok(Valor::Inteiro(!i)),
+                outro => Err(Diagnostico::novo(
+                    "K012",
+                    format!("'~' (bits) só funciona em inteiros, mas recebeu '{}'", outro.tipo_nome()),
+                    span.clone(),
+                )
+                .com_rotulo("esperava um inteiro aqui")),
+            },
         }
     }
 
@@ -1078,6 +1087,64 @@ impl Interpretador {
             MaiorIgual => self.comparar(&a, &b, span, ">=", |o| o.is_ge()),
             Igual => Ok(Valor::Logico(a.igual(&b))),
             Diferente => Ok(Valor::Logico(!a.igual(&b))),
+            EBit => self.bit_op(&a, &b, span, "&", |x, y| x & y),
+            OuBit => self.bit_op(&a, &b, span, "|", |x, y| x | y),
+            XorBit => self.bit_op(&a, &b, span, "^", |x, y| x ^ y),
+            DeslocaEsq => self.deslocar(&a, &b, span, true),
+            DeslocaDir => self.deslocar(&a, &b, span, false),
+        }
+    }
+
+    /// Operação de bits: exige dois inteiros.
+    fn bit_op(
+        &self,
+        a: &Valor,
+        b: &Valor,
+        span: &Span,
+        simbolo: &str,
+        f: impl Fn(i64, i64) -> i64,
+    ) -> Result<Valor, Diagnostico> {
+        match (a, b) {
+            (Valor::Inteiro(x), Valor::Inteiro(y)) => Ok(Valor::Inteiro(f(*x, *y))),
+            _ => Err(Diagnostico::novo(
+                "K012",
+                format!(
+                    "operação de bits '{}' só funciona entre inteiros, mas recebeu '{}' e '{}'",
+                    simbolo,
+                    a.tipo_nome(),
+                    b.tipo_nome()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("esperava inteiros aqui")),
+        }
+    }
+
+    fn deslocar(&self, a: &Valor, b: &Valor, span: &Span, esquerda: bool) -> Result<Valor, Diagnostico> {
+        match (a, b) {
+            (Valor::Inteiro(x), Valor::Inteiro(y)) => {
+                if *y < 0 {
+                    return Err(Diagnostico::novo(
+                        "K012",
+                        "o deslocamento de bits não pode ser negativo",
+                        span.clone(),
+                    )
+                    .com_rotulo("quantidade negativa"));
+                }
+                let n = (*y as u32) & 63;
+                let r = if esquerda { x.wrapping_shl(n) } else { x.wrapping_shr(n) };
+                Ok(Valor::Inteiro(r))
+            }
+            _ => Err(Diagnostico::novo(
+                "K012",
+                format!(
+                    "deslocamento de bits só funciona entre inteiros, mas recebeu '{}' e '{}'",
+                    a.tipo_nome(),
+                    b.tipo_nome()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("esperava inteiros aqui")),
         }
     }
 

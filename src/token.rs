@@ -75,6 +75,19 @@ pub enum TipoToken {
     MenorIgual,
     MaiorIgual,
     Igual,
+    // atribuição composta
+    MaisIgual,
+    MenosIgual,
+    EstrelaIgual,
+    BarraIgual,
+    PorcentoIgual,
+    // operadores de bits
+    EBit,        // &
+    OuBit,       // |
+    OuExclusivo, // ^
+    Til,         // ~
+    DeslocaEsq,  // <<
+    DeslocaDir,  // >>
     ParenEsq,
     ParenDir,
     ChaveEsq,
