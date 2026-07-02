@@ -1,4 +1,4 @@
-//! Funções embutidas (biblioteca padrão mínima da Fase 1) — §10.
+//! Funções embutidas (biblioteca padrão global) — ver a especificação.
 
 use std::cell::RefCell;
 use std::collections::HashMap;

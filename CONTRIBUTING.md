@@ -49,7 +49,7 @@ Ao abrir uma *issue* de bug, inclua:
 
 - O programa `.kaju` mínimo que reproduz o problema.
 - A saída obtida e a saída esperada.
-- A versão do kaju (`kaju --ajuda` mostra informações) e o sistema operacional.
+- A versão do kaju (veja com `kaju --versao`) e o sistema operacional.
 
 ## Código de conduta
 

@@ -46,10 +46,9 @@ importe "geometria.kaju" como geo
 
 escreva(geo.PI)               // 3.14159
 escreva(geo.areaCirculo(5))   // 78.53975
-var p = novo geo.Ponto(1, 2)
 ```
 
-Essa forma deixa claro de onde cada nome vem e mantém o escopo do arquivo limpo.
+Essa forma deixa claro de onde cada nome vem e mantém o escopo do arquivo limpo. O prefixo dá acesso às funções e aos valores do módulo. Para **criar objetos** de uma classe do módulo, use o `importe` simples (sem `como`), que traz a classe para o escopo e permite `novo Ponto(1, 2)` diretamente.
 
 ## Como os caminhos são resolvidos
 

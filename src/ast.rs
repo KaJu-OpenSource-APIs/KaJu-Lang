@@ -1,4 +1,4 @@
-//! Árvore sintática abstrata (AST) da kaju — Fase 1.
+//! Árvore sintática abstrata (AST) do kaju.
 
 use crate::token::Span;
 
@@ -166,7 +166,7 @@ pub struct MetodoDef {
 }
 
 /// Comandos e declarações: executam ações.
-// Alguns `Span` ainda não são lidos; serão usados na Fase 2 para diagnósticos
+// Alguns `Span` ainda não são lidos; ficam reservados para diagnósticos futuros
 // de fluxo (ex.: 'pare' fora de laço, 'retorne' fora de função).
 #[allow(dead_code)]
 #[derive(Clone, Debug)]

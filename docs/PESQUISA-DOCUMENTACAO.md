@@ -10,7 +10,7 @@
 - [Parte 2 — Linguagens dinâmicas de alto nível](#parte-2--linguagens-dinâmicas-de-alto-nível) (Python, JavaScript, Ruby, Lua)
 - [Parte 3 — JVM e funcionais](#parte-3--jvm-e-funcionais) (Java, Go, Haskell, Elixir)
 - [Parte 4 — Metodologias, frameworks e ferramentas](#parte-4--metodologias-frameworks-e-ferramentas)
-- [Síntese final — recomendações para a documentação da kaju](#síntese-final--recomendações-para-a-documentação-da-kaju)
+- [Síntese final — recomendações para a documentação do kaju](#síntese-final--recomendações-para-a-documentação-do-kaju)
 
 ---
 
@@ -165,7 +165,7 @@ WEB/CWEB: o programa é um *ensaio para humanos*; `tangle` extrai o código comp
 
 ---
 
-## Síntese final — recomendações para a documentação da kaju
+## Síntese final — recomendações para a documentação do kaju
 
 Os padrões que **se repetem nas linguagens mais bem documentadas** (Rust, Go, Elixir, Python) e que devemos adotar desde o dia zero:
 
@@ -175,7 +175,7 @@ Os padrões que **se repetem nas linguagens mais bem documentadas** (Rust, Go, E
 
 3. **Separar os três papéis, mas conectá-los:** especificação normativa (contrato, estilo JLS/Haskell Report/Manual Lua), referência de API gerada do código (rustdoc/godoc/ExDoc), e guias narrativos opinativos e curtos (Effective Go).
 
-4. **Exemplos de código testados no CI — a lição mais forte de todas.** doctests do Rust/Elixir e exemplos compilados do langref do Zig garantem que a doc *nunca mente*. Implementar isso no próprio toolchain da kaju.
+4. **Exemplos de código testados no CI — a lição mais forte de todas.** doctests do Rust/Elixir e exemplos compilados do langref do Zig garantem que a doc *nunca mente*. Implementar isso no próprio toolchain do kaju.
 
 5. **Gerar a referência de API a partir de doc-comments** (fonte única de verdade), como rustdoc/godoc/autodoc/ExDoc. Decidir conscientemente entre **texto simples** (Go, baixo atrito) e **tags semânticas** (Java/Haddock, mais rico).
 
@@ -193,7 +193,7 @@ Os padrões que **se repetem nas linguagens mais bem documentadas** (Rust, Go, E
 
 12. **Planejar cedo:** i18n (Crowdin), busca (Algolia/client-side), acessibilidade (WCAG, dark mode), e man pages/`--help` estruturado para a CLI do toolchain.
 
-### Escolha de ferramentas sugerida para a kaju
+### Escolha de ferramentas sugerida para o kaju
 - **mdBook** para "The kaju Book" (tutorial linear) — padrão de facto de linguagens novas, simples, zero dependências.
 - **Docusaurus** ou **MkDocs Material** para o portal principal, se i18n/versionamento/visual forem prioridade.
 - **Sphinx** apenas se a referência da stdlib exigir cross-referencing pesado.

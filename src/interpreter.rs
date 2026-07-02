@@ -776,10 +776,12 @@ impl Interpretador {
                             )
                             .com_rotulo("método estático inexistente")),
                         },
-                        outro => metodos::chamar_metodo(outro, membro, vals).map_err(|msg| {
-                            Diagnostico::novo("K212", msg, span.clone())
-                                .com_rotulo("nesta chamada de método")
-                        }),
+                        outro => {
+                            metodos::chamar_metodo(outro, membro, vals).map_err(|(cod, msg)| {
+                                Diagnostico::novo(cod, msg, span.clone())
+                                    .com_rotulo("nesta chamada de método")
+                            })
+                        }
                     };
                 }
                 // Chamada normal de função
@@ -1028,7 +1030,7 @@ impl Interpretador {
     ) -> Result<(), Diagnostico> {
         if args.len() != esperado {
             Err(Diagnostico::novo(
-                "K212",
+                "K201",
                 format!(
                     "o método '{}' espera {} argumento(s), mas recebeu {}",
                     nome,
@@ -1060,7 +1062,7 @@ impl Interpretador {
         match v {
             Valor::Funcao(_) | Valor::Nativa(_) => Ok(v.clone()),
             outro => Err(Diagnostico::novo(
-                "K212",
+                "K203",
                 format!(
                     "'{}' espera uma função, mas recebeu um '{}'",
                     nome,

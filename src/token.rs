@@ -32,7 +32,7 @@ pub enum TipoToken {
     TextoInterp(Vec<Pedaco>),
     Identificador(String),
 
-    // Palavras-chave da Fase 1
+    // Palavras-chave
     Var,
     Constante,
     Funcao,

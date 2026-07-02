@@ -1,67 +1,80 @@
 //! Métodos embutidos dos tipos de coleção (chamados com `.`), ex.: `lista.adicione(x)`.
 //!
-//! Esta é a mesma máquina de despacho por `.` que a orientação a objetos (Fase 2)
-//! vai reaproveitar para métodos de classes definidas pelo usuário.
+//! É a mesma máquina de despacho por `.` que a orientação a objetos reaproveita
+//! para os métodos de classes definidas pelo usuário.
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
 use crate::valor::{DicRef, ListaRef, Valor};
 
+/// Erro de um método: código de diagnóstico (`Kxxx`) + mensagem. O interpretador
+/// converte isso num `Diagnostico` completo, preservando o código correto.
+pub type ErroMetodo = (&'static str, String);
+
 /// Despacha uma chamada de método `receiver.nome(args)`.
-pub fn chamar_metodo(receiver: Valor, nome: &str, args: Vec<Valor>) -> Result<Valor, String> {
+pub fn chamar_metodo(receiver: Valor, nome: &str, args: Vec<Valor>) -> Result<Valor, ErroMetodo> {
     match &receiver {
         Valor::Lista(l) => metodo_lista(l, nome, args),
         Valor::Texto(t) => metodo_texto(t, nome, args),
         Valor::Dicionario(d) => metodo_dic(d, nome, args),
-        outro => Err(format!(
-            "o tipo '{}' não tem métodos",
-            outro.tipo_nome()
+        outro => Err((
+            "K212",
+            format!("o tipo '{}' não tem métodos", outro.tipo_nome()),
         )),
     }
 }
 
 // ---- Helpers de aridade e tipos de argumento ----
 
-fn checar_aridade(nome: &str, args: &[Valor], esperado: usize) -> Result<(), String> {
+fn checar_aridade(nome: &str, args: &[Valor], esperado: usize) -> Result<(), ErroMetodo> {
     if args.len() != esperado {
-        Err(format!(
-            "o método '{}' espera {} argumento(s), mas recebeu {}",
-            nome,
-            esperado,
-            args.len()
+        Err((
+            "K201",
+            format!(
+                "o método '{}' espera {} argumento(s), mas recebeu {}",
+                nome,
+                esperado,
+                args.len()
+            ),
         ))
     } else {
         Ok(())
     }
 }
 
-fn arg_texto(nome: &str, args: &[Valor], i: usize) -> Result<String, String> {
+fn arg_texto(nome: &str, args: &[Valor], i: usize) -> Result<String, ErroMetodo> {
     match &args[i] {
         Valor::Texto(t) => Ok(t.clone()),
-        outro => Err(format!(
-            "o método '{}' espera um 'texto', mas recebeu um '{}'",
-            nome,
-            outro.tipo_nome()
+        outro => Err((
+            "K203",
+            format!(
+                "o método '{}' espera um 'texto', mas recebeu um '{}'",
+                nome,
+                outro.tipo_nome()
+            ),
         )),
     }
 }
 
-fn arg_indice(nome: &str, args: &[Valor], i: usize) -> Result<usize, String> {
+fn arg_indice(nome: &str, args: &[Valor], i: usize) -> Result<usize, ErroMetodo> {
     match &args[i] {
         Valor::Inteiro(n) if *n >= 0 => Ok(*n as usize),
         Valor::Decimal(f) if f.fract() == 0.0 && *f >= 0.0 => Ok(*f as usize),
-        outro => Err(format!(
-            "o método '{}' espera um índice inteiro não negativo, mas recebeu um '{}'",
-            nome,
-            outro.tipo_nome()
+        outro => Err((
+            "K203",
+            format!(
+                "o método '{}' espera um índice inteiro não negativo, mas recebeu um '{}'",
+                nome,
+                outro.tipo_nome()
+            ),
         )),
     }
 }
 
 // ---- Métodos de lista ----
 
-fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, String> {
+fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, ErroMetodo> {
     match nome {
         "adicione" => {
             checar_aridade(nome, &args, 1)?;
@@ -73,10 +86,9 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Str
             let i = arg_indice(nome, &args, 0)?;
             let mut lista = l.borrow_mut();
             if i >= lista.len() {
-                return Err(format!(
-                    "índice {} fora da lista (tamanho {})",
-                    i,
-                    lista.len()
+                return Err((
+                    "K206",
+                    format!("índice {} fora da lista (tamanho {})", i, lista.len()),
                 ));
             }
             Ok(lista.remove(i))
@@ -130,12 +142,15 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Str
             checar_aridade(nome, &args, 0)?;
             somar_lista(l)
         }
-        outro => Err(format!("o tipo 'lista' não tem o método '{}'", outro)),
+        outro => Err((
+            "K212",
+            format!("o tipo 'lista' não tem o método '{}'", outro),
+        )),
     }
 }
 
 /// Soma os itens de uma lista de números. Inteiro se todos forem inteiros.
-fn somar_lista(l: &ListaRef) -> Result<Valor, String> {
+fn somar_lista(l: &ListaRef) -> Result<Valor, ErroMetodo> {
     let lista = l.borrow();
     let todos_inteiros = lista.iter().all(|v| matches!(v, Valor::Inteiro(_)));
     if todos_inteiros {
@@ -151,7 +166,9 @@ fn somar_lista(l: &ListaRef) -> Result<Valor, String> {
         for v in lista.iter() {
             match v.como_f64() {
                 Some(n) => total += n,
-                None => return Err("'soma' só funciona com listas de números".to_string()),
+                None => {
+                    return Err(("K203", "'soma' só funciona com listas de números".to_string()))
+                }
             }
         }
         Ok(Valor::Decimal(total))
@@ -159,7 +176,7 @@ fn somar_lista(l: &ListaRef) -> Result<Valor, String> {
 }
 
 /// Ordena uma lista in-place: números por valor, textos em ordem alfabética.
-fn ordenar_lista(l: &ListaRef) -> Result<(), String> {
+fn ordenar_lista(l: &ListaRef) -> Result<(), ErroMetodo> {
     let mut lista = l.borrow_mut();
     let todos_numeros = lista.iter().all(|v| v.como_f64().is_some());
     let todos_textos = lista.iter().all(|v| matches!(v, Valor::Texto(_)));
@@ -179,13 +196,16 @@ fn ordenar_lista(l: &ListaRef) -> Result<(), String> {
         });
         Ok(())
     } else {
-        Err("'ordene' só funciona com listas de números ou de textos".to_string())
+        Err((
+            "K203",
+            "'ordene' só funciona com listas de números ou de textos".to_string(),
+        ))
     }
 }
 
 // ---- Métodos de texto ----
 
-fn metodo_texto(t: &str, nome: &str, args: Vec<Valor>) -> Result<Valor, String> {
+fn metodo_texto(t: &str, nome: &str, args: Vec<Valor>) -> Result<Valor, ErroMetodo> {
     match nome {
         "maiusculas" => {
             checar_aridade(nome, &args, 0)?;
@@ -259,13 +279,16 @@ fn metodo_texto(t: &str, nome: &str, args: Vec<Valor>) -> Result<Valor, String> 
             };
             Ok(Valor::Texto(fatia))
         }
-        outro => Err(format!("o tipo 'texto' não tem o método '{}'", outro)),
+        outro => Err((
+            "K212",
+            format!("o tipo 'texto' não tem o método '{}'", outro),
+        )),
     }
 }
 
 // ---- Métodos de dicionário ----
 
-fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, String> {
+fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, ErroMetodo> {
     match nome {
         "chaves" => {
             checar_aridade(nome, &args, 0)?;
@@ -302,6 +325,9 @@ fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, String>
             checar_aridade(nome, &args, 0)?;
             Ok(Valor::Inteiro(d.borrow().len() as i64))
         }
-        outro => Err(format!("o tipo 'dicionario' não tem o método '{}'", outro)),
+        outro => Err((
+            "K212",
+            format!("o tipo 'dicionario' não tem o método '{}'", outro),
+        )),
     }
 }

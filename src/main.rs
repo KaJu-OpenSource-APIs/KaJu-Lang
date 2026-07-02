@@ -1,4 +1,4 @@
-//! kaju — interpretador da linguagem kaju (Fase 1).
+//! kaju — interpretador da linguagem kaju.
 //!
 //! Uso:
 //!   kaju arquivo.kaju     executa um arquivo
@@ -32,6 +32,10 @@ fn main() -> ExitCode {
             mostrar_ajuda();
             ExitCode::SUCCESS
         }
+        Some("--versao") | Some("-v") | Some("versao") => {
+            println!("kaju {}", env!("CARGO_PKG_VERSION"));
+            ExitCode::SUCCESS
+        }
         Some(caminho) => executar_arquivo(caminho),
         None => {
             repl();
@@ -42,22 +46,24 @@ fn main() -> ExitCode {
 
 fn mostrar_ajuda() {
     println!(
-        "kaju — linguagem de programação interpretada, em português.
+        "kaju {} — linguagem de programação interpretada, em português.
 
 USO:
     kaju                     abre o REPL interativo
     kaju <arquivo>           executa um arquivo .kaju (ou .kj)
     kaju explique <codigo>   explica um código de erro (ex.: kaju explique K016)
+    kaju --versao            mostra a versão instalada
     kaju --ajuda             mostra esta ajuda
 
 EXEMPLOS:
     kaju programa.kaju
     kaju explique K001
 
-No REPL: digite código e Enter; setas cima/baixo navegam no histórico;
+No REPL: digite código e Enter; as setas ↑/↓ navegam no histórico;
 Ctrl+D sai.
 
-Documentação: o livro em docs/livro e a especificação em ESPECIFICACAO.md."
+Documentação: o livro em docs/livro e a especificação em ESPECIFICACAO.md.",
+        env!("CARGO_PKG_VERSION")
     );
 }
 

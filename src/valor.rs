@@ -1,4 +1,4 @@
-//! Modelo de valores em tempo de execução da kaju.
+//! Modelo de valores em tempo de execução do kaju.
 
 use std::cell::RefCell;
 use std::collections::HashMap;

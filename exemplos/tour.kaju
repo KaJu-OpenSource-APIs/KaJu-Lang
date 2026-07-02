@@ -1,4 +1,4 @@
-// Passeio pelos recursos da Fase 1 da kaju
+// Passeio pelos recursos do kaju
 
 funcao saudar(nome) {
     retorne "Olá, " + nome + "!"

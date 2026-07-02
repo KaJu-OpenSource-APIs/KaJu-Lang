@@ -1,6 +1,6 @@
 # Erros e exceções
 
-Programas falham: um arquivo não existe, um texto não vira número, uma conta divide por zero. O kaju trata esses casos de dois modos que se complementam. Primeiro, ela **relata** o que deu errado com um diagnóstico detalhado, em português, que aponta o trecho do código e sugere a correção. Segundo, ela deixa você **capturar** um erro em tempo de execução para reagir a ele em vez de deixar o programa parar.
+Programas falham: um arquivo não existe, um texto não vira número, uma conta divide por zero. O kaju trata esses casos de dois modos que se complementam. Primeiro, ele **relata** o que deu errado com um diagnóstico detalhado, em português, que aponta o trecho do código e sugere a correção. Segundo, ele deixa você **capturar** um erro em tempo de execução para reagir a ele em vez de deixar o programa parar.
 
 ## A anatomia de um diagnóstico
 
