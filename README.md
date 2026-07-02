@@ -37,26 +37,42 @@ Já funciona:
 
 **Fase 2 completa.** O kaju já é uma linguagem de uso geral com OOP, exceções e módulos. Próximo possível (Fase 3, opcional): VM de bytecode para desempenho. Ver §14 da especificação.
 
-## Como usar
+## Instalação
+
+O `kaju` é um executável nativo autossuficiente. Para **usar** o kaju você só precisa do binário no `PATH` — **não precisa ter Rust instalado**. Rust só é necessário para **compilar** o kaju a partir do código-fonte.
+
+### Usar (sem Rust)
+
+Com o binário `kaju` em mãos (o arquivo `target/release/kaju` ou um binário distribuído):
 
 ```bash
-# compilar
-cargo build
-
-# executar um arquivo
-cargo run -- exemplos/tour.kaju
-# ou, após compilar:
-./target/debug/kaju exemplos/ola.kaju
-
-# abrir o REPL interativo
-cargo run
-
-# explicar um código de erro em detalhe
-cargo run -- explique K016
-
-# rodar os testes (executam programas .kaju reais e conferem a saída)
-cargo test
+chmod +x kaju
+mv kaju ~/.local/bin/        # sem sudo (garanta que ~/.local/bin está no PATH)
+# ou, para todos os usuários:
+sudo mv kaju /usr/local/bin/
 ```
+
+Depois, o comando funciona em qualquer lugar:
+
+```bash
+kaju programa.kaju          # executa um arquivo (.kaju ou .kj)
+kaju                        # abre o REPL interativo
+kaju explique K016          # explica um código de erro
+```
+
+### Compilar a partir do código-fonte (precisa de [Rust](https://www.rust-lang.org/pt-BR))
+
+```bash
+# instala o comando 'kaju' no PATH (~/.cargo/bin)
+cargo install --path .
+
+# ou apenas gera o binário standalone (em target/release/kaju) para distribuir
+cargo build --release
+```
+
+Durante o desenvolvimento, `cargo run -- programa.kaju` recompila e roda a versão mais recente. Rode os testes com `cargo test` (executam programas `.kaju` reais e conferem a saída).
+
+> Tutorial completo em [`docs/livro`](docs/livro) ("O Livro do kaju").
 
 ## Exemplo
 
