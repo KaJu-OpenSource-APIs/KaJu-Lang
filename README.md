@@ -77,6 +77,11 @@ src/
 ├── valor.rs        valores em runtime
 ├── ambiente.rs     escopos aninhados (closures)
 ├── interpreter.rs  percorre a AST e executa
-├── embutidos.rs    biblioteca padrão mínima
+├── metodos.rs      métodos das coleções (.mapeie, .ordene, ...)
+├── embutidos.rs    biblioteca padrão (funções globais)
 └── erros.rs        diagnósticos ricos em português
 ```
+
+## Licença
+
+[MIT](LICENSE) © 2026 Julio Barbosa. Uso, modificação e distribuição livres, inclusive comercial, mantendo o aviso de copyright.
