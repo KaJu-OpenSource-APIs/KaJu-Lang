@@ -613,7 +613,7 @@ impl Interpretador {
                     // Métodos de ordem superior de lista precisam chamar funções kaju,
                     // então são tratados aqui (onde há acesso ao interpretador).
                     if let Valor::Lista(l) = &recv {
-                        if matches!(membro.as_str(), "mapeie" | "filtre" | "reduza") {
+                        if matches!(membro.as_str(), "mapeie" | "filtre" | "reduza" | "ordenePor") {
                             return self.metodo_lista_superior(l.clone(), membro, vals, span);
                         }
                     }
@@ -776,7 +776,32 @@ impl Interpretador {
                 }
                 Ok(acc)
             }
+            "ordenePor" => {
+                // ordena in-place usando f(item) como chave de ordenação
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                let mut pares: Vec<(Valor, Valor)> = Vec::with_capacity(itens.len());
+                for item in itens {
+                    let chave = self.chamar(f.clone(), vec![item.clone()], span)?;
+                    pares.push((chave, item));
+                }
+                pares.sort_by(|a, b| Self::ordem_chaves(&a.0, &b.0));
+                let ordenada: Vec<Valor> = pares.into_iter().map(|(_, it)| it).collect();
+                *lista.borrow_mut() = ordenada;
+                Ok(Valor::Nulo)
+            }
             _ => unreachable!(),
+        }
+    }
+
+    /// Ordem entre chaves de ordenação (números por valor, textos alfabético).
+    fn ordem_chaves(a: &Valor, b: &Valor) -> std::cmp::Ordering {
+        use std::cmp::Ordering;
+        match (a, b) {
+            (Valor::Texto(x), Valor::Texto(y)) => x.cmp(y),
+            _ => match (a.como_f64(), b.como_f64()) {
+                (Some(x), Some(y)) => x.partial_cmp(&y).unwrap_or(Ordering::Equal),
+                _ => Ordering::Equal,
+            },
         }
     }
 

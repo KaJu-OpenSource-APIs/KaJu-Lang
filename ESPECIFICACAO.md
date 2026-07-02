@@ -356,10 +356,12 @@ u.formatar("olá")             // acesso com prefixo do módulo
 | `paraTexto(x)` | Converte para `texto` |
 | `paraNumero(x)` | Converte `texto`/`logico` para `numero` |
 | `paraInteiro(x)` | Converte para inteiro (trunca decimais) |
+| `intervalo(inicio, fim)` | Lista de inteiros `[inicio, fim)` |
+| `agora()` | Segundos inteiros desde 1970 (tempo Unix) |
 
 ### 10.2 Matemática
 
-`raiz`, `absoluto`, `potencia(base, exp)`, `piso`, `teto`, `arredonde`, `aleatorio()`, `minimo(...)`, `maximo(...)`, `seno`, `cosseno`, `log`, e a constante `PI`.
+`raiz`, `absoluto`, `potencia(base, exp)`, `piso`, `teto`, `arredonde`, `arredondePara(n, casas)`, `aleatorio()`, `minimo(...)`, `maximo(...)`, `seno`, `cosseno`, `log`, e a constante `PI`.
 
 ### 10.3 Arquivos
 
@@ -367,9 +369,9 @@ u.formatar("olá")             // acesso com prefixo do módulo
 
 ### 10.4 Métodos (`.`)
 
-- **lista:** `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte(sep)`, `indiceDe`, `fatie(inicio, fim)`, `ordene`, `mapeie(f)`, `filtre(f)`, `reduza(inicial, f)`
+- **lista:** `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte(sep)`, `indiceDe`, `fatie(inicio, fim)`, `ordene`, `ordenePor(f)`, `soma`, `mapeie(f)`, `filtre(f)`, `reduza(inicial, f)`
 - **texto:** `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua(de, para)`, `divida(sep)`, `fatie(inicio, fim)`, `indiceDe(sub)`, `comecaCom`, `terminaCom`, `repita(n)`
-- **dicionario:** `chaves`, `valores`, `tem(chave)`, `remova(chave)`, `tamanho`
+- **dicionario:** `chaves`, `valores`, `tem(chave)`, `obtem(chave, padrao)`, `remova(chave)`, `tamanho`
 
 ---
 

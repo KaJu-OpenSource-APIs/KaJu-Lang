@@ -223,6 +223,36 @@ fn metodos_lista_ordem_superior() {
 }
 
 #[test]
+fn stdlib_intervalo_soma_arredonde() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(intervalo(0, 5))
+        escreva(intervalo(1, 101).soma())
+        escreva(arredondePara(3.14159, 2))
+        escreva(agora() > 0)
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "[0, 1, 2, 3, 4]\n5050\n3.14\nverdadeiro\n");
+}
+
+#[test]
+fn ordene_por_e_obtem() {
+    let (out, err, ok) = rodar(
+        r#"
+        var xs = [{"n": "b", "v": 3}, {"n": "a", "v": 1}, {"n": "c", "v": 2}]
+        xs.ordenePor(funcao(x) { retorne x["v"] })
+        escreva(xs.mapeie(funcao(x) { retorne x["n"] }).junte(""))
+        var d = {"x": 10}
+        escreva(d.obtem("x", 0), d.obtem("y", -1))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    // ordenado por v: a(1), c(2), b(3)
+    assert_eq!(out, "acb\n10 -1\n");
+}
+
+#[test]
 fn metodos_lista_ordene_fatie_indice() {
     let (out, err, ok) = rodar(
         r#"

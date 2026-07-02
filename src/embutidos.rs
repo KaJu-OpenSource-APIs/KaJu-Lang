@@ -18,6 +18,9 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "paraTexto", para_texto);
     registrar_uma(&mut a, "paraNumero", para_numero);
     registrar_uma(&mut a, "paraInteiro", para_inteiro);
+    registrar_uma(&mut a, "intervalo", intervalo);
+    registrar_uma(&mut a, "agora", agora);
+    registrar_uma(&mut a, "arredondePara", arredonde_para);
     // Matemática (na Fase 2 vira o módulo 'matematica' via importe)
     registrar_uma(&mut a, "raiz", raiz);
     registrar_uma(&mut a, "absoluto", absoluto);
@@ -238,6 +241,43 @@ fn aleatorio(args: Vec<Valor>) -> Result<Valor, String> {
     Ok(Valor::Decimal(proximo_aleatorio()))
 }
 
+/// intervalo(inicio, fim) -> lista de inteiros [inicio, fim).
+fn intervalo(args: Vec<Valor>) -> Result<Valor, String> {
+    if args.len() != 2 {
+        return Err(format!("'intervalo' espera 2 argumentos (inicio, fim), mas recebeu {}", args.len()));
+    }
+    let inicio = como_inteiro("intervalo", &args[0])?;
+    let fim = como_inteiro("intervalo", &args[1])?;
+    let itens: Vec<Valor> = (inicio..fim).map(Valor::Inteiro).collect();
+    Ok(Valor::Lista(Rc::new(RefCell::new(itens))))
+}
+
+/// agora() -> segundos inteiros desde 1970 (tempo Unix).
+fn agora(args: Vec<Valor>) -> Result<Valor, String> {
+    if !args.is_empty() {
+        return Err(format!("'agora' não espera argumentos, mas recebeu {}", args.len()));
+    }
+    let segundos = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs() as i64)
+        .unwrap_or(0);
+    Ok(Valor::Inteiro(segundos))
+}
+
+/// arredondePara(numero, casas) -> decimal arredondado a N casas decimais.
+fn arredonde_para(args: Vec<Valor>) -> Result<Valor, String> {
+    if args.len() != 2 {
+        return Err(format!("'arredondePara' espera 2 argumentos (numero, casas), mas recebeu {}", args.len()));
+    }
+    let n = como_numero("arredondePara", &args[0])?;
+    let casas = como_inteiro("arredondePara", &args[1])?;
+    if casas < 0 {
+        return Err("'arredondePara' não aceita número de casas negativo".into());
+    }
+    let fator = 10f64.powi(casas as i32);
+    Ok(Valor::Decimal((n * fator).round() / fator))
+}
+
 fn para_inteiro(args: Vec<Valor>) -> Result<Valor, String> {
     match um_argumento("paraInteiro", &args)? {
         Valor::Inteiro(i) => Ok(Valor::Inteiro(*i)),
@@ -347,4 +387,16 @@ fn como_numero(nome: &str, v: &Valor) -> Result<f64, String> {
             v.tipo_nome()
         )
     })
+}
+
+fn como_inteiro(nome: &str, v: &Valor) -> Result<i64, String> {
+    match v {
+        Valor::Inteiro(i) => Ok(*i),
+        Valor::Decimal(f) if f.fract() == 0.0 => Ok(*f as i64),
+        outro => Err(format!(
+            "'{}' espera um inteiro, mas recebeu um '{}'",
+            nome,
+            outro.tipo_nome()
+        )),
+    }
 }

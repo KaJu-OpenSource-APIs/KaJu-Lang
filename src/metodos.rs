@@ -126,7 +126,35 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Str
             ordenar_lista(l)?;
             Ok(Valor::Nulo)
         }
+        "soma" => {
+            checar_aridade(nome, &args, 0)?;
+            somar_lista(l)
+        }
         outro => Err(format!("o tipo 'lista' não tem o método '{}'", outro)),
+    }
+}
+
+/// Soma os itens de uma lista de números. Inteiro se todos forem inteiros.
+fn somar_lista(l: &ListaRef) -> Result<Valor, String> {
+    let lista = l.borrow();
+    let todos_inteiros = lista.iter().all(|v| matches!(v, Valor::Inteiro(_)));
+    if todos_inteiros {
+        let mut total: i64 = 0;
+        for v in lista.iter() {
+            if let Valor::Inteiro(i) = v {
+                total = total.wrapping_add(*i);
+            }
+        }
+        Ok(Valor::Inteiro(total))
+    } else {
+        let mut total = 0.0;
+        for v in lista.iter() {
+            match v.como_f64() {
+                Some(n) => total += n,
+                None => return Err("'soma' só funciona com listas de números".to_string()),
+            }
+        }
+        Ok(Valor::Decimal(total))
     }
 }
 
@@ -258,6 +286,12 @@ fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, String>
             checar_aridade(nome, &args, 1)?;
             let chave = arg_texto(nome, &args, 0)?;
             Ok(Valor::Logico(d.borrow().contains_key(&chave)))
+        }
+        "obtem" => {
+            // obtem(chave, padrao) -> valor da chave, ou padrao se ausente
+            checar_aridade(nome, &args, 2)?;
+            let chave = arg_texto(nome, &args, 0)?;
+            Ok(d.borrow().get(&chave).cloned().unwrap_or_else(|| args[1].clone()))
         }
         "remova" => {
             checar_aridade(nome, &args, 1)?;

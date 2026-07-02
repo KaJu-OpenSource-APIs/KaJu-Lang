@@ -18,12 +18,13 @@ Já funciona:
 - **Indexação** `a[i]` (leitura e atribuição) em listas, textos e dicionários
 - **Dicionários** `{"chave": valor}`
 - **Operador `.` + métodos** com encadeamento:
-  - lista: `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte`, `indiceDe`, `fatie`, `ordene`, `mapeie`, `filtre`, `reduza`
+  - lista: `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte`, `indiceDe`, `fatie`, `ordene`, `ordenePor`, `soma`, `mapeie`, `filtre`, `reduza`
   - texto: `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua`, `divida`, `fatie`, `indiceDe`, `comecaCom`, `terminaCom`, `repita`
-  - dicionário: `chaves`, `valores`, `tem`, `remova`, `tamanho`
+  - dicionário: `chaves`, `valores`, `tem`, `obtem`, `remova`, `tamanho`
 - Comparação `< > <= >=` entre textos (ordem alfabética), além de números
-- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`
-- Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
+- `se` / `senaose` / `senao` (aceita também o legado `senao se`)
+- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`
+- Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `arredondePara`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
 - Arquivos: `leiaArquivo`, `escrevaArquivo`, `existeArquivo`
 - **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
 - **Exceções**: `tente`/`capture`/`finalmente` e `lance`. O `capture (erro)` recebe um objeto com `.mensagem` e `.codigo`, e pega tanto o que você `lance` quanto os erros de runtime do interpretador (ex.: divisão por zero)
