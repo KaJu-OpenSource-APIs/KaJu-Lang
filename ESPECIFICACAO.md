@@ -344,7 +344,7 @@ u.formatar("olá")             // acesso com prefixo do módulo
 
 ## 10. Biblioteca padrão (embutidos)
 
-Funções globais da v0.1 (o "com todas as funções" cresce a partir daqui):
+### 10.1 Funções globais
 
 | Função | Descrição |
 |--------|-----------|
@@ -352,11 +352,24 @@ Funções globais da v0.1 (o "com todas as funções" cresce a partir daqui):
 | `leia()` | Lê uma linha da entrada como `texto` |
 | `tamanho(x)` | Comprimento de `texto`, `lista` ou `dicionario` |
 | `tipo(x)` | Nome do tipo de `x` como `texto` |
-| `paraTexto(x)` | Converte para `texto` |
-| `paraNumero(x)` | Converte `texto`/`logico` para `numero` (erro se inválido) |
 | `classeDe(x)` | Nome da classe de um `objeto` como `texto` |
+| `paraTexto(x)` | Converte para `texto` |
+| `paraNumero(x)` | Converte `texto`/`logico` para `numero` |
+| `paraInteiro(x)` | Converte para inteiro (trunca decimais) |
 
-**Métodos de coleção previstos** (Fase 2): `lista.adicione(x)`, `lista.remova(i)`, `dic.chaves()`, `dic.valores()`; módulos `texto`, `matematica`, `arquivo`.
+### 10.2 Matemática
+
+`raiz`, `absoluto`, `potencia(base, exp)`, `piso`, `teto`, `arredonde`, `aleatorio()`, `minimo(...)`, `maximo(...)`, `seno`, `cosseno`, `log`, e a constante `PI`.
+
+### 10.3 Arquivos
+
+`leiaArquivo(caminho)`, `escrevaArquivo(caminho, conteudo)`, `existeArquivo(caminho)`.
+
+### 10.4 Métodos (`.`)
+
+- **lista:** `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte(sep)`, `indiceDe`, `fatie(inicio, fim)`, `ordene`, `mapeie(f)`, `filtre(f)`, `reduza(inicial, f)`
+- **texto:** `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua(de, para)`, `divida(sep)`, `fatie(inicio, fim)`, `indiceDe(sub)`, `comecaCom`, `terminaCom`, `repita(n)`
+- **dicionario:** `chaves`, `valores`, `tem(chave)`, `remova(chave)`, `tamanho`
 
 ---
 

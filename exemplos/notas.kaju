@@ -1,0 +1,38 @@
+// Programa de exemplo usando a biblioteca padrão da kaju
+
+// Notas de uma turma
+var notas = [7.5, 4.0, 9.0, 6.5, 3.5, 8.0, 5.5]
+
+// Média usando reduza
+var soma = notas.reduza(0, funcao(acc, n) { retorne acc + n })
+var media = soma / tamanho(notas)
+escreva("Média da turma:", arredonde(media * 100) / 100)
+
+// Maior e menor nota (reduza combinando par a par)
+escreva("Maior nota:", notas.reduza(notas[0], funcao(a, b) { retorne maximo(a, b) }))
+escreva("Menor nota:", notas.reduza(notas[0], funcao(a, b) { retorne minimo(a, b) }))
+
+// Aprovados (nota >= 6) usando filtre
+var aprovados = notas.filtre(funcao(n) { retorne n >= 6 })
+escreva("Aprovados:", tamanho(aprovados), "de", tamanho(notas))
+
+// Notas ordenadas
+var ordenadas = notas.mapeie(funcao(n) { retorne n })
+ordenadas.ordene()
+escreva("Ordenadas:", ordenadas)
+
+// Relatório de texto
+var linhas = []
+para cada n em notas {
+    var situacao = "reprovado"
+    se n >= 6 { situacao = "aprovado" }
+    linhas.adicione("nota " + paraTexto(n) + ": " + situacao)
+}
+var relatorio = linhas.junte("\n")
+escreva("")
+escreva(relatorio)
+
+// Salva o relatório em arquivo
+escrevaArquivo("/tmp/kaju_relatorio.txt", relatorio)
+escreva("")
+escreva("Relatório salvo. Existe?", existeArquivo("/tmp/kaju_relatorio.txt"))

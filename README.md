@@ -18,11 +18,13 @@ Já funciona:
 - **Indexação** `a[i]` (leitura e atribuição) em listas, textos e dicionários
 - **Dicionários** `{"chave": valor}`
 - **Operador `.` + métodos** com encadeamento:
-  - lista: `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte`
-  - texto: `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua`, `divida`
+  - lista: `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte`, `indiceDe`, `fatie`, `ordene`, `mapeie`, `filtre`, `reduza`
+  - texto: `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua`, `divida`, `fatie`, `indiceDe`, `comecaCom`, `terminaCom`, `repita`
   - dicionário: `chaves`, `valores`, `tem`, `remova`, `tamanho`
-- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `paraTexto`, `paraNumero`
-- Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio` e a constante `PI`
+- Comparação `< > <= >=` entre textos (ordem alfabética), além de números
+- Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`
+- Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
+- Arquivos: `leiaArquivo`, `escrevaArquivo`, `existeArquivo`
 - **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
 - **Exceções**: `tente`/`capture`/`finalmente` e `lance`. O `capture (erro)` recebe um objeto com `.mensagem` e `.codigo`, e pega tanto o que você `lance` quanto os erros de runtime do interpretador (ex.: divisão por zero)
 - **Módulos**: `importe "arquivo.kaju"` traz os nomes para o escopo; `importe "arquivo.kaju" como m` cria um namespace `m.nome`. Caminhos relativos ao arquivo, com cache (cada módulo roda uma vez)
