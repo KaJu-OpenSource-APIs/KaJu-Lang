@@ -283,6 +283,29 @@ fn lacos_e_controle() {
 }
 
 #[test]
+fn desempacotamento() {
+    let (out, err, ok) = rodar(
+        r#"
+        var a, b = 1, 2
+        escreva(a, b)
+        a, b = b, a
+        escreva(a, b)
+        var x, y, z = [10, 20, 30]
+        escreva(x, y, z)
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "1 2\n2 1\n10 20 30\n");
+}
+
+#[test]
+fn erro_desempacotamento_tamanho() {
+    let (_, err, ok) = rodar("var a, b, c = [1, 2]");
+    assert!(!ok);
+    assert!(err.contains("erro[K022]"), "stderr: {err}");
+}
+
+#[test]
 fn parametros_padrao_e_variadicos() {
     let (out, err, ok) = rodar(
         r#"

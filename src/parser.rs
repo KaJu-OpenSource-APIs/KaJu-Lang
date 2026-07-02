@@ -183,6 +183,15 @@ impl Parser {
         }
     }
 
+    /// Lista de expressões separadas por vírgula (lado direito de um desempacotamento).
+    fn lista_valores(&mut self) -> Result<Vec<Expr>, Diagnostico> {
+        let mut valores = vec![self.expressao()?];
+        while self.casar(&TipoToken::Virgula) {
+            valores.push(self.expressao()?);
+        }
+        Ok(valores)
+    }
+
     fn decl_var(&mut self, constante: bool) -> Result<Cmd, Diagnostico> {
         let inicio = self.avancar(); // 'var' ou 'constante'
         let nome_tok = self.consumir(
@@ -192,6 +201,34 @@ impl Parser {
             "declare um nome aqui".into(),
         )?;
         let nome = nome_tok.lexema.clone();
+
+        // desempacotamento: var a, b = ...
+        if self.verificar(&TipoToken::Virgula) {
+            let mut nomes = vec![nome];
+            while self.casar(&TipoToken::Virgula) {
+                let n = self.consumir(
+                    &TipoToken::Identificador(String::new()),
+                    "K002",
+                    "esperava o nome de uma variável".into(),
+                    "nome da variável aqui".into(),
+                )?;
+                nomes.push(n.lexema.clone());
+            }
+            self.consumir(
+                &TipoToken::Igual,
+                "K003",
+                "esperava '=' após os nomes".into(),
+                "atribua os valores com '='".into(),
+            )?;
+            let valores = self.lista_valores()?;
+            return Ok(Cmd::DeclVarMulti {
+                nomes,
+                valores,
+                constante,
+                span: inicio.span,
+            });
+        }
+
         self.consumir(
             &TipoToken::Igual,
             "K003",
@@ -510,6 +547,35 @@ impl Parser {
             }
             _ => {
                 let e = self.expressao()?;
+                // reatribuição múltipla: a, b = b, a
+                if let Expr::Variavel(primeiro, span) = &e {
+                    if self.verificar(&TipoToken::Virgula) {
+                        let primeiro = primeiro.clone();
+                        let span = span.clone();
+                        let mut nomes = vec![primeiro];
+                        while self.casar(&TipoToken::Virgula) {
+                            let n = self.consumir(
+                                &TipoToken::Identificador(String::new()),
+                                "K022",
+                                "na atribuição múltipla, os alvos devem ser nomes de variáveis".into(),
+                                "esperava um nome aqui".into(),
+                            )?;
+                            nomes.push(n.lexema.clone());
+                        }
+                        self.consumir(
+                            &TipoToken::Igual,
+                            "K022",
+                            "esperava '=' na atribuição múltipla".into(),
+                            "ex.: a, b = b, a".into(),
+                        )?;
+                        let valores = self.lista_valores()?;
+                        return Ok(Cmd::AtribMulti {
+                            nomes,
+                            valores,
+                            span,
+                        });
+                    }
+                }
                 Ok(Cmd::Expressao(e))
             }
         }

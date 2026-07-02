@@ -172,6 +172,12 @@ se idade >= 18 e temCarteira {
 var contador = 0        // mutável
 constante PI = 3.14159  // imutável (reatribuir gera erro)
 contador = contador + 1
+contador += 1           // atribuição composta (+= -= *= /= %=)
+
+// desempacotamento
+var a, b = 1, 2         // paralelo
+a, b = b, a             // troca
+var x, y, z = [10, 20, 30]   // a partir de uma lista
 ```
 
 ### 5.2 Condicional

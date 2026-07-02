@@ -297,6 +297,44 @@ impl Interpretador {
                 amb.borrow_mut().definir(nome.clone(), Valor::Classe(classe), false);
                 Ok(Fluxo::Segue)
             }
+            Cmd::DeclVarMulti {
+                nomes,
+                valores,
+                constante,
+                ..
+            } => {
+                let vals = self.valores_multiplos(valores, amb, nomes.len())?;
+                for (nome, v) in nomes.iter().zip(vals) {
+                    amb.borrow_mut().definir(nome.clone(), v, *constante);
+                }
+                Ok(Fluxo::Segue)
+            }
+            Cmd::AtribMulti { nomes, valores, span } => {
+                // avalia TODOS os valores antes de atribuir (permite troca: a, b = b, a)
+                let vals = self.valores_multiplos(valores, amb, nomes.len())?;
+                for (nome, v) in nomes.iter().zip(vals) {
+                    match amb.borrow_mut().atribuir(nome, v) {
+                        ResultadoAtrib::Ok => {}
+                        ResultadoAtrib::Constante => {
+                            return Err(Diagnostico::novo(
+                                "K009",
+                                format!("não é possível reatribuir a constante '{}'", nome),
+                                span.clone(),
+                            )
+                            .com_rotulo("esta é uma constante"))
+                        }
+                        ResultadoAtrib::NaoExiste => {
+                            return Err(Diagnostico::novo(
+                                "K001",
+                                format!("a variável '{}' não foi definida", nome),
+                                span.clone(),
+                            )
+                            .com_ajuda(format!("use 'var {} = ...' para criá-la", nome)))
+                        }
+                    }
+                }
+                Ok(Fluxo::Segue)
+            }
             Cmd::Expressao(e) => {
                 self.avaliar(e, amb)?;
                 Ok(Fluxo::Segue)
@@ -508,6 +546,58 @@ impl Interpretador {
 
                 resultado
             }
+        }
+    }
+
+    /// Resolve os valores de um desempacotamento para `n` alvos: ou `n`
+    /// expressões (paralelo), ou uma única lista de tamanho `n` (destructuring).
+    fn valores_multiplos(
+        &mut self,
+        valores: &[Expr],
+        amb: &Rc<RefCell<Ambiente>>,
+        n: usize,
+    ) -> Result<Vec<Valor>, Diagnostico> {
+        if valores.len() == 1 && n > 1 {
+            // desempacota uma lista
+            let span = valores[0].span();
+            match self.avaliar(&valores[0], amb)? {
+                Valor::Lista(l) => {
+                    let itens = l.borrow();
+                    if itens.len() != n {
+                        return Err(Diagnostico::novo(
+                            "K022",
+                            format!(
+                                "esperava {} valores para desempacotar, mas a lista tem {}",
+                                n,
+                                itens.len()
+                            ),
+                            span,
+                        )
+                        .com_rotulo("tamanhos diferentes"));
+                    }
+                    Ok(itens.clone())
+                }
+                outro => Err(Diagnostico::novo(
+                    "K022",
+                    format!("não é possível desempacotar um '{}' (esperava uma lista de {})", outro.tipo_nome(), n),
+                    span,
+                )
+                .com_rotulo("isto não é uma lista")),
+            }
+        } else {
+            if valores.len() != n {
+                return Err(Diagnostico::novo(
+                    "K022",
+                    format!("são {} nomes mas {} valores", n, valores.len()),
+                    valores.first().map(|e| e.span()).unwrap_or_else(|| Span::novo(1, 1, 1)),
+                )
+                .com_rotulo("as quantidades precisam bater"));
+            }
+            let mut vs = Vec::with_capacity(n);
+            for e in valores {
+                vs.push(self.avaliar(e, amb)?);
+            }
+            Ok(vs)
         }
     }
 

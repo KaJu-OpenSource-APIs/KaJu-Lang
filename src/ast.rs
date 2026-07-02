@@ -186,6 +186,19 @@ pub enum Cmd {
         constante: bool,
         span: Span,
     },
+    // desempacotamento: var a, b = 1, 2  |  var a, b = umaLista
+    DeclVarMulti {
+        nomes: Vec<String>,
+        valores: Vec<Expr>,
+        constante: bool,
+        span: Span,
+    },
+    // reatribuição múltipla: a, b = b, a
+    AtribMulti {
+        nomes: Vec<String>,
+        valores: Vec<Expr>,
+        span: Span,
+    },
     DeclFuncao {
         nome: String,
         params: Vec<Parametro>,

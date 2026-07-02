@@ -29,7 +29,8 @@ Já funciona:
 - JSON: `paraJSON`, `deJSON`
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `arredondePara`, `aleatorio`, `minimo`, `maximo`, `seno`, `cosseno`, `log` e a constante `PI`
 - Arquivos: `leiaArquivo`, `escrevaArquivo`, `existeArquivo`
-- **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
+- **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`), chamadas à superclasse (`base.metodo()`), e **membros estáticos** (`estatico metodo`, `estatico campo`); `classeDe(obj)`
+- **Desempacotamento**: `var a, b = 1, 2`, troca `a, b = b, a`, e a partir de lista `var x, y = [1, 2]`
 - **Exceções**: `tente`/`capture`/`finalmente` e `lance`. O `capture (erro)` recebe um objeto com `.mensagem` e `.codigo`, e pega tanto o que você `lance` quanto os erros de runtime do interpretador (ex.: divisão por zero)
 - **Módulos**: `importe "arquivo.kaju"` traz os nomes para o escopo; `importe "arquivo.kaju" como m` cria um namespace `m.nome`. Caminhos relativos ao arquivo, com cache (cada módulo roda uma vez)
 - **Erros ricos em português** (estilo Rust): código do erro, trecho com `^^^^`, `nota:` e `ajuda:` com sugestão "você quis dizer X?"
