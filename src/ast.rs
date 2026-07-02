@@ -75,7 +75,9 @@ pub enum Expr {
         span: Span,
     },
     Novo {
-        classe: String,
+        /// Referência à classe: um nome (`Ponto`) ou um acesso qualificado
+        /// vindo de um módulo importado com `como` (`geo.Ponto`).
+        classe: Box<Expr>,
         args: Vec<Expr>,
         span: Span,
     },

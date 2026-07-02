@@ -1079,28 +1079,27 @@ impl Interpretador {
     /// Cria uma instância de uma classe, rodando o construtor se houver.
     fn instanciar(
         &mut self,
-        nome: &str,
+        classe_expr: &Expr,
         args_expr: &[Expr],
         amb: &Rc<RefCell<Ambiente>>,
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
-        let classe = match amb.borrow().obter(nome) {
-            Some(Valor::Classe(c)) => c,
-            Some(_) => {
+        // A classe pode ser um nome simples (`Ponto`) ou qualificado
+        // por um módulo importado com `como` (`geo.Ponto`).
+        let classe = match self.avaliar(classe_expr, amb)? {
+            Valor::Classe(c) => c,
+            outro => {
+                let nome = match classe_expr {
+                    Expr::Variavel(n, _) => n.clone(),
+                    Expr::Acesso { membro, .. } => membro.clone(),
+                    _ => outro.tipo_nome().to_string(),
+                };
                 return Err(Diagnostico::novo(
                     "K218",
                     format!("'{}' não é uma classe", nome),
                     span.clone(),
                 )
-                .com_rotulo("só é possível usar 'novo' com uma classe"))
-            }
-            None => {
-                return Err(Diagnostico::novo(
-                    "K218",
-                    format!("a classe '{}' não foi definida", nome),
-                    span.clone(),
-                )
-                .com_rotulo("esta classe não existe"))
+                .com_rotulo("só é possível usar 'novo' com uma classe"));
             }
         };
 
@@ -1124,7 +1123,7 @@ impl Interpretador {
                     "K201",
                     format!(
                         "a classe '{}' não tem construtor, mas recebeu {} argumento(s)",
-                        nome,
+                        classe.nome,
                         vals.len()
                     ),
                     span.clone(),

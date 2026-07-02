@@ -755,6 +755,24 @@ fn importe_traz_nomes_e_alias() {
 }
 
 #[test]
+fn novo_com_classe_de_modulo_com_alias() {
+    let modulo = r#"
+        classe Ponto { construtor(x, y) { isto.x = x  isto.y = y } }
+    "#;
+    let principal = r#"
+        importe "mod.kaju" como geo
+        var p = novo geo.Ponto(3, 4)
+        escreva(p.x, p.y)
+    "#;
+    let (out, err, ok) = rodar_projeto(
+        &[("mod.kaju", modulo), ("principal.kaju", principal)],
+        "principal.kaju",
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "3 4\n");
+}
+
+#[test]
 fn erro_importe_arquivo_inexistente() {
     let (_, err, ok) = rodar(r#"importe "naoexiste.kaju""#);
     assert!(!ok);

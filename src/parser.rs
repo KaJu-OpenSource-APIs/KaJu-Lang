@@ -1217,12 +1217,28 @@ impl Parser {
             }
             TipoToken::Novo => {
                 self.avancar();
-                let classe = self.consumir(
+                let ini = self.consumir(
                     &TipoToken::Identificador(String::new()),
                     "K014",
                     "esperava o nome da classe após 'novo'".into(),
                     "escreva o nome da classe aqui".into(),
                 )?;
+                // Referência à classe: nome simples ou qualificado (`geo.Ponto`).
+                let mut classe = Expr::Variavel(ini.lexema.clone(), ini.span.clone());
+                while self.casar(&TipoToken::Ponto) {
+                    let membro = self.consumir(
+                        &TipoToken::Identificador(String::new()),
+                        "K011",
+                        "esperava o nome da classe após '.'".into(),
+                        "escreva o nome do membro aqui".into(),
+                    )?;
+                    let span = unir_span(&classe.span(), &membro.span);
+                    classe = Expr::Acesso {
+                        alvo: Box::new(classe),
+                        membro: membro.lexema.clone(),
+                        span,
+                    };
+                }
                 self.consumir(
                     &TipoToken::ParenEsq,
                     "K014",
@@ -1246,7 +1262,7 @@ impl Parser {
                 )?;
                 let span = unir_span(&tok.span, &fim.span);
                 Ok(Expr::Novo {
-                    classe: classe.lexema.clone(),
+                    classe: Box::new(classe),
                     args,
                     span,
                 })
