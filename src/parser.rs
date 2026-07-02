@@ -345,12 +345,15 @@ impl Parser {
     }
 
     fn cmd_se(&mut self) -> Result<Cmd, Diagnostico> {
-        self.avancar(); // 'se'
+        self.avancar(); // 'se' ou 'senaose'
         let condicao = self.expressao()?;
         let entao = self.bloco()?;
-        let senao = if self.casar(&TipoToken::Senao) {
+        let senao = if self.verificar(&TipoToken::SenaoSe) {
+            // 'senaose' encadeia outro se (palavra única)
+            Some(vec![self.cmd_se()?])
+        } else if self.casar(&TipoToken::Senao) {
             if self.verificar(&TipoToken::Se) {
-                // "senao se" -> encadeia como um único comando no bloco senao
+                // 'senao se' (duas palavras) também é aceito
                 Some(vec![self.cmd_se()?])
             } else {
                 Some(self.bloco()?)

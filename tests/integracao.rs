@@ -68,6 +68,24 @@ fn aritmetica_e_concatenacao() {
 }
 
 #[test]
+fn senaose_palavra_unica_e_legado() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao c(n) {
+            se n >= 90 { retorne "A" }
+            senaose n >= 80 { retorne "B" }
+            senao { retorne "C" }
+        }
+        escreva(c(95), c(85), c(50))
+        var x = 5
+        se x > 10 { escreva("g") } senao se x > 3 { escreva("m") } senao { escreva("p") }
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "A B C\nm\n");
+}
+
+#[test]
 fn condicional_e_logica() {
     let (out, _, ok) = rodar(
         r#"
