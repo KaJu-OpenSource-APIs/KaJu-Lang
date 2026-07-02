@@ -863,3 +863,22 @@ fn erro_constante_reatribuida() {
     assert!(!ok);
     assert!(err.contains("erro[K009]"), "stderr: {err}");
 }
+
+#[test]
+fn igualdade_estrutural_de_listas_e_dicionarios() {
+    let (out, err, ok) = rodar(
+        r#"escreva([1, 2] == [1, 2])
+escreva([1, 2] == [1, 3])
+escreva({"a": 1, "b": 2} == {"b": 2, "a": 1})
+escreva([[1], [2]] == [[1], [2]])"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "verdadeiro\nfalso\nverdadeiro\nverdadeiro\n");
+}
+
+#[test]
+fn erro_estouro_de_inteiro() {
+    let (_, err, ok) = rodar("escreva(9223372036854775807 + 1)");
+    assert!(!ok);
+    assert!(err.contains("erro[K222]"), "stderr: {err}");
+}

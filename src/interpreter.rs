@@ -1360,10 +1360,21 @@ impl Interpretador {
         ff: impl Fn(f64, f64) -> f64,
     ) -> Result<Valor, Diagnostico> {
         match (a, b) {
-            (Valor::Inteiro(x), Valor::Inteiro(y)) => Ok(match fi(*x, *y) {
-                Some(r) => Valor::Inteiro(r),
-                None => Valor::Decimal(ff(*x as f64, *y as f64)), // estouro -> decimal
-            }),
+            (Valor::Inteiro(x), Valor::Inteiro(y)) => match fi(*x, *y) {
+                Some(r) => Ok(Valor::Inteiro(r)),
+                None => Err(Diagnostico::novo(
+                    "K222",
+                    format!(
+                        "estouro de inteiro em '{} {} {}': o resultado passou do alcance dos inteiros",
+                        x, simbolo, y
+                    ),
+                    span.clone(),
+                )
+                .com_rotulo("esta operação estoura o inteiro")
+                .com_nota(
+                    "inteiros vão de -9223372036854775808 a 9223372036854775807",
+                )),
+            },
             _ => match (a.como_f64(), b.como_f64()) {
                 (Some(x), Some(y)) => Ok(Valor::Decimal(ff(x, y))),
                 _ => Err(self.erro_tipos(simbolo, a, b, span)),

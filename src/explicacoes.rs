@@ -681,6 +681,23 @@ Correto:
 
 Veja também: K220.",
 
+        "K222" => "\
+K222 — estouro de inteiro
+
+Uma operação com inteiros (soma, subtração ou multiplicação) produziu um valor
+fora do alcance dos inteiros, que vão de -9223372036854775808 a
+9223372036854775807. Em vez de perder precisão silenciosamente, o kaju para e
+avisa.
+
+Errado:
+    var x = 9223372036854775807 + 1
+
+Como evitar:
+    // trabalhe com decimais quando esperar números muito grandes
+    var x = 9223372036854775807.0 + 1.0
+
+Veja também: K020.",
+
         "K230" => "\
 K230 — erro lançado e não capturado
 
@@ -712,7 +729,7 @@ pub fn codigos_conhecidos() -> &'static [&'static str] {
         "K019", "K020", "K021", "K022", "K101", "K102", "K103", "K104", "K201",
         "K202", "K203", "K204", "K205", "K206", "K207", "K208", "K209", "K210",
         "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218", "K220",
-        "K221", "K230",
+        "K221", "K222", "K230",
     ]
 }
 

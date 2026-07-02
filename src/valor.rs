@@ -190,8 +190,21 @@ impl Valor {
             (Valor::Texto(a), Valor::Texto(b)) => a == b,
             (Valor::Logico(a), Valor::Logico(b)) => a == b,
             (Valor::Nulo, Valor::Nulo) => true,
-            (Valor::Lista(a), Valor::Lista(b)) => Rc::ptr_eq(a, b),
-            (Valor::Dicionario(a), Valor::Dicionario(b)) => Rc::ptr_eq(a, b),
+            // Listas e dicionários comparam por conteúdo (o mesmo objeto,
+            // via ptr_eq, é um atalho rápido que também evita ciclos triviais).
+            (Valor::Lista(a), Valor::Lista(b)) => {
+                Rc::ptr_eq(a, b) || {
+                    let (a, b) = (a.borrow(), b.borrow());
+                    a.len() == b.len() && a.iter().zip(b.iter()).all(|(x, y)| x.igual(y))
+                }
+            }
+            (Valor::Dicionario(a), Valor::Dicionario(b)) => {
+                Rc::ptr_eq(a, b) || {
+                    let (a, b) = (a.borrow(), b.borrow());
+                    a.len() == b.len()
+                        && a.iter().all(|(k, v)| b.get(k).is_some_and(|w| v.igual(w)))
+                }
+            }
             (Valor::Funcao(a), Valor::Funcao(b)) => Rc::ptr_eq(a, b),
             (Valor::Nativa(a), Valor::Nativa(b)) => Rc::ptr_eq(a, b),
             (Valor::Classe(a), Valor::Classe(b)) => Rc::ptr_eq(a, b),
