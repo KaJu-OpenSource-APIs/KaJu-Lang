@@ -1,7 +1,8 @@
 //! Testes de integração: rodam programas .kaju de verdade e conferem a saída.
 //! Esta é a garantia de que os exemplos da documentação nunca ficam desatualizados.
 
-use std::process::Command;
+use std::io::Write;
+use std::process::{Command, Stdio};
 
 /// Roda uma fonte kaju gravando num arquivo temporário e devolve (stdout, stderr, sucesso).
 fn rodar(fonte: &str) -> (String, String, bool) {
@@ -18,6 +19,32 @@ fn rodar(fonte: &str) -> (String, String, bool) {
     (
         String::from_utf8_lossy(&saida.stdout).to_string(),
         String::from_utf8_lossy(&saida.stderr).to_string(),
+        saida.status.success(),
+    )
+}
+
+/// Roda uma fonte kaju alimentando `entrada` no stdin.
+fn rodar_com_entrada(fonte: &str, entrada: &str) -> (String, bool) {
+    let bin = env!("CARGO_BIN_EXE_kaju");
+    let dir = std::env::temp_dir();
+    let caminho = dir.join(format!("kaju_in_{:x}.kaju", hash(fonte)));
+    std::fs::write(&caminho, fonte).unwrap();
+    let mut filho = Command::new(bin)
+        .arg(&caminho)
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .spawn()
+        .unwrap();
+    filho
+        .stdin
+        .take()
+        .unwrap()
+        .write_all(entrada.as_bytes())
+        .unwrap();
+    let saida = filho.wait_with_output().unwrap();
+    let _ = std::fs::remove_file(&caminho);
+    (
+        String::from_utf8_lossy(&saida.stdout).to_string(),
         saida.status.success(),
     )
 }
@@ -45,6 +72,20 @@ fn rodar_projeto(arquivos: &[(&str, &str)], principal: &str) -> (String, String,
         String::from_utf8_lossy(&saida.stderr).to_string(),
         saida.status.success(),
     )
+}
+
+#[test]
+fn io_terminal_pergunte_e_sem_quebra() {
+    let fonte = r#"
+        escrevaSemQuebra("a", "b")
+        escreva("c")
+        var nome = pergunte("nome? ")
+        escreva("oi " + nome)
+    "#;
+    let (out, ok) = rodar_com_entrada(fonte, "Ana\n");
+    assert!(ok);
+    // "a b" sem quebra, depois "c\n"; a pergunta imprime "nome? " sem quebra
+    assert_eq!(out, "a bc\nnome? oi Ana\n");
 }
 
 #[test]

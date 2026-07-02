@@ -12,7 +12,9 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     let mut a = amb.borrow_mut();
     // Núcleo
     registrar_uma(&mut a, "escreva", escreva);
+    registrar_uma(&mut a, "escrevaSemQuebra", escreva_sem_quebra);
     registrar_uma(&mut a, "leia", leia);
+    registrar_uma(&mut a, "pergunte", pergunte);
     registrar_uma(&mut a, "tamanho", tamanho);
     registrar_uma(&mut a, "tipo", tipo);
     registrar_uma(&mut a, "classeDe", classe_de);
@@ -123,18 +125,45 @@ fn para_numero(args: Vec<Valor>) -> Result<Valor, String> {
     }
 }
 
-fn leia(args: Vec<Valor>) -> Result<Valor, String> {
-    if !args.is_empty() {
-        return Err(format!("'leia' não espera argumentos, mas recebeu {}", args.len()));
-    }
+fn escreva_sem_quebra(args: Vec<Valor>) -> Result<Valor, String> {
+    use std::io::Write;
+    let partes: Vec<String> = args.iter().map(|v| v.para_texto()).collect();
+    print!("{}", partes.join(" "));
+    let _ = std::io::stdout().flush();
+    Ok(Valor::Nulo)
+}
+
+fn ler_linha() -> Result<String, String> {
     use std::io::BufRead;
     let mut linha = String::new();
     std::io::stdin()
         .lock()
         .read_line(&mut linha)
         .map_err(|e| format!("erro ao ler a entrada: {}", e))?;
-    let limpa = linha.trim_end_matches(['\n', '\r']).to_string();
-    Ok(Valor::Texto(limpa))
+    Ok(linha.trim_end_matches(['\n', '\r']).to_string())
+}
+
+fn leia(args: Vec<Valor>) -> Result<Valor, String> {
+    if !args.is_empty() {
+        return Err(format!("'leia' não espera argumentos, mas recebeu {}", args.len()));
+    }
+    Ok(Valor::Texto(ler_linha()?))
+}
+
+/// pergunte(texto) -> mostra o texto (sem quebra) e lê uma linha da entrada.
+fn pergunte(args: Vec<Valor>) -> Result<Valor, String> {
+    if args.len() > 1 {
+        return Err(format!(
+            "'pergunte' espera no máximo 1 argumento (a pergunta), mas recebeu {}",
+            args.len()
+        ));
+    }
+    if let Some(p) = args.first() {
+        use std::io::Write;
+        print!("{}", p.para_texto());
+        let _ = std::io::stdout().flush();
+    }
+    Ok(Valor::Texto(ler_linha()?))
 }
 
 // ---- Arquivos ----
