@@ -1,0 +1,241 @@
+//! Testes de integração: rodam programas .kaju de verdade e conferem a saída.
+//! Esta é a garantia de que os exemplos da documentação nunca ficam desatualizados.
+
+use std::process::Command;
+
+/// Roda uma fonte kaju gravando num arquivo temporário e devolve (stdout, stderr, sucesso).
+fn rodar(fonte: &str) -> (String, String, bool) {
+    let bin = env!("CARGO_BIN_EXE_kaju");
+    let dir = std::env::temp_dir();
+    // nome de arquivo único por conteúdo, sem depender de aleatoriedade
+    let nome = format!("kaju_teste_{:x}.kaju", hash(fonte));
+    let caminho = dir.join(nome);
+    std::fs::write(&caminho, fonte).unwrap();
+
+    let saida = Command::new(bin).arg(&caminho).output().unwrap();
+    let _ = std::fs::remove_file(&caminho);
+
+    (
+        String::from_utf8_lossy(&saida.stdout).to_string(),
+        String::from_utf8_lossy(&saida.stderr).to_string(),
+        saida.status.success(),
+    )
+}
+
+fn hash(s: &str) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut h = std::collections::hash_map::DefaultHasher::new();
+    s.hash(&mut h);
+    h.finish()
+}
+
+#[test]
+fn ola_mundo() {
+    let (out, _, ok) = rodar(r#"escreva("Olá, mundo!")"#);
+    assert!(ok);
+    assert_eq!(out.trim(), "Olá, mundo!");
+}
+
+#[test]
+fn aritmetica_e_concatenacao() {
+    let (out, _, ok) = rodar(
+        r#"
+        escreva(2 + 3 * 4)
+        escreva("total: " + 7)
+        escreva(10 % 3)
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "14\ntotal: 7\n1\n");
+}
+
+#[test]
+fn condicional_e_logica() {
+    let (out, _, ok) = rodar(
+        r#"
+        var idade = 20
+        se idade >= 18 e nao (idade > 65) {
+            escreva("adulto")
+        } senao {
+            escreva("outro")
+        }
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out.trim(), "adulto");
+}
+
+#[test]
+fn lacos_e_controle() {
+    let (out, _, ok) = rodar(
+        r#"
+        var soma = 0
+        para i de 1 ate 5 { soma = soma + i }
+        escreva(soma)
+        para cada x em [10, 20, 30] { escreva(x) }
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "15\n10\n20\n30\n");
+}
+
+#[test]
+fn funcoes_e_closures() {
+    let (out, _, ok) = rodar(
+        r#"
+        funcao criar() {
+            var t = 0
+            retorne funcao() { t = t + 1  retorne t }
+        }
+        var p = criar()
+        escreva(p(), p(), p())
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out.trim(), "1 2 3");
+}
+
+#[test]
+fn indexacao_lista_e_texto() {
+    let (out, _, ok) = rodar(
+        r#"
+        var l = [10, 20, 30]
+        escreva(l[0], l[2])
+        l[1] = 99
+        escreva(l)
+        var p = "caju"
+        escreva(p[0])
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "10 30\n[10, 99, 30]\nc\n");
+}
+
+#[test]
+fn dicionarios() {
+    let (out, _, ok) = rodar(
+        r#"
+        var d = {"nome": "Ana", "idade": 30}
+        escreva(d["nome"])
+        d["idade"] = 31
+        d["cidade"] = "Recife"
+        escreva(tamanho(d))
+        para cada c em d { escreva(c) }
+    "#,
+    );
+    assert!(ok);
+    // chaves ordenadas: cidade, idade, nome
+    assert_eq!(out, "Ana\n3\ncidade\nidade\nnome\n");
+}
+
+#[test]
+fn metodos_de_lista() {
+    let (out, _, ok) = rodar(
+        r#"
+        var l = [3, 1, 2]
+        l.adicione(4)
+        escreva(l.tamanho())
+        escreva(l.contem(2))
+        l.inverta()
+        escreva(l.junte("-"))
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "4\nverdadeiro\n4-2-1-3\n");
+}
+
+#[test]
+fn metodos_de_texto() {
+    let (out, _, ok) = rodar(
+        r#"
+        escreva("  oi  ".apara().maiusculas())
+        escreva("a,b,c".divida(",").junte("+"))
+        escreva("caju".contem("aj"))
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "OI\na+b+c\nverdadeiro\n");
+}
+
+#[test]
+fn metodos_de_dicionario() {
+    let (out, _, ok) = rodar(
+        r#"
+        var d = {"b": 2, "a": 1}
+        escreva(d.chaves())
+        escreva(d.valores())
+        escreva(d.tem("a"))
+        d.remova("b")
+        escreva(d.tamanho())
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "[a, b]\n[1, 2]\nverdadeiro\n1\n");
+}
+
+#[test]
+fn matematica() {
+    let (out, _, ok) = rodar(
+        r#"
+        escreva(raiz(16))
+        escreva(piso(3.7), teto(3.2))
+        escreva(potencia(2, 10))
+        escreva(absoluto(0 - 5))
+        var r = aleatorio()
+        escreva(r >= 0 e r < 1)
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "4\n3 4\n1024\n5\nverdadeiro\n");
+}
+
+#[test]
+fn erro_metodo_inexistente() {
+    let (_, err, ok) = rodar("var l = [1]\nl.gire()");
+    assert!(!ok);
+    assert!(err.contains("erro[K212]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_indice_fora_da_lista() {
+    let (_, err, ok) = rodar("var l = [1, 2]\nescreva(l[5])");
+    assert!(!ok);
+    assert!(err.contains("erro[K206]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_chave_inexistente() {
+    let (_, err, ok) = rodar(r#"var d = {"a": 1}
+escreva(d["b"])"#);
+    assert!(!ok);
+    assert!(err.contains("erro[K208]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_variavel_indefinida_sugere() {
+    let (_, err, ok) = rodar("var idade = 1\nescreva(idde)");
+    assert!(!ok);
+    assert!(err.contains("erro[K001]"), "stderr: {err}");
+    assert!(err.contains("você quis dizer 'idade'"), "stderr: {err}");
+}
+
+#[test]
+fn erro_tipos_incompativeis() {
+    let (_, err, ok) = rodar(r#""abc" - 1"#);
+    assert!(!ok);
+    assert!(err.contains("erro[K012]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_divisao_por_zero() {
+    let (_, err, ok) = rodar("escreva(1 / 0)");
+    assert!(!ok);
+    assert!(err.contains("erro[K020]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_constante_reatribuida() {
+    let (_, err, ok) = rodar("constante PI = 3.14\nPI = 4");
+    assert!(!ok);
+    assert!(err.contains("erro[K009]"), "stderr: {err}");
+}

@@ -1,0 +1,23 @@
+// Listas e indexação
+var nums = [10, 20, 30]
+escreva("primeiro:", nums[0])
+escreva("último:", nums[2])
+nums[1] = 99
+escreva("depois de alterar:", nums)
+
+// Texto indexável
+var palavra = "caju"
+escreva("primeira letra:", palavra[0])
+
+// Dicionários
+var pessoa = {"nome": "Ana", "idade": 30}
+escreva("nome:", pessoa["nome"])
+pessoa["idade"] = 31
+pessoa["cidade"] = "Recife"
+escreva("pessoa:", pessoa)
+escreva("campos:", tamanho(pessoa))
+
+// Iterar dicionário (pelas chaves, ordenadas)
+para cada chave em pessoa {
+    escreva(chave, "=>", pessoa[chave])
+}

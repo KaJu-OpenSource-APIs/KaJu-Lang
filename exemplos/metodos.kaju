@@ -1,0 +1,30 @@
+// Métodos de lista
+var l = [3, 1, 2]
+l.adicione(4)
+escreva("depois de adicionar:", l)
+escreva("contém 2?", l.contem(2))
+var removido = l.remova(0)
+escreva("removi:", removido, "| sobrou:", l)
+l.inverta()
+escreva("invertida:", l)
+escreva("juntada:", l.junte(" - "))
+
+// Métodos de texto
+var frase = "  Olá Mundo Kaju  "
+escreva("aparada:", frase.apara())
+escreva("maiúsculas:", frase.apara().maiusculas())
+escreva("contém 'Mundo'?", frase.contem("Mundo"))
+escreva("substituída:", "caju,manga,uva".substitua(",", " | "))
+var partes = "caju,manga,uva".divida(",")
+escreva("dividida:", partes, "| qtde:", tamanho(partes))
+
+// Métodos de dicionário
+var d = {"b": 2, "a": 1, "c": 3}
+escreva("chaves:", d.chaves())
+escreva("valores:", d.valores())
+escreva("tem 'a'?", d.tem("a"))
+d.remova("b")
+escreva("após remover b:", d)
+
+// Encadeamento (o . reaproveitável pela OOP)
+escreva("encadeado:", "a,b,c".divida(",").junte("+").maiusculas())

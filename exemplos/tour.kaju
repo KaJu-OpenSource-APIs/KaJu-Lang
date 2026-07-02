@@ -1,0 +1,53 @@
+// Passeio pelos recursos da Fase 1 da kaju
+
+funcao saudar(nome) {
+    retorne "Olá, " + nome + "!"
+}
+
+var idade = 20
+se idade >= 18 {
+    escreva(saudar("Ana"))
+} senao {
+    escreva("Menor de idade")
+}
+
+// laço para cada sobre lista
+var frutas = ["caju", "manga", "acerola"]
+para cada fruta em frutas {
+    escreva(fruta)
+}
+
+// laço numérico e acumulador
+var soma = 0
+para i de 1 ate 5 {
+    soma = soma + i
+}
+escreva("Soma de 1 a 5:", soma)
+
+// enquanto com pare e continue
+var n = 0
+enquanto verdadeiro {
+    n = n + 1
+    se n == 3 { continue }
+    se n > 5 { pare }
+    escreva("n =", n)
+}
+
+// funções de primeira classe e closures
+funcao criarContador() {
+    var total = 0
+    retorne funcao() {
+        total = total + 1
+        retorne total
+    }
+}
+var proximo = criarContador()
+escreva("contador:", proximo(), proximo(), proximo())
+
+// operadores lógicos em português
+var maior = idade >= 18 e nao (idade > 65)
+escreva("adulto em idade produtiva:", maior)
+
+// embutidos
+escreva("tipo de frutas:", tipo(frutas))
+escreva("quantidade de frutas:", tamanho(frutas))
