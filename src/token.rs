@@ -105,7 +105,8 @@ pub enum TipoToken {
     Virgula,
     DoisPontos,
     Ponto,
-    Reticencias, // ...
+    Reticencias,   // ...
+    Interrogacao,  // ?
 
     FimDeArquivo,
 }

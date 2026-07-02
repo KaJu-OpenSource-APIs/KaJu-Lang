@@ -642,7 +642,7 @@ impl Parser {
     }
 
     fn atribuicao(&mut self) -> Result<Expr, Diagnostico> {
-        let esq = self.ou_logico()?;
+        let esq = self.ternario()?;
 
         // atribuição simples: alvo = valor
         if self.verificar(&TipoToken::Igual) {
@@ -712,6 +712,29 @@ impl Parser {
             )
             .com_rotulo("o lado esquerdo precisa ser um nome, um acesso com [] ou um campo")),
         }
+    }
+
+    /// Expressão condicional: `condicao ? entao : senao`.
+    fn ternario(&mut self) -> Result<Expr, Diagnostico> {
+        let condicao = self.ou_logico()?;
+        if self.casar(&TipoToken::Interrogacao) {
+            let entao = self.ternario()?;
+            self.consumir(
+                &TipoToken::DoisPontos,
+                "K019",
+                "esperava ':' no operador condicional".into(),
+                "use 'condicao ? valorSeVerdadeiro : valorSeFalso'".into(),
+            )?;
+            let senao = self.ternario()?;
+            let span = unir_span(&condicao.span(), &senao.span());
+            return Ok(Expr::Ternario {
+                condicao: Box::new(condicao),
+                entao: Box::new(entao),
+                senao: Box::new(senao),
+                span,
+            });
+        }
+        Ok(condicao)
     }
 
     fn ou_logico(&mut self) -> Result<Expr, Diagnostico> {

@@ -575,6 +575,18 @@ impl Interpretador {
                     }
                 }
             }
+            Expr::Ternario {
+                condicao,
+                entao,
+                senao,
+                ..
+            } => {
+                if self.avaliar(condicao, amb)?.eh_verdadeiro() {
+                    self.avaliar(entao, amb)
+                } else {
+                    self.avaliar(senao, amb)
+                }
+            }
             Expr::Atribuicao { nome, valor, span } => {
                 let v = self.avaliar(valor, amb)?;
                 match amb.borrow_mut().atribuir(nome, v.clone()) {

@@ -169,6 +169,19 @@ fn interpolacao_de_texto() {
 }
 
 #[test]
+fn operador_ternario() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(20 >= 18 ? "adulto" : "menor")
+        var x = 0
+        escreva(x > 0 ? "pos" : x < 0 ? "neg" : "zero")
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "adulto\nzero\n");
+}
+
+#[test]
 fn atribuicao_composta() {
     let (out, err, ok) = rodar(
         r#"
