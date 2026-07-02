@@ -17,6 +17,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "classeDe", classe_de);
     registrar_uma(&mut a, "paraTexto", para_texto);
     registrar_uma(&mut a, "paraNumero", para_numero);
+    registrar_uma(&mut a, "paraInteiro", para_inteiro);
     // Matemática (na Fase 2 vira o módulo 'matematica' via importe)
     registrar_uma(&mut a, "raiz", raiz);
     registrar_uma(&mut a, "absoluto", absoluto);
@@ -25,6 +26,11 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "teto", teto);
     registrar_uma(&mut a, "arredonde", arredonde);
     registrar_uma(&mut a, "aleatorio", aleatorio);
+    registrar_uma(&mut a, "minimo", minimo);
+    registrar_uma(&mut a, "maximo", maximo);
+    registrar_uma(&mut a, "seno", seno);
+    registrar_uma(&mut a, "cosseno", cosseno);
+    registrar_uma(&mut a, "log", log);
     a.definir("PI", Valor::Decimal(std::f64::consts::PI), true);
 }
 
@@ -177,6 +183,65 @@ fn aleatorio(args: Vec<Valor>) -> Result<Valor, String> {
         return Err(format!("'aleatorio' não espera argumentos, mas recebeu {}", args.len()));
     }
     Ok(Valor::Decimal(proximo_aleatorio()))
+}
+
+fn para_inteiro(args: Vec<Valor>) -> Result<Valor, String> {
+    match um_argumento("paraInteiro", &args)? {
+        Valor::Inteiro(i) => Ok(Valor::Inteiro(*i)),
+        Valor::Decimal(f) => Ok(Valor::Inteiro(f.trunc() as i64)), // trunca em direção a zero
+        Valor::Logico(b) => Ok(Valor::Inteiro(if *b { 1 } else { 0 })),
+        Valor::Texto(t) => t
+            .trim()
+            .parse::<i64>()
+            .map(Valor::Inteiro)
+            .map_err(|_| format!("não consegui converter o texto \"{}\" em inteiro", t)),
+        outro => Err(format!(
+            "não é possível converter um '{}' em inteiro",
+            outro.tipo_nome()
+        )),
+    }
+}
+
+/// Preserva inteiro quando ambos são inteiros; senão decimal.
+fn extremo(nome: &str, args: &[Valor], escolher_maior: bool) -> Result<Valor, String> {
+    if args.len() < 2 {
+        return Err(format!("'{}' espera pelo menos 2 números", nome));
+    }
+    let mut melhor = args[0].clone();
+    let mut melhor_f = como_numero(nome, &args[0])?;
+    for v in &args[1..] {
+        let f = como_numero(nome, v)?;
+        let troca = if escolher_maior { f > melhor_f } else { f < melhor_f };
+        if troca {
+            melhor = v.clone();
+            melhor_f = f;
+        }
+    }
+    Ok(melhor)
+}
+
+fn minimo(args: Vec<Valor>) -> Result<Valor, String> {
+    extremo("minimo", &args, false)
+}
+
+fn maximo(args: Vec<Valor>) -> Result<Valor, String> {
+    extremo("maximo", &args, true)
+}
+
+fn seno(args: Vec<Valor>) -> Result<Valor, String> {
+    Ok(Valor::Decimal(um_numero("seno", &args)?.sin()))
+}
+
+fn cosseno(args: Vec<Valor>) -> Result<Valor, String> {
+    Ok(Valor::Decimal(um_numero("cosseno", &args)?.cos()))
+}
+
+fn log(args: Vec<Valor>) -> Result<Valor, String> {
+    let x = um_numero("log", &args)?;
+    if x <= 0.0 {
+        return Err("'log' só aceita números positivos".into());
+    }
+    Ok(Valor::Decimal(x.ln()))
 }
 
 /// Gerador pseudoaleatório simples (xorshift64) com semente do relógio.

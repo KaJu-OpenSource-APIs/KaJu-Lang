@@ -271,6 +271,21 @@ fn inteiro_e_decimal() {
 }
 
 #[test]
+fn numeros_e_matematica_extra() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(paraInteiro(3.9))
+        escreva(paraInteiro("42"))
+        escreva(minimo(5, 2, 8, 1))
+        escreva(maximo(5, 2, 8, 1))
+        escreva(seno(0), cosseno(0))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "3\n42\n1\n8\n0.0 1.0\n");
+}
+
+#[test]
 fn matematica() {
     let (out, _, ok) = rodar(
         r#"
