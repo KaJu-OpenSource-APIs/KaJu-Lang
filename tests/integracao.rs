@@ -68,6 +68,27 @@ fn aritmetica_e_concatenacao() {
 }
 
 #[test]
+fn erro_pare_fora_de_laco() {
+    let (_, err, ok) = rodar("escreva(1)\npare");
+    assert!(!ok);
+    assert!(err.contains("erro[K016]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_retorne_fora_de_funcao() {
+    let (_, err, ok) = rodar("retorne 5");
+    assert!(!ok);
+    assert!(err.contains("erro[K016]"), "stderr: {err}");
+}
+
+#[test]
+fn pare_dentro_de_funcao_sem_laco_falha() {
+    let (_, err, ok) = rodar("funcao f() { pare }\nf()");
+    assert!(!ok);
+    assert!(err.contains("erro[K016]"), "stderr: {err}");
+}
+
+#[test]
 fn senaose_palavra_unica_e_legado() {
     let (out, err, ok) = rodar(
         r#"

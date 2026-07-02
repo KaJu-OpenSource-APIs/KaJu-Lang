@@ -7,6 +7,10 @@ use crate::token::{Span, TipoToken, Token};
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
+    /// Profundidade de laços aninhados (para validar 'pare'/'continue').
+    prof_laco: usize,
+    /// Profundidade de funções aninhadas (para validar 'retorne').
+    prof_funcao: usize,
 }
 
 /// Une dois spans na mesma linha em um só (para apontar a expressão inteira).
@@ -40,7 +44,12 @@ fn descricao(tipo: &TipoToken) -> String {
 
 impl Parser {
     pub fn novo(tokens: Vec<Token>) -> Self {
-        Parser { tokens, pos: 0 }
+        Parser {
+            tokens,
+            pos: 0,
+            prof_laco: 0,
+            prof_funcao: 0,
+        }
     }
 
     fn atual(&self) -> &Token {
@@ -146,7 +155,7 @@ impl Parser {
         let nome_tok = self.avancar(); // já sabemos que é Identificador
         let nome = nome_tok.lexema.clone();
         let params = self.lista_parametros()?;
-        let corpo = self.bloco()?;
+        let corpo = self.corpo_funcao()?;
         Ok(Cmd::DeclFuncao {
             nome,
             params,
@@ -217,7 +226,7 @@ impl Parser {
                 TipoToken::Construtor => {
                     self.avancar();
                     let params = self.lista_parametros()?;
-                    let corpo = self.bloco()?;
+                    let corpo = self.corpo_funcao()?;
                     construtor = Some(MetodoDef {
                         nome: "construtor".into(),
                         params,
@@ -233,7 +242,7 @@ impl Parser {
                         "nome do método aqui".into(),
                     )?;
                     let params = self.lista_parametros()?;
-                    let corpo = self.bloco()?;
+                    let corpo = self.corpo_funcao()?;
                     metodos.push(MetodoDef {
                         nome: nome_m.lexema.clone(),
                         params,
@@ -299,6 +308,26 @@ impl Parser {
         Ok(params)
     }
 
+    /// Analisa o corpo de um laço, marcando o contexto para 'pare'/'continue'.
+    fn corpo_laco(&mut self) -> Result<Vec<Cmd>, Diagnostico> {
+        self.prof_laco += 1;
+        let corpo = self.bloco();
+        self.prof_laco -= 1;
+        corpo
+    }
+
+    /// Analisa o corpo de uma função. Marca o contexto para 'retorne' e zera o
+    /// contexto de laço (um 'pare' dentro de função não afeta laços externos).
+    fn corpo_funcao(&mut self) -> Result<Vec<Cmd>, Diagnostico> {
+        let laco_salvo = self.prof_laco;
+        self.prof_laco = 0;
+        self.prof_funcao += 1;
+        let corpo = self.bloco();
+        self.prof_funcao -= 1;
+        self.prof_laco = laco_salvo;
+        corpo
+    }
+
     fn bloco(&mut self) -> Result<Vec<Cmd>, Diagnostico> {
         self.consumir(
             &TipoToken::ChaveEsq,
@@ -331,10 +360,28 @@ impl Parser {
             TipoToken::Retorne => self.cmd_retorne(),
             TipoToken::Pare => {
                 let t = self.avancar();
+                if self.prof_laco == 0 {
+                    return Err(Diagnostico::novo(
+                        "K016",
+                        "'pare' só pode ser usado dentro de um laço",
+                        t.span,
+                    )
+                    .com_rotulo("fora de um laço aqui")
+                    .com_ajuda("'pare' interrompe um 'enquanto' ou 'para'"));
+                }
                 Ok(Cmd::Pare(t.span))
             }
             TipoToken::Continue => {
                 let t = self.avancar();
+                if self.prof_laco == 0 {
+                    return Err(Diagnostico::novo(
+                        "K016",
+                        "'continue' só pode ser usado dentro de um laço",
+                        t.span,
+                    )
+                    .com_rotulo("fora de um laço aqui")
+                    .com_ajuda("'continue' pula para a próxima volta de um 'enquanto' ou 'para'"));
+                }
                 Ok(Cmd::Continue(t.span))
             }
             _ => {
@@ -371,7 +418,7 @@ impl Parser {
     fn cmd_enquanto(&mut self) -> Result<Cmd, Diagnostico> {
         self.avancar(); // 'enquanto'
         let condicao = self.expressao()?;
-        let corpo = self.bloco()?;
+        let corpo = self.corpo_laco()?;
         Ok(Cmd::Enquanto { condicao, corpo })
     }
 
@@ -392,7 +439,7 @@ impl Parser {
                 "use 'para cada X em lista'".into(),
             )?;
             let iteravel = self.expressao()?;
-            let corpo = self.bloco()?;
+            let corpo = self.corpo_laco()?;
             Ok(Cmd::ParaCada {
                 variavel: var.lexema,
                 iteravel,
@@ -420,7 +467,7 @@ impl Parser {
                 "use 'para X de A ate B'".into(),
             )?;
             let ate = self.expressao()?;
-            let corpo = self.bloco()?;
+            let corpo = self.corpo_laco()?;
             Ok(Cmd::ParaNumerico {
                 variavel: var.lexema,
                 de,
@@ -479,6 +526,14 @@ impl Parser {
 
     fn cmd_retorne(&mut self) -> Result<Cmd, Diagnostico> {
         let t = self.avancar(); // 'retorne'
+        if self.prof_funcao == 0 {
+            return Err(Diagnostico::novo(
+                "K016",
+                "'retorne' só pode ser usado dentro de uma função",
+                t.span,
+            )
+            .com_rotulo("fora de uma função aqui"));
+        }
         // Sem valor se o próximo token fecha o bloco ou termina o arquivo.
         let valor = if self.verificar(&TipoToken::ChaveDir) || self.fim() {
             None
@@ -890,7 +945,7 @@ impl Parser {
             TipoToken::Funcao => {
                 self.avancar();
                 let params = self.lista_parametros()?;
-                let corpo = self.bloco()?;
+                let corpo = self.corpo_funcao()?;
                 Ok(Expr::FuncaoAnon {
                     params,
                     corpo,
