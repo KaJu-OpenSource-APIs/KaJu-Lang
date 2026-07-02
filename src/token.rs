@@ -15,6 +15,13 @@ impl Span {
     }
 }
 
+/// Um pedaço de um texto interpolado: parte literal ou código a avaliar.
+#[derive(Clone, Debug, PartialEq)]
+pub enum Pedaco {
+    Lit(String),
+    Cod(String),
+}
+
 /// Tipo (categoria) de um token.
 #[derive(Clone, Debug, PartialEq)]
 pub enum TipoToken {
@@ -22,6 +29,7 @@ pub enum TipoToken {
     Inteiro(i64),
     Decimal(f64),
     Texto(String),
+    TextoInterp(Vec<Pedaco>),
     Identificador(String),
 
     // Palavras-chave da Fase 1

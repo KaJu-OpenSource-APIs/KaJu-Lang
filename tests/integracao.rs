@@ -154,6 +154,21 @@ fn pare_dentro_de_funcao_sem_laco_falha() {
 }
 
 #[test]
+fn interpolacao_de_texto() {
+    let (out, err, ok) = rodar(
+        r#"
+        var nome = "Ana"
+        var n = 3
+        escreva($"Oi {nome}, {n} + 1 = {n + 1}")
+        var d = {"c": "Recife"}
+        escreva($"cidade {d["c"]} e chaves {{}}")
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "Oi Ana, 3 + 1 = 4\ncidade Recife e chaves {}\n");
+}
+
+#[test]
 fn atribuicao_composta() {
     let (out, err, ok) = rodar(
         r#"

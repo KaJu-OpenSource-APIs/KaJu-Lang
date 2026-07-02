@@ -2,7 +2,8 @@
 
 use crate::ast::{Cmd, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria};
 use crate::erros::Diagnostico;
-use crate::token::{Span, TipoToken, Token};
+use crate::lexer::Lexer;
+use crate::token::{Pedaco, Span, TipoToken, Token};
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -148,6 +149,20 @@ impl Parser {
             }
             self.avancar();
         }
+    }
+
+    /// Analisa uma única expressão completa (usado ao interpolar textos).
+    pub fn analisar_expressao(&mut self) -> Result<Expr, Diagnostico> {
+        let e = self.expressao()?;
+        if !self.fim() {
+            return Err(Diagnostico::novo(
+                "K018",
+                "expressão extra na interpolação",
+                self.atual().span.clone(),
+            )
+            .com_rotulo("sobrou isto"));
+        }
+        Ok(e)
     }
 
     fn declaracao(&mut self) -> Result<Cmd, Diagnostico> {
@@ -922,6 +937,16 @@ impl Parser {
         Ok(expr)
     }
 
+    /// Erro de uma expressão inválida dentro de uma interpolação de texto.
+    fn erro_interp(&self, interno: &Diagnostico, span: &Span) -> Diagnostico {
+        Diagnostico::novo(
+            "K018",
+            format!("erro na interpolação de texto: {}", interno.mensagem),
+            span.clone(),
+        )
+        .com_rotulo("dentro deste texto interpolado")
+    }
+
     fn primario(&mut self) -> Result<Expr, Diagnostico> {
         let tok = self.atual().clone();
         match &tok.tipo {
@@ -936,6 +961,32 @@ impl Parser {
             TipoToken::Texto(t) => {
                 self.avancar();
                 Ok(Expr::Texto(t.clone(), tok.span))
+            }
+            TipoToken::TextoInterp(pedacos) => {
+                let pedacos = pedacos.clone();
+                self.avancar();
+                // constrói: "" + parte0 + parte1 + ... (garante semântica de texto)
+                let mut acc = Expr::Texto(String::new(), tok.span.clone());
+                for p in pedacos {
+                    let parte = match p {
+                        Pedaco::Lit(s) => Expr::Texto(s, tok.span.clone()),
+                        Pedaco::Cod(src) => {
+                            let toks = Lexer::novo(&src)
+                                .tokenizar()
+                                .map_err(|d| self.erro_interp(&d, &tok.span))?;
+                            Parser::novo(toks)
+                                .analisar_expressao()
+                                .map_err(|d| self.erro_interp(&d, &tok.span))?
+                        }
+                    };
+                    acc = Expr::Binaria {
+                        op: OpBinaria::Soma,
+                        esq: Box::new(acc),
+                        dir: Box::new(parte),
+                        span: tok.span.clone(),
+                    };
+                }
+                Ok(acc)
             }
             TipoToken::Verdadeiro => {
                 self.avancar();

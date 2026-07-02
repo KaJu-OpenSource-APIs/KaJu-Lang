@@ -105,6 +105,11 @@ impl Lexer {
         let ini_coluna = self.coluna;
         let c = self.atual();
 
+        // Texto interpolado: $"... {expr} ..."
+        if c == '$' && self.proximo() == '"' {
+            self.avancar(); // consome '$'
+            return self.ler_texto_interp(ini_linha, ini_coluna);
+        }
         // Número
         if c.is_ascii_digit() {
             return Ok(self.ler_numero(ini_linha, ini_coluna));
@@ -281,6 +286,126 @@ impl Lexer {
             conteudo,
             span,
         ))
+    }
+
+    /// Lê um texto interpolado `$"...{expr}..."`, produzindo pedaços literais e
+    /// de código. `{{` e `}}` viram chaves literais.
+    fn ler_texto_interp(&mut self, linha: usize, coluna: usize) -> Result<Token, Diagnostico> {
+        use crate::token::Pedaco;
+        self.avancar(); // consome a aspa inicial
+        let mut pedacos: Vec<Pedaco> = Vec::new();
+        let mut lit = String::new();
+
+        let nao_fechado = |l: usize, c: usize| {
+            Diagnostico::novo("K104", "texto interpolado não foi fechado", Span::novo(l, c, 2))
+                .com_rotulo("começa aqui e nunca fecha")
+                .com_ajuda("feche com \" na mesma linha")
+        };
+
+        loop {
+            if self.fim() || self.atual() == '\n' {
+                return Err(nao_fechado(linha, coluna));
+            }
+            let c = self.atual();
+            if c == '"' {
+                self.avancar();
+                break;
+            }
+            if c == '\\' {
+                self.avancar();
+                let e = self.avancar();
+                match e {
+                    'n' => lit.push('\n'),
+                    't' => lit.push('\t'),
+                    '\\' => lit.push('\\'),
+                    '"' => lit.push('"'),
+                    outro => {
+                        lit.push('\\');
+                        lit.push(outro);
+                    }
+                }
+                continue;
+            }
+            if c == '{' {
+                if self.proximo() == '{' {
+                    self.avancar();
+                    self.avancar();
+                    lit.push('{');
+                    continue;
+                }
+                self.avancar(); // consome '{'
+                if !lit.is_empty() {
+                    pedacos.push(Pedaco::Lit(std::mem::take(&mut lit)));
+                }
+                // coleta o código até o '}' correspondente (ciente de strings e aninhamento)
+                let mut cod = String::new();
+                let mut prof = 1;
+                let mut em_texto = false;
+                loop {
+                    if self.fim() || self.atual() == '\n' {
+                        return Err(Diagnostico::novo(
+                            "K104",
+                            "'{' não foi fechado na interpolação",
+                            Span::novo(self.linha, self.coluna, 1),
+                        )
+                        .com_rotulo("faltou '}'"));
+                    }
+                    let d = self.atual();
+                    if em_texto {
+                        if d == '\\' {
+                            cod.push(d);
+                            self.avancar();
+                            cod.push(self.atual());
+                            self.avancar();
+                            continue;
+                        }
+                        if d == '"' {
+                            em_texto = false;
+                        }
+                    } else {
+                        match d {
+                            '"' => em_texto = true,
+                            '{' => prof += 1,
+                            '}' => {
+                                prof -= 1;
+                                if prof == 0 {
+                                    self.avancar();
+                                    break;
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                    cod.push(d);
+                    self.avancar();
+                }
+                pedacos.push(Pedaco::Cod(cod));
+                continue;
+            }
+            if c == '}' {
+                if self.proximo() == '}' {
+                    self.avancar();
+                    self.avancar();
+                    lit.push('}');
+                    continue;
+                }
+                return Err(Diagnostico::novo(
+                    "K104",
+                    "'}' inesperado na interpolação",
+                    Span::novo(self.linha, self.coluna, 1),
+                )
+                .com_ajuda("para uma chave literal, use '}}'"));
+            }
+            lit.push(c);
+            self.avancar();
+        }
+
+        if !lit.is_empty() {
+            pedacos.push(Pedaco::Lit(lit));
+        }
+        let comprimento = self.coluna.saturating_sub(coluna).max(2);
+        let span = Span::novo(linha, coluna, comprimento);
+        Ok(Token::novo(TipoToken::TextoInterp(pedacos), String::new(), span))
     }
 
     fn ler_identificador(&mut self, linha: usize, coluna: usize) -> Token {
