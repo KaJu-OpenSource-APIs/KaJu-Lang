@@ -48,12 +48,16 @@ impl Interpretador {
             nome: "Erro".to_string(),
             construtor: None,
             metodos: HashMap::new(),
+            metodos_estaticos: HashMap::new(),
+            campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
         });
         let classe_modulo = Rc::new(ClasseKaju {
             nome: "Modulo".to_string(),
             construtor: None,
             metodos: HashMap::new(),
+            metodos_estaticos: HashMap::new(),
+            campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
         });
         // Torna a classe Erro visível para o usuário também.
@@ -229,6 +233,8 @@ impl Interpretador {
                 superclasse,
                 construtor,
                 metodos,
+                metodos_estaticos,
+                campos_estaticos,
                 span,
             } => {
                 // Resolve a superclasse, se houver.
@@ -269,11 +275,23 @@ impl Interpretador {
                 for def in metodos {
                     mapa_metodos.insert(def.nome.clone(), criar_funcao(def));
                 }
+                let mut mapa_estaticos = HashMap::new();
+                for def in metodos_estaticos {
+                    mapa_estaticos.insert(def.nome.clone(), criar_funcao(def));
+                }
+                // Avalia os inicializadores dos campos estáticos.
+                let mut campos = HashMap::new();
+                for (nome_c, expr) in campos_estaticos {
+                    let v = self.avaliar(expr, amb)?;
+                    campos.insert(nome_c.clone(), v);
+                }
 
                 let classe = Rc::new(ClasseKaju {
                     nome: nome.clone(),
                     construtor: construtor_rc,
                     metodos: mapa_metodos,
+                    metodos_estaticos: mapa_estaticos,
+                    campos_estaticos: RefCell::new(campos),
                     superclasse: super_rc,
                 });
                 amb.borrow_mut().definir(nome.clone(), Valor::Classe(classe), false);
@@ -658,6 +676,16 @@ impl Interpretador {
                     }
                     return match recv {
                         Valor::Objeto(obj) => self.chamar_metodo_objeto(obj, membro, vals, span),
+                        // Classe.metodoEstatico(...)
+                        Valor::Classe(c) => match c.buscar_metodo_estatico(membro) {
+                            Some(f) => self.chamar(Valor::Funcao(f), vals, span),
+                            None => Err(Diagnostico::novo(
+                                "K212",
+                                format!("a classe '{}' não tem o método estático '{}'", c.nome, membro),
+                                span.clone(),
+                            )
+                            .com_rotulo("método estático inexistente")),
+                        },
                         outro => metodos::chamar_metodo(outro, membro, vals).map_err(|msg| {
                             Diagnostico::novo("K212", msg, span.clone())
                                 .com_rotulo("nesta chamada de método")
@@ -675,6 +703,26 @@ impl Interpretador {
             Expr::Acesso { alvo, membro, span } => {
                 let base = self.avaliar(alvo, amb)?;
                 match base {
+                    // Classe.campoEstatico
+                    Valor::Classe(c) => {
+                        if let Some(v) = c.campo_estatico(membro) {
+                            return Ok(v);
+                        }
+                        if c.buscar_metodo_estatico(membro).is_some() {
+                            return Err(Diagnostico::novo(
+                                "K211",
+                                format!("'{}' é um método estático, chame-o com ()", membro),
+                                span.clone(),
+                            )
+                            .com_ajuda(format!("use '{}.{}(...)'", c.nome, membro)));
+                        }
+                        Err(Diagnostico::novo(
+                            "K213",
+                            format!("a classe '{}' não tem o membro estático '{}'", c.nome, membro),
+                            span.clone(),
+                        )
+                        .com_rotulo("membro estático inexistente"))
+                    }
                     Valor::Objeto(obj) => {
                         if let Some(v) = obj.borrow().campos.get(membro) {
                             return Ok(v.clone());
@@ -720,6 +768,11 @@ impl Interpretador {
                 match base {
                     Valor::Objeto(obj) => {
                         obj.borrow_mut().campos.insert(membro.clone(), v.clone());
+                        Ok(v)
+                    }
+                    // Classe.campoEstatico = valor
+                    Valor::Classe(c) => {
+                        c.campos_estaticos.borrow_mut().insert(membro.clone(), v.clone());
                         Ok(v)
                     }
                     outro => Err(Diagnostico::novo(

@@ -279,6 +279,8 @@ impl Parser {
 
         let mut construtor = None;
         let mut metodos = Vec::new();
+        let mut metodos_estaticos = Vec::new();
+        let mut campos_estaticos = Vec::new();
         while !self.verificar(&TipoToken::ChaveDir) && !self.fim() {
             match &self.atual().tipo {
                 TipoToken::Construtor => {
@@ -292,25 +294,34 @@ impl Parser {
                     });
                 }
                 TipoToken::Metodo => {
+                    metodos.push(self.membro_metodo()?);
+                }
+                // membro estático: 'estatico metodo ...' ou 'estatico nome = valor'
+                TipoToken::Estatico => {
                     self.avancar();
-                    let nome_m = self.consumir(
-                        &TipoToken::Identificador(String::new()),
-                        "K013",
-                        "esperava o nome do método".into(),
-                        "nome do método aqui".into(),
-                    )?;
-                    let params = self.lista_parametros()?;
-                    let corpo = self.corpo_funcao()?;
-                    metodos.push(MetodoDef {
-                        nome: nome_m.lexema.clone(),
-                        params,
-                        corpo,
-                    });
+                    if self.verificar(&TipoToken::Metodo) {
+                        metodos_estaticos.push(self.membro_metodo()?);
+                    } else {
+                        let nome_c = self.consumir(
+                            &TipoToken::Identificador(String::new()),
+                            "K013",
+                            "esperava o nome de um campo estático ou 'metodo'".into(),
+                            "ex.: 'estatico contador = 0' ou 'estatico metodo criar() {}'".into(),
+                        )?;
+                        self.consumir(
+                            &TipoToken::Igual,
+                            "K013",
+                            "esperava '=' após o nome do campo estático".into(),
+                            "dê um valor inicial ao campo estático".into(),
+                        )?;
+                        let valor = self.expressao()?;
+                        campos_estaticos.push((nome_c.lexema.clone(), valor));
+                    }
                 }
                 _ => {
                     return Err(Diagnostico::novo(
                         "K013",
-                        "dentro de uma classe só podem existir 'construtor' e 'metodo'",
+                        "dentro de uma classe só cabem 'construtor', 'metodo' e 'estatico'",
                         self.atual().span.clone(),
                     )
                     .com_rotulo("não esperava isto aqui")
@@ -331,7 +342,27 @@ impl Parser {
             superclasse,
             construtor,
             metodos,
+            metodos_estaticos,
+            campos_estaticos,
             span: inicio.span,
+        })
+    }
+
+    /// Analisa `metodo nome(params) { corpo }` (o token 'metodo' está no atual).
+    fn membro_metodo(&mut self) -> Result<MetodoDef, Diagnostico> {
+        self.avancar(); // 'metodo'
+        let nome_m = self.consumir(
+            &TipoToken::Identificador(String::new()),
+            "K013",
+            "esperava o nome do método".into(),
+            "nome do método aqui".into(),
+        )?;
+        let params = self.lista_parametros()?;
+        let corpo = self.corpo_funcao()?;
+        Ok(MetodoDef {
+            nome: nome_m.lexema.clone(),
+            params,
+            corpo,
         })
     }
 

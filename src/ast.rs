@@ -176,6 +176,8 @@ pub enum Cmd {
         superclasse: Option<String>,
         construtor: Option<MetodoDef>,
         metodos: Vec<MetodoDef>,
+        metodos_estaticos: Vec<MetodoDef>,
+        campos_estaticos: Vec<(String, Expr)>,
         span: Span,
     },
     DeclVar {

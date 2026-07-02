@@ -24,11 +24,13 @@ pub struct Nativa {
     pub func: fn(Vec<Valor>) -> Result<Valor, String>,
 }
 
-/// Uma classe: nome, construtor, métodos e superclasse opcional.
+/// Uma classe: nome, construtor, métodos, membros estáticos e superclasse.
 pub struct ClasseKaju {
     pub nome: String,
     pub construtor: Option<Rc<FuncaoKaju>>,
     pub metodos: HashMap<String, Rc<FuncaoKaju>>,
+    pub metodos_estaticos: HashMap<String, Rc<FuncaoKaju>>,
+    pub campos_estaticos: RefCell<HashMap<String, Valor>>,
     pub superclasse: Option<Rc<ClasseKaju>>,
 }
 
@@ -40,6 +42,28 @@ impl ClasseKaju {
             Some((m.clone(), self.clone()))
         } else if let Some(sup) = &self.superclasse {
             sup.buscar_metodo(nome)
+        } else {
+            None
+        }
+    }
+
+    /// Procura um método estático subindo pela cadeia de herança.
+    pub fn buscar_metodo_estatico(self: &Rc<Self>, nome: &str) -> Option<Rc<FuncaoKaju>> {
+        if let Some(m) = self.metodos_estaticos.get(nome) {
+            Some(m.clone())
+        } else if let Some(sup) = &self.superclasse {
+            sup.buscar_metodo_estatico(nome)
+        } else {
+            None
+        }
+    }
+
+    /// Lê um campo estático, subindo pela cadeia de herança.
+    pub fn campo_estatico(self: &Rc<Self>, nome: &str) -> Option<Valor> {
+        if let Some(v) = self.campos_estaticos.borrow().get(nome) {
+            Some(v.clone())
+        } else if let Some(sup) = &self.superclasse {
+            sup.campo_estatico(nome)
         } else {
             None
         }

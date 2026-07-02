@@ -739,6 +739,26 @@ fn erro_importe_arquivo_inexistente() {
 }
 
 #[test]
+fn membros_estaticos() {
+    let (out, err, ok) = rodar(
+        r#"
+        classe Contador {
+            estatico total = 0
+            construtor() { Contador.total += 1 }
+            estatico metodo quantos() { retorne Contador.total }
+        }
+        novo Contador()
+        novo Contador()
+        escreva(Contador.total, Contador.quantos())
+        classe M { estatico PI = 3 }
+        escreva(M.PI)
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "2 2\n3\n");
+}
+
+#[test]
 fn erro_metodo_objeto_inexistente() {
     let (_, err, ok) = rodar("classe A { }\nvar a = novo A()\na.voar()");
     assert!(!ok);
