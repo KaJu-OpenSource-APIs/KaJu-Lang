@@ -1,0 +1,10 @@
+[book]
+title = "O Livro da kaju"
+authors = ["Julio Barbosa"]
+language = "pt-BR"
+src = "src"
+description = "Tutorial e guia da linguagem de programação kaju."
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
