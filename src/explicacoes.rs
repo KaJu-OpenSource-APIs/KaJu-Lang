@@ -18,7 +18,7 @@ Correto:
     var idade = 20
     escreva(idade)
 
-Quando a kaju encontra um nome parecido com um existente, ela sugere:
+Quando o kaju encontra um nome parecido com um existente, ele sugere:
 \"você quis dizer 'idade'?\".",
 
         "K005" => "\
@@ -362,7 +362,7 @@ Correto:  var a, b = [1, 2]        ou      var a, b, c = 1, 2, 3",
         "K101" => "\
 K101 — caractere inesperado
 
-Apareceu um símbolo que não faz parte da kaju. Confira erros de digitação.
+Apareceu um símbolo que não faz parte do kaju. Confira erros de digitação.
 Para 'diferente de' use '!='; para negação lógica, 'nao'.",
 
         "K102" => "\
