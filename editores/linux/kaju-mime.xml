@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="text/x-kaju">
+    <comment>Código-fonte kaju</comment>
+    <comment xml:lang="en">kaju source code</comment>
+    <glob pattern="*.kaju"/>
+    <icon name="text-x-kaju"/>
+    <sub-class-of type="text/plain"/>
+  </mime-type>
+</mime-info>
