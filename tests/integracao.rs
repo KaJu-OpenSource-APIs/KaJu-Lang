@@ -68,6 +68,16 @@ fn aritmetica_e_concatenacao() {
 }
 
 #[test]
+fn parser_relata_varios_erros() {
+    // dois erros independentes; o parser deve relatar ambos, não só o primeiro
+    let (_, err, ok) = rodar("var a = )\nvar b = )");
+    assert!(!ok);
+    let ocorrencias = err.matches("erro[K008]").count();
+    assert!(ocorrencias >= 2, "esperava 2+ erros, stderr: {err}");
+    assert!(err.contains("erros encontrados"), "stderr: {err}");
+}
+
+#[test]
 fn erro_pare_fora_de_laco() {
     let (_, err, ok) = rodar("escreva(1)\npare");
     assert!(!ok);

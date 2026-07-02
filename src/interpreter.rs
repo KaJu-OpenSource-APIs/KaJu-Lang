@@ -96,7 +96,7 @@ impl Interpretador {
             .map_err(|d| self.envolver_erro_modulo(caminho, &d, span))?;
         let programa = Parser::novo(tokens)
             .analisar()
-            .map_err(|d| self.envolver_erro_modulo(caminho, &d, span))?;
+            .map_err(|ds| self.envolver_erro_modulo(caminho, &ds[0], span))?;
 
         // O módulo roda num escopo filho do global; guardamos no cache ANTES de
         // executar, para importações circulares não entrarem em loop.

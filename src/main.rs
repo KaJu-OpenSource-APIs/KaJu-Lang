@@ -51,19 +51,26 @@ fn executar_arquivo(caminho: &str) -> ExitCode {
 
     match rodar(&fonte, base) {
         Ok(()) => ExitCode::SUCCESS,
-        Err(diag) => {
-            eprint!("{}", diag.render(caminho, &fonte));
+        Err(diags) => {
+            for diag in &diags {
+                eprint!("{}", diag.render(caminho, &fonte));
+                eprintln!();
+            }
+            if diags.len() > 1 {
+                eprintln!("({} erros encontrados)", diags.len());
+            }
             ExitCode::FAILURE
         }
     }
 }
 
 /// Pipeline completo: fonte -> tokens -> AST -> execução.
-fn rodar(fonte: &str, base: PathBuf) -> Result<(), erros::Diagnostico> {
-    let tokens = Lexer::novo(fonte).tokenizar()?;
+/// Devolve uma lista de erros (o parser pode relatar vários de uma vez).
+fn rodar(fonte: &str, base: PathBuf) -> Result<(), Vec<erros::Diagnostico>> {
+    let tokens = Lexer::novo(fonte).tokenizar().map_err(|d| vec![d])?;
     let programa = Parser::novo(tokens).analisar()?;
     let mut interp = Interpretador::com_base(base);
-    interp.executar_programa(&programa)
+    interp.executar_programa(&programa).map_err(|d| vec![d])
 }
 
 /// Uma entrada do REPL está completa quando os delimitadores {} () [] estão
@@ -141,16 +148,24 @@ fn repl() {
         }
         let _ = editor.add_history_entry(buffer.trim_end());
 
-        match Lexer::novo(&buffer)
-            .tokenizar()
-            .and_then(|t| Parser::novo(t).analisar())
-        {
+        let tokens = match Lexer::novo(&buffer).tokenizar() {
+            Ok(t) => t,
+            Err(diag) => {
+                eprint!("{}", diag.render("<repl>", &buffer));
+                continue;
+            }
+        };
+        match Parser::novo(tokens).analisar() {
             Ok(programa) => match interp.executar_repl(&programa) {
                 Ok(Some(resultado)) => println!("{}", resultado),
                 Ok(None) => {}
                 Err(diag) => eprint!("{}", diag.render("<repl>", &buffer)),
             },
-            Err(diag) => eprint!("{}", diag.render("<repl>", &buffer)),
+            Err(diags) => {
+                for diag in diags {
+                    eprint!("{}", diag.render("<repl>", &buffer));
+                }
+            }
         }
     }
 

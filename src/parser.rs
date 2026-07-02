@@ -99,12 +99,55 @@ impl Parser {
 
     // ---- Nível superior ----
 
-    pub fn analisar(&mut self) -> Result<Vec<Cmd>, Diagnostico> {
+    pub fn analisar(&mut self) -> Result<Vec<Cmd>, Vec<Diagnostico>> {
         let mut cmds = Vec::new();
+        let mut erros = Vec::new();
         while !self.fim() {
-            cmds.push(self.declaracao()?);
+            match self.declaracao() {
+                Ok(cmd) => cmds.push(cmd),
+                Err(diag) => {
+                    erros.push(diag);
+                    // limita para não inundar a saída em arquivos muito quebrados
+                    if erros.len() >= 20 {
+                        break;
+                    }
+                    self.sincronizar();
+                }
+            }
         }
-        Ok(cmds)
+        if erros.is_empty() {
+            Ok(cmds)
+        } else {
+            Err(erros)
+        }
+    }
+
+    /// Após um erro, descarta tokens até o começo provável da próxima
+    /// declaração, para conseguir relatar mais de um erro por vez.
+    fn sincronizar(&mut self) {
+        // garante progresso: consome ao menos o token problemático
+        if !self.fim() {
+            self.avancar();
+        }
+        while !self.fim() {
+            if matches!(
+                self.atual().tipo,
+                TipoToken::Var
+                    | TipoToken::Constante
+                    | TipoToken::Funcao
+                    | TipoToken::Classe
+                    | TipoToken::Importe
+                    | TipoToken::Se
+                    | TipoToken::Enquanto
+                    | TipoToken::Para
+                    | TipoToken::Retorne
+                    | TipoToken::Tente
+                    | TipoToken::Lance
+            ) {
+                return;
+            }
+            self.avancar();
+        }
     }
 
     fn declaracao(&mut self) -> Result<Cmd, Diagnostico> {
