@@ -25,7 +25,7 @@
 ## 1. Visão geral
 
 - **Paradigma:** imperativo/procedural com **funções de primeira classe** e **orientação a objetos** (classes, herança). Tipagem **dinâmica**.
-- **Extensão de arquivo:** `.kaju`
+- **Extensão de arquivo:** `.kaju` (ou `.kj`, forma curta)
 - **Codificação:** UTF-8 (aceita acentos em identificadores e strings).
 - **Ponto de entrada:** o arquivo é executado de cima para baixo; não é obrigatória uma função `principal`.
 - **Filosofia:** ler como português claro, ser enxuta e dar **mensagens de erro em português**.

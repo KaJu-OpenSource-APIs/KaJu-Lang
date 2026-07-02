@@ -4,6 +4,7 @@
     <comment>Código-fonte kaju</comment>
     <comment xml:lang="en">kaju source code</comment>
     <glob pattern="*.kaju"/>
+    <glob pattern="*.kj"/>
     <icon name="text-x-kaju"/>
     <sub-class-of type="text/plain"/>
   </mime-type>

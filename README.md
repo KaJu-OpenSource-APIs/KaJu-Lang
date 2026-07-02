@@ -1,6 +1,6 @@
 # kaju
 
-Linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca **totalmente em português**. O interpretador é escrito em **Rust**.
+Linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca **totalmente em português**. O interpretador é escrito em **Rust**. Arquivos usam a extensão `.kaju` ou `.kj`.
 
 > Especificação completa da linguagem: [`ESPECIFICACAO.md`](ESPECIFICACAO.md)
 > Pesquisa que embasou o design da documentação: [`PESQUISA-DOCUMENTACAO.md`](PESQUISA-DOCUMENTACAO.md)

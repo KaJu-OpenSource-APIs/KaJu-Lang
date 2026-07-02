@@ -21,7 +21,8 @@
           "Kaju"
         ],
         "extensions": [
-          ".kaju"
+          ".kaju",
+          ".kj"
         ],
         "configuration": "./language-configuration.json",
         "icon": {
