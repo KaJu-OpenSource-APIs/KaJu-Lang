@@ -26,6 +26,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "relogio", relogio);
     registrar_uma(&mut a, "formatarData", formatar_data);
     registrar_uma(&mut a, "arredondePara", arredonde_para);
+    registrar_uma(&mut a, "formateDecimal", formate_decimal);
     // JSON
     registrar_uma(&mut a, "paraJSON", para_json);
     registrar_uma(&mut a, "deJSON", de_json);
@@ -428,6 +429,19 @@ fn json_para_valor(v: serde_json::Value) -> Valor {
             Valor::Dicionario(Rc::new(RefCell::new(m)))
         }
     }
+}
+
+/// formateDecimal(numero, casas) -> texto com exatamente N casas decimais.
+fn formate_decimal(args: Vec<Valor>) -> Result<Valor, String> {
+    if args.len() != 2 {
+        return Err(format!("'formateDecimal' espera 2 argumentos (numero, casas), mas recebeu {}", args.len()));
+    }
+    let n = como_numero("formateDecimal", &args[0])?;
+    let casas = como_inteiro("formateDecimal", &args[1])?;
+    if casas < 0 {
+        return Err("'formateDecimal' não aceita número de casas negativo".into());
+    }
+    Ok(Valor::Texto(format!("{:.*}", casas as usize, n)))
 }
 
 fn para_inteiro(args: Vec<Valor>) -> Result<Valor, String> {
