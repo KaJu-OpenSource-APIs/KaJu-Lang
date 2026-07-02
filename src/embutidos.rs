@@ -31,6 +31,10 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "seno", seno);
     registrar_uma(&mut a, "cosseno", cosseno);
     registrar_uma(&mut a, "log", log);
+    // Arquivos
+    registrar_uma(&mut a, "leiaArquivo", leia_arquivo);
+    registrar_uma(&mut a, "escrevaArquivo", escreva_arquivo);
+    registrar_uma(&mut a, "existeArquivo", existe_arquivo);
     a.definir("PI", Valor::Decimal(std::f64::consts::PI), true);
 }
 
@@ -122,6 +126,55 @@ fn leia(args: Vec<Valor>) -> Result<Valor, String> {
         .map_err(|e| format!("erro ao ler a entrada: {}", e))?;
     let limpa = linha.trim_end_matches(['\n', '\r']).to_string();
     Ok(Valor::Texto(limpa))
+}
+
+// ---- Arquivos ----
+
+fn leia_arquivo(args: Vec<Valor>) -> Result<Valor, String> {
+    let caminho = match um_argumento("leiaArquivo", &args)? {
+        Valor::Texto(t) => t.clone(),
+        outro => {
+            return Err(format!(
+                "'leiaArquivo' espera um 'texto' com o caminho, mas recebeu um '{}'",
+                outro.tipo_nome()
+            ))
+        }
+    };
+    std::fs::read_to_string(&caminho)
+        .map(Valor::Texto)
+        .map_err(|e| format!("não consegui ler o arquivo \"{}\": {}", caminho, e))
+}
+
+fn escreva_arquivo(args: Vec<Valor>) -> Result<Valor, String> {
+    if args.len() != 2 {
+        return Err(format!(
+            "'escrevaArquivo' espera 2 argumentos (caminho, conteúdo), mas recebeu {}",
+            args.len()
+        ));
+    }
+    let caminho = match &args[0] {
+        Valor::Texto(t) => t.clone(),
+        outro => {
+            return Err(format!(
+                "'escrevaArquivo' espera um 'texto' no caminho, mas recebeu um '{}'",
+                outro.tipo_nome()
+            ))
+        }
+    };
+    let conteudo = args[1].para_texto();
+    std::fs::write(&caminho, conteudo)
+        .map(|_| Valor::Nulo)
+        .map_err(|e| format!("não consegui escrever no arquivo \"{}\": {}", caminho, e))
+}
+
+fn existe_arquivo(args: Vec<Valor>) -> Result<Valor, String> {
+    match um_argumento("existeArquivo", &args)? {
+        Valor::Texto(t) => Ok(Valor::Logico(std::path::Path::new(t).exists())),
+        outro => Err(format!(
+            "'existeArquivo' espera um 'texto', mas recebeu um '{}'",
+            outro.tipo_nome()
+        )),
+    }
 }
 
 // ---- Matemática ----

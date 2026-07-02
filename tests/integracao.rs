@@ -271,6 +271,21 @@ fn inteiro_e_decimal() {
 }
 
 #[test]
+fn arquivos_escreve_e_le() {
+    let (out, err, ok) = rodar(
+        r#"
+        var caminho = "/tmp/kaju_io_teste_integracao.txt"
+        escrevaArquivo(caminho, "a\nb\nc")
+        escreva(existeArquivo(caminho))
+        escreva(tamanho(leiaArquivo(caminho).divida("\n")))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "verdadeiro\n3\n");
+    let _ = std::fs::remove_file("/tmp/kaju_io_teste_integracao.txt");
+}
+
+#[test]
 fn numeros_e_matematica_extra() {
     let (out, err, ok) = rodar(
         r#"
