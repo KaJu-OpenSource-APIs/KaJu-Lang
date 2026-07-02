@@ -23,7 +23,7 @@ Já funciona:
   - texto: `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua`, `divida`, `fatie`, `indiceDe`, `comecaCom`, `terminaCom`, `repita`
   - dicionário: `chaves`, `valores`, `tem`, `obtem`, `remova`, `tamanho`
 - Comparação `< > <= >=` entre textos (ordem alfabética), além de números
-- `se` / `senaose` / `senao` (aceita também o legado `senao se`)
+- `se` / `senaose` / `senao` (aceita também o legado `senao se`), `escolha`/`caso`/`padrao` (switch), operador ternário `cond ? a : b`
 - Embutidos: `escreva`, `escrevaSemQuebra`, `leia`, `pergunte`, `tamanho`, `tipo`, `classeDe`, `paraTexto`, `paraNumero`, `paraInteiro`, `intervalo`, `agora`, `relogio`, `formatarData`
 - Diagnóstico de erros: `kaju explique K016` explica um código de erro em detalhe
 - JSON: `paraJSON`, `deJSON`

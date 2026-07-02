@@ -209,6 +209,17 @@ enquanto verdadeiro {
     se acabou { pare }        // break
     se pular  { continue }    // continue
 }
+
+// escolha (switch/match, sem fall-through)
+escolha dia {
+    caso 1 { escreva("domingo") }
+    caso 2, 3, 4, 5, 6 { escreva("dia útil") }
+    caso 7 { escreva("sábado") }
+    padrao { escreva("inválido") }
+}
+
+// operador condicional (ternário)
+var rotulo = idade >= 18 ? "adulto" : "menor"
 ```
 
 ---

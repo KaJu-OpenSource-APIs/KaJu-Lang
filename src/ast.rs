@@ -221,6 +221,12 @@ pub enum Cmd {
         finalmente: Option<Vec<Cmd>>,
     },
     Lance(Expr, Span),
+    Escolha {
+        valor: Expr,
+        // cada ramo: um ou mais valores de comparação + o corpo
+        casos: Vec<(Vec<Expr>, Vec<Cmd>)>,
+        padrao: Option<Vec<Cmd>>,
+    },
     Importe {
         caminho: String,
         alias: Option<String>,

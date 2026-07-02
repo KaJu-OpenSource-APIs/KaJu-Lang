@@ -445,6 +445,7 @@ impl Parser {
     fn comando(&mut self) -> Result<Cmd, Diagnostico> {
         match &self.atual().tipo {
             TipoToken::Se => self.cmd_se(),
+            TipoToken::Escolha => self.cmd_escolha(),
             TipoToken::Enquanto => self.cmd_enquanto(),
             TipoToken::Para => self.cmd_para(),
             TipoToken::Tente => self.cmd_tente(),
@@ -504,6 +505,58 @@ impl Parser {
             condicao,
             entao,
             senao,
+        })
+    }
+
+    fn cmd_escolha(&mut self) -> Result<Cmd, Diagnostico> {
+        self.avancar(); // 'escolha'
+        let valor = self.expressao()?;
+        self.consumir(
+            &TipoToken::ChaveEsq,
+            "K021",
+            "esperava '{' para abrir o corpo do 'escolha'".into(),
+            "abra o corpo com '{'".into(),
+        )?;
+        let mut casos: Vec<(Vec<Expr>, Vec<Cmd>)> = Vec::new();
+        let mut padrao: Option<Vec<Cmd>> = None;
+        while !self.verificar(&TipoToken::ChaveDir) && !self.fim() {
+            if self.casar(&TipoToken::Caso) {
+                let mut valores = vec![self.expressao()?];
+                while self.casar(&TipoToken::Virgula) {
+                    valores.push(self.expressao()?);
+                }
+                let corpo = self.bloco()?;
+                casos.push((valores, corpo));
+            } else if self.casar(&TipoToken::Padrao) {
+                if padrao.is_some() {
+                    return Err(Diagnostico::novo(
+                        "K021",
+                        "só pode haver um 'padrao' no 'escolha'",
+                        self.atual().span.clone(),
+                    )
+                    .com_rotulo("segundo 'padrao' aqui"));
+                }
+                padrao = Some(self.bloco()?);
+            } else {
+                return Err(Diagnostico::novo(
+                    "K021",
+                    "dentro de 'escolha' só cabem 'caso' e 'padrao'",
+                    self.atual().span.clone(),
+                )
+                .com_rotulo("não esperava isto aqui")
+                .com_ajuda("use 'caso valor { ... }' ou 'padrao { ... }'"));
+            }
+        }
+        self.consumir(
+            &TipoToken::ChaveDir,
+            "K021",
+            "esperava '}' para fechar o 'escolha'".into(),
+            "feche com '}'".into(),
+        )?;
+        Ok(Cmd::Escolha {
+            valor,
+            casos,
+            padrao,
         })
     }
 

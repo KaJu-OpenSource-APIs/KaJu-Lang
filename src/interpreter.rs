@@ -416,6 +416,33 @@ impl Interpretador {
                 }
                 Ok(Fluxo::Segue)
             }
+            Cmd::Escolha {
+                valor,
+                casos,
+                padrao,
+            } => {
+                let v = self.avaliar(valor, amb)?;
+                for (valores, corpo) in casos {
+                    let mut casou = false;
+                    for ve in valores {
+                        if self.avaliar(ve, amb)?.igual(&v) {
+                            casou = true;
+                            break;
+                        }
+                    }
+                    if casou {
+                        let filho = Ambiente::com_pai(amb.clone());
+                        return self.executar_bloco(corpo, &filho);
+                    }
+                }
+                match padrao {
+                    Some(corpo) => {
+                        let filho = Ambiente::com_pai(amb.clone());
+                        self.executar_bloco(corpo, &filho)
+                    }
+                    None => Ok(Fluxo::Segue),
+                }
+            }
             Cmd::Lance(expr, span) => {
                 let v = self.avaliar(expr, amb)?;
                 let mensagem = match &v {

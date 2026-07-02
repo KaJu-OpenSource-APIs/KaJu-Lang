@@ -169,6 +169,24 @@ fn interpolacao_de_texto() {
 }
 
 #[test]
+fn escolha_caso() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao classifica(n) {
+            escolha n {
+                caso 1 { retorne "um" }
+                caso 2, 3 { retorne "dois ou tres" }
+                padrao { retorne "outro" }
+            }
+        }
+        escreva(classifica(1), classifica(3), classifica(9))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "um dois ou tres outro\n");
+}
+
+#[test]
 fn operador_ternario() {
     let (out, err, ok) = rodar(
         r#"
