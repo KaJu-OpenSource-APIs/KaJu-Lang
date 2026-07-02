@@ -162,6 +162,27 @@ impl Interpretador {
         Ok(())
     }
 
+    /// Executa uma entrada do REPL. Se o último comando for uma expressão,
+    /// devolve seu valor formatado para ser ecoado (None se for `nulo`, para
+    /// não poluir a saída após chamadas como `escreva(...)`).
+    pub fn executar_repl(&mut self, programa: &[Cmd]) -> Result<Option<String>, Diagnostico> {
+        let amb = self.global.clone();
+        let ultimo = programa.len().saturating_sub(1);
+        for (i, cmd) in programa.iter().enumerate() {
+            if i == ultimo {
+                if let Cmd::Expressao(e) = cmd {
+                    let v = self.avaliar(e, &amb)?;
+                    return Ok(match v {
+                        Valor::Nulo => None,
+                        outro => Some(outro.para_texto()),
+                    });
+                }
+            }
+            self.executar(cmd, &amb)?;
+        }
+        Ok(None)
+    }
+
     fn executar_bloco(
         &mut self,
         cmds: &[Cmd],

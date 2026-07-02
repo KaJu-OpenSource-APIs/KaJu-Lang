@@ -67,7 +67,7 @@ fn rodar(fonte: &str, base: PathBuf) -> Result<(), erros::Diagnostico> {
 }
 
 fn repl() {
-    println!("kaju (Fase 1) — digite código e pressione Enter. Ctrl+D para sair.");
+    println!("kaju — REPL interativo. Digite código e pressione Enter; Ctrl+D para sair.");
     let entrada = io::stdin();
     let mut interp = Interpretador::novo();
 
@@ -93,11 +93,11 @@ fn repl() {
             .tokenizar()
             .and_then(|t| Parser::novo(t).analisar())
         {
-            Ok(programa) => {
-                if let Err(diag) = interp.executar_programa(&programa) {
-                    eprint!("{}", diag.render("<repl>", &linha));
-                }
-            }
+            Ok(programa) => match interp.executar_repl(&programa) {
+                Ok(Some(resultado)) => println!("{}", resultado),
+                Ok(None) => {}
+                Err(diag) => eprint!("{}", diag.render("<repl>", &linha)),
+            },
             Err(diag) => eprint!("{}", diag.render("<repl>", &linha)),
         }
     }
