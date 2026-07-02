@@ -1,4 +1,4 @@
-# Ícone e tipo MIME da kaju no Linux
+# Ícone e tipo MIME do kaju no Linux
 
 Registra o tipo MIME `text/x-kaju` e associa o ícone do caju aos arquivos `.kaju`
 no gerenciador de arquivos (padrão freedesktop: Nautilus, Thunar, Nemo, Dolphin,

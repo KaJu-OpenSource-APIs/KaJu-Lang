@@ -1,6 +1,6 @@
 # Especificação da linguagem kaju
 
-> Documento normativo da **kaju** — linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca **totalmente em português**.
+> Documento normativo do **kaju** — linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca **totalmente em português**.
 > O interpretador é escrito em **Rust**. O código kaju roda direto no interpretador, sem gerar arquivo intermediário (mesmo modelo do CPython, trocando C por Rust).
 > Versão da especificação: **0.1 (rascunho)** · Estilo de sintaxe: **moderno** (chaves `{ }`, enxuto).
 
@@ -618,7 +618,7 @@ Listas e dicionários completos com métodos, módulos de stdlib `texto`/`matema
 Compilar a AST para **bytecode** e executar numa VM em Rust (modelo `clox` do *Crafting Interpreters*).
 
 **Documentação (em paralelo, seguindo a pesquisa):**
-Este `ESPECIFICACAO.md` é o artefato normativo. Depois: "O Livro da kaju" (tutorial), referência da stdlib gerada com exemplos **testados no CI** (a lição mais forte da pesquisa), e guias how-to. Estrutura Diátaxis.
+Este `ESPECIFICACAO.md` é o artefato normativo. Depois: "O Livro do kaju" (tutorial), referência da stdlib gerada com exemplos **testados no CI** (a lição mais forte da pesquisa), e guias how-to. Estrutura Diátaxis.
 
 ---
 

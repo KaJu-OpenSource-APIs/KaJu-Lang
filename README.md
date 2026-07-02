@@ -35,7 +35,7 @@ Já funciona:
 - **Módulos**: `importe "arquivo.kaju"` traz os nomes para o escopo; `importe "arquivo.kaju" como m` cria um namespace `m.nome`. Caminhos relativos ao arquivo, com cache (cada módulo roda uma vez)
 - **Erros ricos em português** (estilo Rust): código do erro, trecho com `^^^^`, `nota:` e `ajuda:` com sugestão "você quis dizer X?"
 
-**Fase 2 completa.** A kaju já é uma linguagem de uso geral com OOP, exceções e módulos. Próximo possível (Fase 3, opcional): VM de bytecode para desempenho. Ver §14 da especificação.
+**Fase 2 completa.** O kaju já é uma linguagem de uso geral com OOP, exceções e módulos. Próximo possível (Fase 3, opcional): VM de bytecode para desempenho. Ver §14 da especificação.
 
 ## Como usar
 

@@ -1,10 +1,10 @@
 # Erros e exceções
 
-Programas falham: um arquivo não existe, um texto não vira número, uma conta divide por zero. A kaju trata esses casos de dois modos que se complementam. Primeiro, ela **relata** o que deu errado com um diagnóstico detalhado, em português, que aponta o trecho do código e sugere a correção. Segundo, ela deixa você **capturar** um erro em tempo de execução para reagir a ele em vez de deixar o programa parar.
+Programas falham: um arquivo não existe, um texto não vira número, uma conta divide por zero. O kaju trata esses casos de dois modos que se complementam. Primeiro, ela **relata** o que deu errado com um diagnóstico detalhado, em português, que aponta o trecho do código e sugere a correção. Segundo, ela deixa você **capturar** um erro em tempo de execução para reagir a ele em vez de deixar o programa parar.
 
 ## A anatomia de um diagnóstico
 
-Quando um erro impede o programa de continuar, a kaju o descreve em um formato consistente. Cada diagnóstico tem um **código** (por exemplo, `K001`), uma mensagem curta, a localização exata e, quando possível, uma dica de como corrigir:
+Quando um erro impede o programa de continuar, o kaju o descreve em um formato consistente. Cada diagnóstico tem um **código** (por exemplo, `K001`), uma mensagem curta, a localização exata e, quando possível, uma dica de como corrigir:
 
 ```
 erro[K001]: a variável 'idde' não foi definida
@@ -91,7 +91,7 @@ tente {
 }
 ```
 
-Quando você lança um texto, a kaju o transforma em um objeto de erro cuja `.mensagem` é aquele texto.
+Quando você lança um texto, o kaju o transforma em um objeto de erro cuja `.mensagem` é aquele texto.
 
 ## Erros personalizados com objetos
 

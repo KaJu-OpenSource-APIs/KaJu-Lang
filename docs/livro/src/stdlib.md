@@ -1,6 +1,6 @@
 # Biblioteca padrão
 
-A kaju vem com um conjunto de funções sempre disponíveis — os **embutidos**. Você não precisa importar nada para usá-las: elas fazem parte da linguagem. Este capítulo é uma referência rápida, agrupada por tema. Os métodos de listas, textos e dicionários (aqueles chamados com `.`, como `lista.mapeie(...)`) são cobertos nos capítulos de [Coleções](./colecoes.md) e [Textos](./textos.md).
+O kaju vem com um conjunto de funções sempre disponíveis — os **embutidos**. Você não precisa importar nada para usá-las: elas fazem parte da linguagem. Este capítulo é uma referência rápida, agrupada por tema. Os métodos de listas, textos e dicionários (aqueles chamados com `.`, como `lista.mapeie(...)`) são cobertos nos capítulos de [Coleções](./colecoes.md) e [Textos](./textos.md).
 
 ## Entrada e saída
 

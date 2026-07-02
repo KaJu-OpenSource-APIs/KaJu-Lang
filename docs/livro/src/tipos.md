@@ -19,11 +19,11 @@ escreva(tipo(verdadeiro))  // logico
 escreva(tipo([1, 2]))      // lista
 ```
 
-A kaju tem **tipagem dinâmica**: uma variável não é presa a um tipo, e o tipo de um valor é conhecido enquanto o programa roda. Você não declara tipos; eles surgem dos próprios valores.
+O kaju tem **tipagem dinâmica**: uma variável não é presa a um tipo, e o tipo de um valor é conhecido enquanto o programa roda. Você não declara tipos; eles surgem dos próprios valores.
 
 ## Números: inteiros e decimais
 
-Há um único tipo visível, `numero` — `tipo(x)` sempre responde `"numero"`. Por baixo, porém, a kaju distingue **inteiros** de **decimais**, para oferecer precisão exata quando ela importa:
+Há um único tipo visível, `numero` — `tipo(x)` sempre responde `"numero"`. Por baixo, porém, o kaju distingue **inteiros** de **decimais**, para oferecer precisão exata quando ela importa:
 
 ```kaju
 escreva(2 + 2)              // 4         (inteiro exato)
@@ -41,7 +41,7 @@ As regras que governam essa distinção:
 - `%` (resto) dá inteiro entre inteiros e decimal caso contrário.
 - Comparações são matemáticas: `5 == 5.0` é `verdadeiro`.
 - Ao imprimir, decimais mostram o ponto (`5.0`) para se distinguir dos inteiros (`5`).
-- Se uma operação com inteiros ultrapassa o limite do inteiro, a kaju promove o resultado para decimal automaticamente.
+- Se uma operação com inteiros ultrapassa o limite do inteiro, o kaju promove o resultado para decimal automaticamente.
 
 > Não existe operador de divisão inteira com `//` (essa sequência inicia um comentário). Para obter a parte inteira de uma divisão, use `piso(a / b)`.
 
@@ -60,7 +60,7 @@ O texto ganha um capítulo próprio mais adiante; por ora, basta saber que é o 
 
 O tipo `logico` tem exatamente dois valores: `verdadeiro` e `falso`. Eles aparecem em comparações e controlam decisões no programa.
 
-Quando um valor de outro tipo é usado como condição, a kaju precisa decidir se ele conta como verdadeiro ou falso. A regra é simples: apenas `falso` e `nulo` são considerados "falsos". **Todo o resto é verdadeiro**, inclusive `0` e o texto vazio `""`.
+Quando um valor de outro tipo é usado como condição, o kaju precisa decidir se ele conta como verdadeiro ou falso. A regra é simples: apenas `falso` e `nulo` são considerados "falsos". **Todo o resto é verdadeiro**, inclusive `0` e o texto vazio `""`.
 
 ```kaju
 se 0 { escreva("zero conta como verdadeiro") }   // isto imprime

@@ -2,7 +2,7 @@
 
 Até aqui os programas rodaram de cima para baixo, uma linha após a outra. As estruturas de **controle de fluxo** mudam essa ordem: elas decidem quais trechos executar e quantas vezes repeti-los.
 
-Em todas elas, o corpo fica entre chaves `{ }`, e a condição é uma expressão que resulta em verdadeiro ou falso. Vale lembrar a regra de veracidade da kaju: apenas `falso` e `nulo` contam como falsos; qualquer outro valor é considerado verdadeiro.
+Em todas elas, o corpo fica entre chaves `{ }`, e a condição é uma expressão que resulta em verdadeiro ou falso. Vale lembrar a regra de veracidade do kaju: apenas `falso` e `nulo` contam como falsos; qualquer outro valor é considerado verdadeiro.
 
 ## Decisão: se, senaose, senao
 
@@ -18,7 +18,7 @@ se nota >= 90 {
 }
 ```
 
-A kaju testa as condições em ordem e executa apenas o primeiro bloco cuja condição é verdadeira. Tanto os `senaose` quanto o `senao` são opcionais: um `se` sozinho já é válido.
+O kaju testa as condições em ordem e executa apenas o primeiro bloco cuja condição é verdadeira. Tanto os `senaose` quanto o `senao` são opcionais: um `se` sozinho já é válido.
 
 Para escolher um valor entre dois de forma curta, existe o **operador condicional** (ou ternário), na forma `condicao ? valorSeVerdadeiro : valorSeFalso`:
 

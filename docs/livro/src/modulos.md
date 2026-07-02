@@ -53,7 +53,7 @@ Essa forma deixa claro de onde cada nome vem e mantém o escopo do arquivo limpo
 
 ## Como os caminhos são resolvidos
 
-O caminho passado ao `importe` é **relativo ao arquivo que faz o importe**, não ao diretório de onde você executa a kaju. Se `principal.kaju` e `geometria.kaju` estão na mesma pasta, `importe "geometria.kaju"` funciona independentemente de onde você rode o programa. Para módulos em subpastas, use o caminho relativo correspondente, como `importe "utilidades/texto.kaju"`.
+O caminho passado ao `importe` é **relativo ao arquivo que faz o importe**, não ao diretório de onde você executa o kaju. Se `principal.kaju` e `geometria.kaju` estão na mesma pasta, `importe "geometria.kaju"` funciona independentemente de onde você rode o programa. Para módulos em subpastas, use o caminho relativo correspondente, como `importe "utilidades/texto.kaju"`.
 
 ## Cada módulo roda uma vez
 

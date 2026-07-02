@@ -39,5 +39,5 @@ code --install-extension kaju-0.1.0.vsix
 
 O ícone declarado aqui aparece na aba do editor e em temas de ícones que respeitam
 o ícone da linguagem. Alguns temas de ícones de arquivo (ex.: Material Icon Theme)
-sobrescrevem ícones por conta própria; nesses casos o ícone da kaju pode não
+sobrescrevem ícones por conta própria; nesses casos o ícone do kaju pode não
 aparecer no explorador, mas o realce de sintaxe funciona sempre.

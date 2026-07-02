@@ -1,8 +1,8 @@
 # Instalação e primeiros passos
 
-O `kaju` é um **executável nativo autossuficiente**. Para *usar* a kaju, você só precisa do binário `kaju`; **não precisa ter o Rust instalado**. O Rust só entra em cena quando alguém quer *compilar* a kaju a partir do código-fonte.
+O `kaju` é um **executável nativo autossuficiente**. Para *usar* o kaju, você só precisa do binário `kaju`; **não precisa ter o Rust instalado**. O Rust só entra em cena quando alguém quer *compilar* o kaju a partir do código-fonte.
 
-## Para usar a kaju
+## Para usar o kaju
 
 Pegue o executável `kaju` — o arquivo `target/release/kaju` gerado pela compilação, ou um binário já distribuído — e coloque-o num diretório do seu `PATH`:
 
@@ -20,9 +20,9 @@ kaju meu_programa.kaju
 
 O binário depende apenas das bibliotecas do sistema (`libc`), então roda em qualquer máquina compatível.
 
-## Para compilar a kaju a partir do código-fonte
+## Para compilar o kaju a partir do código-fonte
 
-Se você quer construir a kaju do zero — por exemplo, para contribuir com o interpretador —, aí sim precisa do [Rust](https://www.rust-lang.org/pt-BR). Na pasta do projeto:
+Se você quer construir o kaju do zero — por exemplo, para contribuir com o interpretador —, aí sim precisa do [Rust](https://www.rust-lang.org/pt-BR). Na pasta do projeto:
 
 ```bash
 # gera o binário otimizado em target/release/kaju

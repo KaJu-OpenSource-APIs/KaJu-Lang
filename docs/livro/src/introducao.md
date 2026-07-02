@@ -1,8 +1,8 @@
 # Introdução
 
-A **kaju** é uma linguagem de programação de alto nível, **interpretada** e de **uso geral**, cuja sintaxe e biblioteca são **totalmente em português**. Seu interpretador é escrito em Rust e executa o código diretamente, sem etapa de compilação para o usuário.
+O **kaju** é uma linguagem de programação de alto nível, **interpretada** e de **uso geral**, cuja sintaxe e biblioteca são **totalmente em português**. Seu interpretador é escrito em Rust e executa o código diretamente, sem etapa de compilação para o usuário.
 
-O propósito da kaju é ser uma linguagem moderna e agradável de ler, em que as palavras-chave e as funções fazem sentido em português — sem abrir mão dos recursos que uma linguagem séria oferece: orientação a objetos, exceções, módulos, funções de primeira classe, números exatos e mensagens de erro claras.
+O propósito do kaju é ser uma linguagem moderna e agradável de ler, em que as palavras-chave e as funções fazem sentido em português — sem abrir mão dos recursos que uma linguagem séria oferece: orientação a objetos, exceções, módulos, funções de primeira classe, números exatos e mensagens de erro claras.
 
 ## Um gostinho
 
@@ -27,7 +27,7 @@ Olá, acerola!
 
 Repare em alguns elementos que aparecem já nesse trecho curto: `funcao` declara uma função, `$"..."` interpola valores dentro de um texto, e `para cada ... em` percorre uma lista. Tudo se lê quase como uma frase.
 
-## O que a kaju oferece
+## O que o kaju oferece
 
 - **Português de verdade:** as palavras-chave são `se`, `senao`, `enquanto`, `para cada`, `funcao`, `classe`, `retorne`, `verdadeiro`/`falso`, `e`/`ou`/`nao`. O código descreve o que faz na sua própria língua.
 - **Números exatos:** inteiros nunca perdem precisão e convivem com decimais sob um único tipo `numero`.

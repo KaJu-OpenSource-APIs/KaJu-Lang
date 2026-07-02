@@ -1,6 +1,6 @@
 # Coleções: listas e dicionários
 
-Uma variável guarda um único valor. Para trabalhar com vários valores de uma vez, a kaju oferece duas coleções: a **lista**, uma sequência ordenada de valores, e o **dicionário**, um conjunto de pares chave-valor.
+Uma variável guarda um único valor. Para trabalhar com vários valores de uma vez, o kaju oferece duas coleções: a **lista**, uma sequência ordenada de valores, e o **dicionário**, um conjunto de pares chave-valor.
 
 ## Listas
 

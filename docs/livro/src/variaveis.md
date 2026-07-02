@@ -70,7 +70,7 @@ escreva(5 == 5.0)            // verdadeiro
 
 ## Operadores lógicos
 
-As conexões lógicas são palavras em português: `e`, `ou` e `nao`. Os operadores `e` e `ou` têm **curto-circuito** — a kaju só avalia o segundo lado quando é necessário para decidir o resultado.
+As conexões lógicas são palavras em português: `e`, `ou` e `nao`. Os operadores `e` e `ou` têm **curto-circuito** — o kaju só avalia o segundo lado quando é necessário para decidir o resultado.
 
 ```kaju
 var idade = 20
@@ -90,7 +90,7 @@ escreva(rotulo)
 
 ## Operadores de bits
 
-Sobre inteiros, a kaju oferece operações bit a bit: `&` (e), `|` (ou), `^` (ou-exclusivo), `~` (não) e os deslocamentos `<<` e `>>`.
+Sobre inteiros, o kaju oferece operações bit a bit: `&` (e), `|` (ou), `^` (ou-exclusivo), `~` (não) e os deslocamentos `<<` e `>>`.
 
 ```kaju
 escreva(5 & 3)     // 1
