@@ -102,7 +102,56 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Str
             let partes: Vec<String> = l.borrow().iter().map(|v| v.para_texto()).collect();
             Ok(Valor::Texto(partes.join(&sep)))
         }
+        "indiceDe" => {
+            checar_aridade(nome, &args, 1)?;
+            let alvo = &args[0];
+            let pos = l.borrow().iter().position(|v| v.igual(alvo));
+            Ok(Valor::Inteiro(pos.map(|p| p as i64).unwrap_or(-1)))
+        }
+        "fatie" => {
+            checar_aridade(nome, &args, 2)?;
+            let inicio = arg_indice(nome, &args, 0)?;
+            let fim = arg_indice(nome, &args, 1)?;
+            let lista = l.borrow();
+            let fim = fim.min(lista.len());
+            let fatia: Vec<Valor> = if inicio >= fim {
+                Vec::new()
+            } else {
+                lista[inicio..fim].to_vec()
+            };
+            Ok(Valor::Lista(Rc::new(RefCell::new(fatia))))
+        }
+        "ordene" => {
+            checar_aridade(nome, &args, 0)?;
+            ordenar_lista(l)?;
+            Ok(Valor::Nulo)
+        }
         outro => Err(format!("o tipo 'lista' não tem o método '{}'", outro)),
+    }
+}
+
+/// Ordena uma lista in-place: números por valor, textos em ordem alfabética.
+fn ordenar_lista(l: &ListaRef) -> Result<(), String> {
+    let mut lista = l.borrow_mut();
+    let todos_numeros = lista.iter().all(|v| v.como_f64().is_some());
+    let todos_textos = lista.iter().all(|v| matches!(v, Valor::Texto(_)));
+
+    if todos_numeros {
+        lista.sort_by(|a, b| {
+            a.como_f64()
+                .unwrap()
+                .partial_cmp(&b.como_f64().unwrap())
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
+        Ok(())
+    } else if todos_textos {
+        lista.sort_by(|a, b| match (a, b) {
+            (Valor::Texto(x), Valor::Texto(y)) => x.cmp(y),
+            _ => std::cmp::Ordering::Equal,
+        });
+        Ok(())
+    } else {
+        Err("'ordene' só funciona com listas de números ou de textos".to_string())
     }
 }
 

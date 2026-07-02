@@ -610,6 +610,13 @@ impl Interpretador {
                         return self.chamar_base(membro, vals, amb, span);
                     }
                     let recv = self.avaliar(receptor, amb)?;
+                    // Métodos de ordem superior de lista precisam chamar funções kaju,
+                    // então são tratados aqui (onde há acesso ao interpretador).
+                    if let Valor::Lista(l) = &recv {
+                        if matches!(membro.as_str(), "mapeie" | "filtre" | "reduza") {
+                            return self.metodo_lista_superior(l.clone(), membro, vals, span);
+                        }
+                    }
                     return match recv {
                         Valor::Objeto(obj) => self.chamar_metodo_objeto(obj, membro, vals, span),
                         outro => metodos::chamar_metodo(outro, membro, vals).map_err(|msg| {
@@ -728,6 +735,101 @@ impl Interpretador {
                 span.clone(),
             )
             .com_rotulo("isto não é uma função")),
+        }
+    }
+
+    /// Métodos de lista que recebem uma função: mapeie, filtre, reduza.
+    fn metodo_lista_superior(
+        &mut self,
+        lista: crate::valor::ListaRef,
+        nome: &str,
+        args: Vec<Valor>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let itens: Vec<Valor> = lista.borrow().clone();
+        match nome {
+            "mapeie" => {
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                let mut saida = Vec::with_capacity(itens.len());
+                for item in itens {
+                    saida.push(self.chamar(f.clone(), vec![item], span)?);
+                }
+                Ok(Valor::Lista(Rc::new(RefCell::new(saida))))
+            }
+            "filtre" => {
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                let mut saida = Vec::new();
+                for item in itens {
+                    if self.chamar(f.clone(), vec![item.clone()], span)?.eh_verdadeiro() {
+                        saida.push(item);
+                    }
+                }
+                Ok(Valor::Lista(Rc::new(RefCell::new(saida))))
+            }
+            "reduza" => {
+                // reduza(inicial, funcao) -> acc = funcao(acc, item)
+                self.checar_aridade_metodo(nome, &args, 2, span)?;
+                let mut acc = args[0].clone();
+                let f = self.como_funcao(nome, &args[1], span)?;
+                for item in itens {
+                    acc = self.chamar(f.clone(), vec![acc, item], span)?;
+                }
+                Ok(acc)
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    fn checar_aridade_metodo(
+        &self,
+        nome: &str,
+        args: &[Valor],
+        esperado: usize,
+        span: &Span,
+    ) -> Result<(), Diagnostico> {
+        if args.len() != esperado {
+            Err(Diagnostico::novo(
+                "K212",
+                format!(
+                    "o método '{}' espera {} argumento(s), mas recebeu {}",
+                    nome,
+                    esperado,
+                    args.len()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("número de argumentos incorreto"))
+        } else {
+            Ok(())
+        }
+    }
+
+    /// Verifica aridade e extrai o argumento `i` como função.
+    fn arg_funcao(
+        &self,
+        nome: &str,
+        args: &[Valor],
+        i: usize,
+        aridade: usize,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        self.checar_aridade_metodo(nome, args, aridade, span)?;
+        self.como_funcao(nome, &args[i], span)
+    }
+
+    fn como_funcao(&self, nome: &str, v: &Valor, span: &Span) -> Result<Valor, Diagnostico> {
+        match v {
+            Valor::Funcao(_) | Valor::Nativa(_) => Ok(v.clone()),
+            outro => Err(Diagnostico::novo(
+                "K212",
+                format!(
+                    "'{}' espera uma função, mas recebeu um '{}'",
+                    nome,
+                    outro.tipo_nome()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("esperava uma função aqui")),
         }
     }
 
@@ -1026,13 +1128,18 @@ impl Interpretador {
         simbolo: &str,
         f: impl Fn(std::cmp::Ordering) -> bool,
     ) -> Result<Valor, Diagnostico> {
-        match (a.como_f64(), b.como_f64()) {
-            (Some(x), Some(y)) => match x.partial_cmp(&y) {
-                Some(ord) => Ok(Valor::Logico(f(ord))),
-                None => Ok(Valor::Logico(false)),
+        let ordem = match (a, b) {
+            // texto compara em ordem alfabética (lexicográfica)
+            (Valor::Texto(x), Valor::Texto(y)) => x.cmp(y),
+            _ => match (a.como_f64(), b.como_f64()) {
+                (Some(x), Some(y)) => match x.partial_cmp(&y) {
+                    Some(o) => o,
+                    None => return Ok(Valor::Logico(false)),
+                },
+                _ => return Err(self.erro_tipos(simbolo, a, b, span)),
             },
-            _ => Err(self.erro_tipos(simbolo, a, b, span)),
-        }
+        };
+        Ok(Valor::Logico(f(ordem)))
     }
 
     // ---- Indexação ----

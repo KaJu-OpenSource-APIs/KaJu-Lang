@@ -192,6 +192,47 @@ fn metodos_de_dicionario() {
 }
 
 #[test]
+fn metodos_lista_ordem_superior() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva([1,2,3,4].mapeie(funcao(x) { retorne x * 2 }))
+        escreva([1,2,3,4,5,6].filtre(funcao(x) { retorne x % 2 == 0 }))
+        escreva([1,2,3,4,5].reduza(0, funcao(a, x) { retorne a + x }))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "[2, 4, 6, 8]\n[2, 4, 6]\n15\n");
+}
+
+#[test]
+fn metodos_lista_ordene_fatie_indice() {
+    let (out, err, ok) = rodar(
+        r#"
+        var n = [3,1,2]
+        n.ordene()
+        escreva(n)
+        escreva([10,20,30,40].fatie(1, 3))
+        escreva([10,20,30].indiceDe(30), [10,20,30].indiceDe(99))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "[1, 2, 3]\n[20, 30]\n2 -1\n");
+}
+
+#[test]
+fn comparacao_de_texto() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva("abacaxi" < "caju")
+        escreva("z" > "a")
+        escreva("igual" == "igual")
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "verdadeiro\nverdadeiro\nverdadeiro\n");
+}
+
+#[test]
 fn inteiro_e_decimal() {
     let (out, err, ok) = rodar(
         r#"
