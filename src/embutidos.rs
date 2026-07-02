@@ -14,6 +14,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "leia", leia);
     registrar_uma(&mut a, "tamanho", tamanho);
     registrar_uma(&mut a, "tipo", tipo);
+    registrar_uma(&mut a, "classeDe", classe_de);
     registrar_uma(&mut a, "paraTexto", para_texto);
     registrar_uma(&mut a, "paraNumero", para_numero);
     // Matemática (na Fase 2 vira o módulo 'matematica' via importe)
@@ -60,6 +61,17 @@ fn tamanho(args: Vec<Valor>) -> Result<Valor, String> {
 fn tipo(args: Vec<Valor>) -> Result<Valor, String> {
     let arg = um_argumento("tipo", &args)?;
     Ok(Valor::Texto(arg.tipo_nome().to_string()))
+}
+
+fn classe_de(args: Vec<Valor>) -> Result<Valor, String> {
+    let arg = um_argumento("classeDe", &args)?;
+    match arg {
+        Valor::Objeto(o) => Ok(Valor::Texto(o.borrow().classe.nome.clone())),
+        outro => Err(format!(
+            "'classeDe' espera um 'objeto', mas recebeu um '{}'",
+            outro.tipo_nome()
+        )),
+    }
 }
 
 fn para_texto(args: Vec<Valor>) -> Result<Valor, String> {

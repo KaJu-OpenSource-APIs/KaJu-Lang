@@ -10,7 +10,7 @@ use crate::embutidos;
 use crate::erros::{sugerir_nome, Diagnostico};
 use crate::metodos;
 use crate::token::Span;
-use crate::valor::{FuncaoKaju, Valor};
+use crate::valor::{ClasseKaju, FuncaoKaju, Objeto, Valor};
 
 /// Sinal de controle de fluxo propagado ao executar comandos.
 enum Fluxo {
@@ -79,6 +79,61 @@ impl Interpretador {
                     closure: amb.clone(),
                 }));
                 amb.borrow_mut().definir(nome.clone(), f, false);
+                Ok(Fluxo::Segue)
+            }
+            Cmd::DeclClasse {
+                nome,
+                superclasse,
+                construtor,
+                metodos,
+                span,
+            } => {
+                // Resolve a superclasse, se houver.
+                let super_rc = match superclasse {
+                    Some(nome_sup) => match amb.borrow().obter(nome_sup) {
+                        Some(Valor::Classe(c)) => Some(c),
+                        Some(_) => {
+                            return Err(Diagnostico::novo(
+                                "K216",
+                                format!("'{}' não é uma classe", nome_sup),
+                                span.clone(),
+                            )
+                            .com_rotulo("só é possível herdar de uma classe"))
+                        }
+                        None => {
+                            return Err(Diagnostico::novo(
+                                "K216",
+                                format!("a superclasse '{}' não foi definida", nome_sup),
+                                span.clone(),
+                            )
+                            .com_rotulo("esta classe não existe"))
+                        }
+                    },
+                    None => None,
+                };
+
+                let criar_funcao = |def: &crate::ast::MetodoDef| {
+                    Rc::new(FuncaoKaju {
+                        nome: Some(def.nome.clone()),
+                        params: def.params.clone(),
+                        corpo: def.corpo.clone(),
+                        closure: amb.clone(),
+                    })
+                };
+
+                let construtor_rc = construtor.as_ref().map(&criar_funcao);
+                let mut mapa_metodos = HashMap::new();
+                for def in metodos {
+                    mapa_metodos.insert(def.nome.clone(), criar_funcao(def));
+                }
+
+                let classe = Rc::new(ClasseKaju {
+                    nome: nome.clone(),
+                    construtor: construtor_rc,
+                    metodos: mapa_metodos,
+                    superclasse: super_rc,
+                });
+                amb.borrow_mut().definir(nome.clone(), Valor::Classe(classe), false);
                 Ok(Fluxo::Segue)
             }
             Cmd::Expressao(e) => {
@@ -209,6 +264,21 @@ impl Interpretador {
             Expr::Texto(t, _) => Ok(Valor::Texto(t.clone())),
             Expr::Booleano(b, _) => Ok(Valor::Logico(*b)),
             Expr::Nulo(_) => Ok(Valor::Nulo),
+            Expr::Isto(span) => amb.borrow().obter("isto").ok_or_else(|| {
+                Diagnostico::novo(
+                    "K214",
+                    "'isto' só pode ser usado dentro de um método",
+                    span.clone(),
+                )
+                .com_rotulo("fora de um método aqui")
+            }),
+            Expr::Base(span) => Err(Diagnostico::novo(
+                "K215",
+                "'base' só pode ser usado para chamar um método da superclasse",
+                span.clone(),
+            )
+            .com_rotulo("use 'base.metodo(...)'")),
+            Expr::Novo { classe, args, span } => self.instanciar(classe, args, amb, span),
             Expr::Lista(itens, _) => {
                 let mut vs = Vec::with_capacity(itens.len());
                 for it in itens {
@@ -300,15 +370,22 @@ impl Interpretador {
                     ..
                 } = alvo.as_ref()
                 {
-                    let recv = self.avaliar(receptor, amb)?;
                     let mut vals = Vec::with_capacity(args.len());
                     for a in args {
                         vals.push(self.avaliar(a, amb)?);
                     }
-                    return metodos::chamar_metodo(recv, membro, vals).map_err(|msg| {
-                        Diagnostico::novo("K212", msg, span.clone())
-                            .com_rotulo("nesta chamada de método")
-                    });
+                    // base.metodo(...) — chamada à superclasse
+                    if let Expr::Base(_) = receptor.as_ref() {
+                        return self.chamar_base(membro, vals, amb, span);
+                    }
+                    let recv = self.avaliar(receptor, amb)?;
+                    return match recv {
+                        Valor::Objeto(obj) => self.chamar_metodo_objeto(obj, membro, vals, span),
+                        outro => metodos::chamar_metodo(outro, membro, vals).map_err(|msg| {
+                            Diagnostico::novo("K212", msg, span.clone())
+                                .com_rotulo("nesta chamada de método")
+                        }),
+                    };
                 }
                 // Chamada normal de função
                 let f = self.avaliar(alvo, amb)?;
@@ -318,13 +395,64 @@ impl Interpretador {
                 }
                 self.chamar(f, vals, span)
             }
-            Expr::Acesso { membro, span, .. } => Err(Diagnostico::novo(
-                "K211",
-                format!("'{}' só pode ser usado como método, chamando-o com ()", membro),
-                span.clone(),
-            )
-            .com_rotulo("falta chamar o método")
-            .com_ajuda(format!("use '.{}(...)' para chamar o método", membro))),
+            Expr::Acesso { alvo, membro, span } => {
+                let base = self.avaliar(alvo, amb)?;
+                match base {
+                    Valor::Objeto(obj) => {
+                        if let Some(v) = obj.borrow().campos.get(membro) {
+                            return Ok(v.clone());
+                        }
+                        // não é campo: talvez seja um método usado sem ()
+                        if obj.borrow().classe.buscar_metodo(membro).is_some() {
+                            Err(Diagnostico::novo(
+                                "K211",
+                                format!("'{}' é um método, chame-o com ()", membro),
+                                span.clone(),
+                            )
+                            .com_ajuda(format!("use '.{}(...)'", membro)))
+                        } else {
+                            Err(Diagnostico::novo(
+                                "K213",
+                                format!(
+                                    "o objeto da classe '{}' não tem o campo ou método '{}'",
+                                    obj.borrow().classe.nome,
+                                    membro
+                                ),
+                                span.clone(),
+                            )
+                            .com_rotulo("membro inexistente"))
+                        }
+                    }
+                    _ => Err(Diagnostico::novo(
+                        "K211",
+                        format!("'{}' só pode ser usado como método, chamando-o com ()", membro),
+                        span.clone(),
+                    )
+                    .com_rotulo("falta chamar o método")
+                    .com_ajuda(format!("use '.{}(...)' para chamar o método", membro))),
+                }
+            }
+            Expr::AtribCampo {
+                alvo,
+                membro,
+                valor,
+                span,
+            } => {
+                let base = self.avaliar(alvo, amb)?;
+                let v = self.avaliar(valor, amb)?;
+                match base {
+                    Valor::Objeto(obj) => {
+                        obj.borrow_mut().campos.insert(membro.clone(), v.clone());
+                        Ok(v)
+                    }
+                    outro => Err(Diagnostico::novo(
+                        "K217",
+                        format!("não é possível atribuir um campo em '{}'", outro.tipo_nome()),
+                        span.clone(),
+                    )
+                    .com_rotulo("só objetos têm campos")),
+                }
+            }
             Expr::FuncaoAnon { params, corpo, .. } => Ok(Valor::Funcao(Rc::new(FuncaoKaju {
                 nome: None,
                 params: params.clone(),
@@ -369,6 +497,178 @@ impl Interpretador {
                 span.clone(),
             )
             .com_rotulo("isto não é uma função")),
+        }
+    }
+
+    // ---- Orientação a objetos ----
+
+    /// Cria uma instância de uma classe, rodando o construtor se houver.
+    fn instanciar(
+        &mut self,
+        nome: &str,
+        args_expr: &[Expr],
+        amb: &Rc<RefCell<Ambiente>>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let classe = match amb.borrow().obter(nome) {
+            Some(Valor::Classe(c)) => c,
+            Some(_) => {
+                return Err(Diagnostico::novo(
+                    "K218",
+                    format!("'{}' não é uma classe", nome),
+                    span.clone(),
+                )
+                .com_rotulo("só é possível usar 'novo' com uma classe"))
+            }
+            None => {
+                return Err(Diagnostico::novo(
+                    "K218",
+                    format!("a classe '{}' não foi definida", nome),
+                    span.clone(),
+                )
+                .com_rotulo("esta classe não existe"))
+            }
+        };
+
+        let obj = Rc::new(RefCell::new(Objeto {
+            classe: classe.clone(),
+            campos: HashMap::new(),
+        }));
+        let valor_obj = Valor::Objeto(obj);
+
+        let mut vals = Vec::with_capacity(args_expr.len());
+        for a in args_expr {
+            vals.push(self.avaliar(a, amb)?);
+        }
+
+        match classe.buscar_construtor() {
+            Some((ctor, classe_ctor)) => {
+                self.invocar_metodo(ctor, valor_obj.clone(), classe_ctor, vals, span)?;
+            }
+            None if !vals.is_empty() => {
+                return Err(Diagnostico::novo(
+                    "K201",
+                    format!(
+                        "a classe '{}' não tem construtor, mas recebeu {} argumento(s)",
+                        nome,
+                        vals.len()
+                    ),
+                    span.clone(),
+                )
+                .com_rotulo("remova os argumentos ou defina um 'construtor'"));
+            }
+            None => {}
+        }
+
+        Ok(valor_obj)
+    }
+
+    /// Chama um método de um objeto, subindo pela cadeia de herança.
+    fn chamar_metodo_objeto(
+        &mut self,
+        obj: Rc<RefCell<Objeto>>,
+        nome: &str,
+        args: Vec<Valor>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let classe = obj.borrow().classe.clone();
+        match classe.buscar_metodo(nome) {
+            Some((metodo, classe_do_metodo)) => {
+                self.invocar_metodo(metodo, Valor::Objeto(obj), classe_do_metodo, args, span)
+            }
+            None => Err(Diagnostico::novo(
+                "K212",
+                format!("o objeto da classe '{}' não tem o método '{}'", classe.nome, nome),
+                span.clone(),
+            )
+            .com_rotulo("método inexistente")),
+        }
+    }
+
+    /// Chama um método (ou construtor) da superclasse via `base`.
+    fn chamar_base(
+        &mut self,
+        membro: &str,
+        args: Vec<Valor>,
+        amb: &Rc<RefCell<Ambiente>>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let fora_de_metodo = || {
+            Diagnostico::novo(
+                "K215",
+                "'base' só pode ser usado dentro de um método",
+                span.clone(),
+            )
+            .com_rotulo("fora de um método aqui")
+        };
+        let isto = amb.borrow().obter("isto").ok_or_else(fora_de_metodo)?;
+        let classe_atual = match amb.borrow().obter("@classe") {
+            Some(Valor::Classe(c)) => c,
+            _ => return Err(fora_de_metodo()),
+        };
+        let sup = classe_atual.superclasse.clone().ok_or_else(|| {
+            Diagnostico::novo(
+                "K215",
+                format!("a classe '{}' não tem superclasse para usar 'base'", classe_atual.nome),
+                span.clone(),
+            )
+            .com_rotulo("esta classe não herda de ninguém")
+        })?;
+
+        let achado = if membro == "construtor" {
+            sup.buscar_construtor()
+        } else {
+            sup.buscar_metodo(membro)
+        };
+
+        match achado {
+            Some((metodo, classe_do_metodo)) => {
+                self.invocar_metodo(metodo, isto, classe_do_metodo, args, span)
+            }
+            None => Err(Diagnostico::novo(
+                "K212",
+                format!("a superclasse '{}' não tem '{}'", sup.nome, membro),
+                span.clone(),
+            )
+            .com_rotulo("membro inexistente na superclasse")),
+        }
+    }
+
+    /// Executa um método com `isto` e a classe atual ligados no escopo.
+    fn invocar_metodo(
+        &mut self,
+        metodo: Rc<FuncaoKaju>,
+        isto: Valor,
+        classe: Rc<ClasseKaju>,
+        args: Vec<Valor>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        if args.len() != metodo.params.len() {
+            let nome = metodo.nome.clone().unwrap_or_else(|| "o método".to_string());
+            return Err(Diagnostico::novo(
+                "K201",
+                format!(
+                    "'{}' espera {} argumento(s), mas recebeu {}",
+                    nome,
+                    metodo.params.len(),
+                    args.len()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("número de argumentos incorreto"));
+        }
+        let escopo = Ambiente::com_pai(metodo.closure.clone());
+        {
+            let mut e = escopo.borrow_mut();
+            e.definir("isto", isto, true);
+            e.definir("@classe", Valor::Classe(classe), true);
+            for (nome, valor) in metodo.params.iter().zip(args.into_iter()) {
+                e.definir(nome.clone(), valor, false);
+            }
+        }
+        match self.executar_bloco(&metodo.corpo, &escopo)? {
+            Fluxo::Retorna(v) => Ok(v),
+            _ => Ok(Valor::Nulo),
         }
     }
 

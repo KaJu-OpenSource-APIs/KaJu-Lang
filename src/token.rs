@@ -45,6 +45,15 @@ pub enum TipoToken {
     Falso,
     Nulo,
 
+    // Palavras-chave de orientação a objetos (Fase 2)
+    Classe,
+    Herda,
+    Metodo,
+    Construtor,
+    Novo,
+    Isto,
+    Base,
+
     // Símbolos
     Mais,
     Menos,
@@ -108,6 +117,13 @@ pub fn palavra_chave(texto: &str) -> Option<TipoToken> {
         "verdadeiro" => TipoToken::Verdadeiro,
         "falso" => TipoToken::Falso,
         "nulo" => TipoToken::Nulo,
+        "classe" => TipoToken::Classe,
+        "herda" => TipoToken::Herda,
+        "metodo" => TipoToken::Metodo,
+        "construtor" => TipoToken::Construtor,
+        "novo" => TipoToken::Novo,
+        "isto" => TipoToken::Isto,
+        "base" => TipoToken::Base,
         _ => return None,
     };
     Some(tipo)

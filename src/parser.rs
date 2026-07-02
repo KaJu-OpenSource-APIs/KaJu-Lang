@@ -1,6 +1,6 @@
 //! Analisador sintático: transforma tokens em uma AST por descida recursiva.
 
-use crate::ast::{Cmd, Expr, OpBinaria, OpLogica, OpUnaria};
+use crate::ast::{Cmd, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria};
 use crate::erros::Diagnostico;
 use crate::token::{Span, TipoToken, Token};
 
@@ -102,6 +102,7 @@ impl Parser {
         match &self.atual().tipo {
             TipoToken::Var => self.decl_var(false),
             TipoToken::Constante => self.decl_var(true),
+            TipoToken::Classe => self.decl_classe(),
             TipoToken::Funcao => {
                 // pode ser declaração de função nomeada ou função anônima em expressão.
                 if let TipoToken::Identificador(_) = self.tokens[self.pos + 1].tipo {
@@ -149,6 +150,93 @@ impl Parser {
             nome,
             params,
             corpo,
+            span: inicio.span,
+        })
+    }
+
+    fn decl_classe(&mut self) -> Result<Cmd, Diagnostico> {
+        let inicio = self.avancar(); // 'classe'
+        let nome_tok = self.consumir(
+            &TipoToken::Identificador(String::new()),
+            "K013",
+            "esperava o nome da classe".into(),
+            "dê um nome à classe aqui".into(),
+        )?;
+        let nome = nome_tok.lexema.clone();
+
+        let superclasse = if self.casar(&TipoToken::Herda) {
+            let sup = self.consumir(
+                &TipoToken::Identificador(String::new()),
+                "K013",
+                "esperava o nome da superclasse após 'herda'".into(),
+                "nome da superclasse aqui".into(),
+            )?;
+            Some(sup.lexema.clone())
+        } else {
+            None
+        };
+
+        self.consumir(
+            &TipoToken::ChaveEsq,
+            "K013",
+            "esperava '{' para abrir o corpo da classe".into(),
+            "abra o corpo da classe com '{'".into(),
+        )?;
+
+        let mut construtor = None;
+        let mut metodos = Vec::new();
+        while !self.verificar(&TipoToken::ChaveDir) && !self.fim() {
+            match &self.atual().tipo {
+                TipoToken::Construtor => {
+                    self.avancar();
+                    let params = self.lista_parametros()?;
+                    let corpo = self.bloco()?;
+                    construtor = Some(MetodoDef {
+                        nome: "construtor".into(),
+                        params,
+                        corpo,
+                    });
+                }
+                TipoToken::Metodo => {
+                    self.avancar();
+                    let nome_m = self.consumir(
+                        &TipoToken::Identificador(String::new()),
+                        "K013",
+                        "esperava o nome do método".into(),
+                        "nome do método aqui".into(),
+                    )?;
+                    let params = self.lista_parametros()?;
+                    let corpo = self.bloco()?;
+                    metodos.push(MetodoDef {
+                        nome: nome_m.lexema.clone(),
+                        params,
+                        corpo,
+                    });
+                }
+                _ => {
+                    return Err(Diagnostico::novo(
+                        "K013",
+                        "dentro de uma classe só podem existir 'construtor' e 'metodo'",
+                        self.atual().span.clone(),
+                    )
+                    .com_rotulo("não esperava isto aqui")
+                    .com_ajuda("declare um método com 'metodo nome(...) { ... }'"))
+                }
+            }
+        }
+
+        self.consumir(
+            &TipoToken::ChaveDir,
+            "K013",
+            "esperava '}' para fechar a classe".into(),
+            "feche a classe com '}'".into(),
+        )?;
+
+        Ok(Cmd::DeclClasse {
+            nome,
+            superclasse,
+            construtor,
+            metodos,
             span: inicio.span,
         })
     }
@@ -354,6 +442,15 @@ impl Parser {
                         span: span_total,
                     })
                 }
+                Expr::Acesso { alvo, membro, span } => {
+                    let span_total = unir_span(&span, &valor.span());
+                    Ok(Expr::AtribCampo {
+                        alvo,
+                        membro,
+                        valor: Box::new(valor),
+                        span: span_total,
+                    })
+                }
                 _ => Err(Diagnostico::novo(
                     "K007",
                     "só é possível atribuir a uma variável ou a um índice",
@@ -548,12 +645,17 @@ impl Parser {
                 };
             } else if self.verificar(&TipoToken::Ponto) {
                 self.avancar();
-                let membro = self.consumir(
-                    &TipoToken::Identificador(String::new()),
-                    "K011",
-                    "esperava o nome de um membro após '.'".into(),
-                    "escreva o nome do método ou atributo aqui".into(),
-                )?;
+                // O membro é um identificador; 'construtor' é permitido (para base.construtor()).
+                let membro = if self.verificar(&TipoToken::Construtor) {
+                    self.avancar()
+                } else {
+                    self.consumir(
+                        &TipoToken::Identificador(String::new()),
+                        "K011",
+                        "esperava o nome de um membro após '.'".into(),
+                        "escreva o nome do método ou atributo aqui".into(),
+                    )?
+                };
                 let span = unir_span(&expr.span(), &membro.span);
                 expr = Expr::Acesso {
                     alvo: Box::new(expr),
@@ -589,6 +691,50 @@ impl Parser {
             TipoToken::Nulo => {
                 self.avancar();
                 Ok(Expr::Nulo(tok.span))
+            }
+            TipoToken::Isto => {
+                self.avancar();
+                Ok(Expr::Isto(tok.span))
+            }
+            TipoToken::Base => {
+                self.avancar();
+                Ok(Expr::Base(tok.span))
+            }
+            TipoToken::Novo => {
+                self.avancar();
+                let classe = self.consumir(
+                    &TipoToken::Identificador(String::new()),
+                    "K014",
+                    "esperava o nome da classe após 'novo'".into(),
+                    "escreva o nome da classe aqui".into(),
+                )?;
+                self.consumir(
+                    &TipoToken::ParenEsq,
+                    "K014",
+                    "esperava '(' para os argumentos do construtor".into(),
+                    "abra os parênteses aqui".into(),
+                )?;
+                let mut args = Vec::new();
+                if !self.verificar(&TipoToken::ParenDir) {
+                    loop {
+                        args.push(self.expressao()?);
+                        if !self.casar(&TipoToken::Virgula) {
+                            break;
+                        }
+                    }
+                }
+                let fim = self.consumir(
+                    &TipoToken::ParenDir,
+                    "K014",
+                    "esperava ')' para fechar os argumentos".into(),
+                    "feche os parênteses aqui".into(),
+                )?;
+                let span = unir_span(&tok.span, &fim.span);
+                Ok(Expr::Novo {
+                    classe: classe.lexema.clone(),
+                    args,
+                    span,
+                })
             }
             TipoToken::Identificador(nome) => {
                 self.avancar();

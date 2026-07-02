@@ -5,7 +5,7 @@ Linguagem de programação de alto nível, **interpretada**, de **uso geral** e 
 > Especificação completa da linguagem: [`ESPECIFICACAO.md`](ESPECIFICACAO.md)
 > Pesquisa que embasou o design da documentação: [`PESQUISA-DOCUMENTACAO.md`](PESQUISA-DOCUMENTACAO.md)
 
-## Estado atual: Fase 1.5
+## Estado atual: Fase 2 (em andamento — OOP pronta)
 
 Já funciona:
 - Tipos `numero`, `texto`, `logico`, `lista`, `dicionario`, `funcao`, `nulo`
@@ -22,9 +22,10 @@ Já funciona:
   - dicionário: `chaves`, `valores`, `tem`, `remova`, `tamanho`
 - Embutidos: `escreva`, `leia`, `tamanho`, `tipo`, `paraTexto`, `paraNumero`
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio` e a constante `PI`
+- **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
 - **Erros ricos em português** (estilo Rust): código do erro, trecho com `^^^^`, `nota:` e `ajuda:` com sugestão "você quis dizer X?"
 
-**Fase 1.5 completa.** Próximo (Fase 2): OOP (classes/herança), exceções `tente`/`capture`, módulos `importe`. O despacho por `.` já está pronto e será reaproveitado pelos métodos de classes. Ver §14 da especificação.
+**Fase 2 em andamento.** Feito: OOP completa. Falta: exceções `tente`/`capture`/`lance` e módulos `importe`. Ver §14 da especificação.
 
 ## Como usar
 

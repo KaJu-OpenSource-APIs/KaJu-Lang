@@ -190,6 +190,78 @@ fn matematica() {
 }
 
 #[test]
+fn classes_e_metodos() {
+    let (out, _, ok) = rodar(
+        r#"
+        classe Contador {
+            construtor() { isto.valor = 0 }
+            metodo incremente() {
+                isto.valor = isto.valor + 1
+                retorne isto.valor
+            }
+        }
+        var c = novo Contador()
+        escreva(c.incremente(), c.incremente(), c.incremente())
+        escreva(classeDe(c))
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "1 2 3\nContador\n");
+}
+
+#[test]
+fn heranca_e_base() {
+    let (out, _, ok) = rodar(
+        r#"
+        classe Animal {
+            construtor(nome) { isto.nome = nome }
+            metodo falar() { escreva(isto.nome + " faz um som") }
+        }
+        classe Gato herda Animal {
+            construtor(nome) { base.construtor(nome) }
+            metodo falar() {
+                base.falar()
+                escreva(isto.nome + " faz miau")
+            }
+        }
+        var g = novo Gato("Felix")
+        g.falar()
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out, "Felix faz um som\nFelix faz miau\n");
+}
+
+#[test]
+fn objetos_sao_referencias() {
+    let (out, _, ok) = rodar(
+        r#"
+        classe Caixa { construtor(v) { isto.v = v } }
+        funcao muda(c) { c.v = 99 }
+        var caixa = novo Caixa(1)
+        muda(caixa)
+        escreva(caixa.v)
+    "#,
+    );
+    assert!(ok);
+    assert_eq!(out.trim(), "99");
+}
+
+#[test]
+fn erro_metodo_objeto_inexistente() {
+    let (_, err, ok) = rodar("classe A { }\nvar a = novo A()\na.voar()");
+    assert!(!ok);
+    assert!(err.contains("erro[K212]"), "stderr: {err}");
+}
+
+#[test]
+fn erro_novo_em_nao_classe() {
+    let (_, err, ok) = rodar("var x = 5\nnovo x()");
+    assert!(!ok);
+    assert!(err.contains("erro[K218]"), "stderr: {err}");
+}
+
+#[test]
 fn erro_metodo_inexistente() {
     let (_, err, ok) = rodar("var l = [1]\nl.gire()");
     assert!(!ok);

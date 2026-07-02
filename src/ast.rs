@@ -39,6 +39,8 @@ pub enum Expr {
     Texto(String, Span),
     Booleano(bool, Span),
     Nulo(Span),
+    Isto(Span),
+    Base(Span),
     Lista(Vec<Expr>, Span),
     Dicionario(Vec<(String, Expr)>, Span),
     Variavel(String, Span),
@@ -56,6 +58,17 @@ pub enum Expr {
         alvo: Box<Expr>,
         indice: Box<Expr>,
         valor: Box<Expr>,
+        span: Span,
+    },
+    AtribCampo {
+        alvo: Box<Expr>,
+        membro: String,
+        valor: Box<Expr>,
+        span: Span,
+    },
+    Novo {
+        classe: String,
+        args: Vec<Expr>,
         span: Span,
     },
     Unaria {
@@ -100,12 +113,16 @@ impl Expr {
             | Expr::Texto(_, s)
             | Expr::Booleano(_, s)
             | Expr::Nulo(s)
+            | Expr::Isto(s)
+            | Expr::Base(s)
             | Expr::Lista(_, s)
             | Expr::Dicionario(_, s)
             | Expr::Variavel(_, s)
             | Expr::Indice { span: s, .. }
             | Expr::Acesso { span: s, .. }
             | Expr::AtribIndice { span: s, .. }
+            | Expr::AtribCampo { span: s, .. }
+            | Expr::Novo { span: s, .. }
             | Expr::Unaria { span: s, .. }
             | Expr::Binaria { span: s, .. }
             | Expr::Logica { span: s, .. }
@@ -116,12 +133,27 @@ impl Expr {
     }
 }
 
+/// Definição de um método ou construtor dentro de uma classe.
+#[derive(Clone, Debug)]
+pub struct MetodoDef {
+    pub nome: String,
+    pub params: Vec<String>,
+    pub corpo: Vec<Cmd>,
+}
+
 /// Comandos e declarações: executam ações.
 // Alguns `Span` ainda não são lidos; serão usados na Fase 2 para diagnósticos
 // de fluxo (ex.: 'pare' fora de laço, 'retorne' fora de função).
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub enum Cmd {
+    DeclClasse {
+        nome: String,
+        superclasse: Option<String>,
+        construtor: Option<MetodoDef>,
+        metodos: Vec<MetodoDef>,
+        span: Span,
+    },
     DeclVar {
         nome: String,
         valor: Expr,

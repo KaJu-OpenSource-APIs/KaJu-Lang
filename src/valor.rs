@@ -24,6 +24,45 @@ pub struct Nativa {
     pub func: fn(Vec<Valor>) -> Result<Valor, String>,
 }
 
+/// Uma classe: nome, construtor, métodos e superclasse opcional.
+pub struct ClasseKaju {
+    pub nome: String,
+    pub construtor: Option<Rc<FuncaoKaju>>,
+    pub metodos: HashMap<String, Rc<FuncaoKaju>>,
+    pub superclasse: Option<Rc<ClasseKaju>>,
+}
+
+impl ClasseKaju {
+    /// Procura um método na classe e, se não achar, sobe pela superclasse.
+    /// Devolve o método e a classe onde ele foi encontrado (para o 'base').
+    pub fn buscar_metodo(self: &Rc<Self>, nome: &str) -> Option<(Rc<FuncaoKaju>, Rc<ClasseKaju>)> {
+        if let Some(m) = self.metodos.get(nome) {
+            Some((m.clone(), self.clone()))
+        } else if let Some(sup) = &self.superclasse {
+            sup.buscar_metodo(nome)
+        } else {
+            None
+        }
+    }
+
+    /// Procura o construtor mais próximo na cadeia de herança.
+    pub fn buscar_construtor(self: &Rc<Self>) -> Option<(Rc<FuncaoKaju>, Rc<ClasseKaju>)> {
+        if let Some(c) = &self.construtor {
+            Some((c.clone(), self.clone()))
+        } else if let Some(sup) = &self.superclasse {
+            sup.buscar_construtor()
+        } else {
+            None
+        }
+    }
+}
+
+/// Uma instância de uma classe.
+pub struct Objeto {
+    pub classe: Rc<ClasseKaju>,
+    pub campos: HashMap<String, Valor>,
+}
+
 /// Um valor kaju.
 #[derive(Clone)]
 pub enum Valor {
@@ -34,6 +73,8 @@ pub enum Valor {
     Dicionario(DicRef),
     Funcao(Rc<FuncaoKaju>),
     Nativa(Rc<Nativa>),
+    Classe(Rc<ClasseKaju>),
+    Objeto(Rc<RefCell<Objeto>>),
     Nulo,
 }
 
@@ -56,6 +97,8 @@ impl Valor {
             Valor::Lista(_) => "lista",
             Valor::Dicionario(_) => "dicionario",
             Valor::Funcao(_) | Valor::Nativa(_) => "funcao",
+            Valor::Classe(_) => "classe",
+            Valor::Objeto(_) => "objeto",
             Valor::Nulo => "nulo",
         }
     }
@@ -93,6 +136,8 @@ impl Valor {
                 None => "<funcao anônima>".to_string(),
             },
             Valor::Nativa(n) => format!("<funcao embutida {}>", n.nome),
+            Valor::Classe(c) => format!("<classe {}>", c.nome),
+            Valor::Objeto(o) => format!("<objeto {}>", o.borrow().classe.nome),
         }
     }
 
@@ -107,6 +152,8 @@ impl Valor {
             (Valor::Dicionario(a), Valor::Dicionario(b)) => Rc::ptr_eq(a, b),
             (Valor::Funcao(a), Valor::Funcao(b)) => Rc::ptr_eq(a, b),
             (Valor::Nativa(a), Valor::Nativa(b)) => Rc::ptr_eq(a, b),
+            (Valor::Classe(a), Valor::Classe(b)) => Rc::ptr_eq(a, b),
+            (Valor::Objeto(a), Valor::Objeto(b)) => Rc::ptr_eq(a, b),
             _ => false,
         }
     }

@@ -1,0 +1,51 @@
+// Classe base
+classe Animal {
+    construtor(nome) {
+        isto.nome = nome
+    }
+    metodo falar() {
+        escreva(isto.nome + " faz um som")
+    }
+    metodo apresentar() {
+        escreva("Eu sou", isto.nome)
+    }
+}
+
+// Herança + sobrescrita + base
+classe Gato herda Animal {
+    construtor(nome, cor) {
+        base.construtor(nome)     // chama o construtor da superclasse
+        isto.cor = cor
+    }
+    metodo falar() {
+        base.falar()              // chama o método da superclasse
+        escreva(isto.nome + " faz miau")
+    }
+}
+
+var felix = novo Gato("Félix", "preto")
+felix.apresentar()               // herdado de Animal
+felix.falar()                    // sobrescrito, usando base
+escreva("cor:", felix.cor)
+escreva("classe:", classeDe(felix))
+escreva("é objeto?", tipo(felix))
+
+// Objetos são referências (mutação compartilhada)
+funcao renomeie(bicho, novoNome) {
+    bicho.nome = novoNome
+}
+renomeie(felix, "Tom")
+felix.apresentar()
+
+// Contador com estado encapsulado
+classe Contador {
+    construtor() {
+        isto.valor = 0
+    }
+    metodo incremente() {
+        isto.valor = isto.valor + 1
+        retorne isto.valor
+    }
+}
+var c = novo Contador()
+escreva("contagem:", c.incremente(), c.incremente(), c.incremente())
