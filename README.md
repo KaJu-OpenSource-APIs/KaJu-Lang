@@ -82,6 +82,10 @@ src/
 └── erros.rs        diagnósticos ricos em português
 ```
 
+## Suporte a editor
+
+Há uma extensão de VS Code em [`editores/vscode-kaju`](editores/vscode-kaju) com realce de sintaxe, ícone de arquivo e configuração da linguagem. Veja o README de lá para instalar.
+
 ## Licença
 
 [MIT](LICENSE) © 2026 Julio Barbosa. Uso, modificação e distribuição livres, inclusive comercial, mantendo o aviso de copyright.

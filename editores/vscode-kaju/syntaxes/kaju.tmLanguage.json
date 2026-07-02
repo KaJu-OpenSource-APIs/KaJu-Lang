@@ -1,0 +1,114 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "kaju",
+  "scopeName": "source.kaju",
+  "patterns": [
+    { "include": "#comentarios" },
+    { "include": "#textos" },
+    { "include": "#definicao-funcao" },
+    { "include": "#definicao-classe" },
+    { "include": "#nome-classe" },
+    { "include": "#palavras-chave" },
+    { "include": "#embutidos" },
+    { "include": "#numeros" },
+    { "include": "#chamada-funcao" },
+    { "include": "#operadores" }
+  ],
+  "repository": {
+    "comentarios": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.kaju",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.kaju",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "textos": {
+      "name": "string.quoted.double.kaju",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.kaju",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "definicao-funcao": {
+      "match": "\\b(funcao|metodo)\\s+([\\p{L}_][\\p{L}\\p{N}_]*)",
+      "captures": {
+        "1": { "name": "storage.type.function.kaju" },
+        "2": { "name": "entity.name.function.kaju" }
+      }
+    },
+    "definicao-classe": {
+      "match": "\\b(classe)\\s+([\\p{L}_][\\p{L}\\p{N}_]*)",
+      "captures": {
+        "1": { "name": "storage.type.class.kaju" },
+        "2": { "name": "entity.name.type.class.kaju" }
+      }
+    },
+    "nome-classe": {
+      "match": "\\b(herda|novo)\\s+([\\p{L}_][\\p{L}\\p{N}_]*)",
+      "captures": {
+        "1": { "name": "keyword.other.kaju" },
+        "2": { "name": "entity.name.type.class.kaju" }
+      }
+    },
+    "palavras-chave": {
+      "patterns": [
+        {
+          "name": "keyword.control.kaju",
+          "match": "\\b(se|senao|enquanto|para|cada|em|de|ate|pare|continue|retorne|tente|capture|finalmente|lance)\\b"
+        },
+        {
+          "name": "keyword.control.import.kaju",
+          "match": "\\b(importe|como)\\b"
+        },
+        {
+          "name": "storage.type.kaju",
+          "match": "\\b(var|constante|funcao|classe|metodo|construtor)\\b"
+        },
+        {
+          "name": "keyword.other.kaju",
+          "match": "\\b(novo|herda)\\b"
+        },
+        {
+          "name": "variable.language.kaju",
+          "match": "\\b(isto|base)\\b"
+        },
+        {
+          "name": "constant.language.kaju",
+          "match": "\\b(verdadeiro|falso|nulo|PI)\\b"
+        },
+        {
+          "name": "keyword.operator.logical.kaju",
+          "match": "\\b(e|ou|nao)\\b"
+        }
+      ]
+    },
+    "embutidos": {
+      "name": "support.function.builtin.kaju",
+      "match": "\\b(escreva|leia|tamanho|tipo|classeDe|paraTexto|paraNumero|paraInteiro|raiz|absoluto|potencia|piso|teto|arredonde|aleatorio|minimo|maximo|seno|cosseno|log|leiaArquivo|escrevaArquivo|existeArquivo)\\b"
+    },
+    "numeros": {
+      "name": "constant.numeric.kaju",
+      "match": "\\b\\d+(\\.\\d+)?\\b"
+    },
+    "chamada-funcao": {
+      "match": "([\\p{L}_][\\p{L}\\p{N}_]*)\\s*(?=\\()",
+      "captures": {
+        "1": { "name": "entity.name.function.call.kaju" }
+      }
+    },
+    "operadores": {
+      "name": "keyword.operator.kaju",
+      "match": "(==|!=|<=|>=|<|>|=|\\+|-|\\*|/|%)"
+    }
+  }
+}
