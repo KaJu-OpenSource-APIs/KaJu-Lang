@@ -1,6 +1,6 @@
 //! Analisador sintático: transforma tokens em uma AST por descida recursiva.
 
-use crate::ast::{Cmd, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria};
+use crate::ast::{Cmd, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Parametro};
 use crate::erros::Diagnostico;
 use crate::lexer::Lexer;
 use crate::token::{Pedaco, Span, TipoToken, Token};
@@ -335,23 +335,57 @@ impl Parser {
         })
     }
 
-    fn lista_parametros(&mut self) -> Result<Vec<String>, Diagnostico> {
+    fn lista_parametros(&mut self) -> Result<Vec<Parametro>, Diagnostico> {
         self.consumir(
             &TipoToken::ParenEsq,
             "K004",
             "esperava '(' para a lista de parâmetros".into(),
             "abra os parênteses aqui".into(),
         )?;
-        let mut params = Vec::new();
+        let mut params: Vec<Parametro> = Vec::new();
+        let mut viu_padrao = false;
         if !self.verificar(&TipoToken::ParenDir) {
             loop {
+                // '...' antes do nome marca parâmetro variádico (coleta o resto)
+                let variadico = self.casar(&TipoToken::Reticencias);
                 let p = self.consumir(
                     &TipoToken::Identificador(String::new()),
                     "K004",
                     "esperava o nome de um parâmetro".into(),
                     "nome do parâmetro aqui".into(),
                 )?;
-                params.push(p.lexema.clone());
+                // valor padrão opcional: nome = expr
+                let padrao = if !variadico && self.casar(&TipoToken::Igual) {
+                    Some(self.expressao()?)
+                } else {
+                    None
+                };
+                if padrao.is_some() {
+                    viu_padrao = true;
+                } else if !variadico && viu_padrao {
+                    return Err(Diagnostico::novo(
+                        "K004",
+                        format!(
+                            "o parâmetro '{}' (sem padrão) não pode vir depois de um com valor padrão",
+                            p.lexema
+                        ),
+                        p.span.clone(),
+                    )
+                    .com_rotulo("dê um valor padrão a ele ou mova-o para antes"));
+                }
+                if variadico && !self.verificar(&TipoToken::ParenDir) {
+                    return Err(Diagnostico::novo(
+                        "K004",
+                        "o parâmetro variádico (...) precisa ser o último",
+                        self.atual().span.clone(),
+                    )
+                    .com_rotulo("nada pode vir depois dele"));
+                }
+                params.push(Parametro {
+                    nome: p.lexema.clone(),
+                    padrao,
+                    variadico,
+                });
                 if !self.casar(&TipoToken::Virgula) {
                     break;
                 }

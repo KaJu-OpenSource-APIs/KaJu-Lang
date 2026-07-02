@@ -14,7 +14,8 @@ Já funciona:
 - Comparações e operadores lógicos em português (`e`, `ou`, `nao`) com curto-circuito
 - `se` / `senao` / `senao se`, `enquanto`, `para X de A ate B`, `para cada X em lista/dicionario`
 - `pare`, `continue`, `retorne`
-- Funções de primeira classe e **closures**
+- Funções de primeira classe e **closures**, com **parâmetros padrão** (`b = 10`) e **variádicos** (`...resto`)
+- Açúcar sintático: **atribuição composta** (`+=`, `-=`, `*=`, `/=`, `%=`), **operadores de bits** (`& | ^ ~ << >>`), **interpolação de strings** (`$"olá {nome}"`)
 - **Indexação** `a[i]` (leitura e atribuição) em listas, textos e dicionários
 - **Dicionários** `{"chave": valor}`
 - **Operador `.` + métodos** com encadeamento:

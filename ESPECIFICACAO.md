@@ -232,6 +232,28 @@ var dobro = funcao(x) { retorne x * 2 }
 - Escopo **léxico** com closures (a função captura o ambiente onde foi definida).
 - Argumentos passados por valor (coleções são referências compartilhadas).
 
+### 6.1 Parâmetros padrão e variádicos
+
+```kaju
+// valor padrão: usado quando o argumento não é passado
+funcao saudar(nome, saudacao = "Olá") {
+    escreva(saudacao + ", " + nome)
+}
+saudar("Ana")            // Olá, Ana
+saudar("Ana", "Oi")      // Oi, Ana
+
+// variádico: '...' coleta o resto dos argumentos em uma lista
+funcao soma(...numeros) {
+    var total = 0
+    para cada n em numeros { total += n }
+    retorne total
+}
+soma(1, 2, 3)            // 6
+```
+
+- Parâmetros sem padrão não podem vir depois de um com padrão.
+- O parâmetro variádico (`...`) deve ser o último.
+
 ---
 
 ## 7. Classes e objetos

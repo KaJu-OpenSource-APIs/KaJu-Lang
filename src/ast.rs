@@ -107,7 +107,7 @@ pub enum Expr {
         span: Span,
     },
     FuncaoAnon {
-        params: Vec<String>,
+        params: Vec<Parametro>,
         corpo: Vec<Cmd>,
         span: Span,
     },
@@ -142,11 +142,19 @@ impl Expr {
     }
 }
 
+/// Um parâmetro de função: nome, valor padrão opcional e se é variádico (...).
+#[derive(Clone, Debug)]
+pub struct Parametro {
+    pub nome: String,
+    pub padrao: Option<Expr>,
+    pub variadico: bool,
+}
+
 /// Definição de um método ou construtor dentro de uma classe.
 #[derive(Clone, Debug)]
 pub struct MetodoDef {
     pub nome: String,
-    pub params: Vec<String>,
+    pub params: Vec<Parametro>,
     pub corpo: Vec<Cmd>,
 }
 
@@ -171,7 +179,7 @@ pub enum Cmd {
     },
     DeclFuncao {
         nome: String,
-        params: Vec<String>,
+        params: Vec<Parametro>,
         corpo: Vec<Cmd>,
         span: Span,
     },

@@ -143,7 +143,15 @@ impl Lexer {
             ']' => (TipoToken::ColcheteDir, 1),
             ',' => (TipoToken::Virgula, 1),
             ':' => (TipoToken::DoisPontos, 1),
-            '.' => (TipoToken::Ponto, 1),
+            '.' => {
+                if self.atual() == '.' && self.proximo() == '.' {
+                    self.avancar();
+                    self.avancar();
+                    (TipoToken::Reticencias, 3)
+                } else {
+                    (TipoToken::Ponto, 1)
+                }
+            }
             '=' => {
                 if self.atual() == '=' {
                     self.avancar();

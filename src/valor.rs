@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::ambiente::Ambiente;
-use crate::ast::Cmd;
+use crate::ast::{Cmd, Parametro};
 
 pub type ListaRef = Rc<RefCell<Vec<Valor>>>;
 pub type DicRef = Rc<RefCell<HashMap<String, Valor>>>;
@@ -13,7 +13,7 @@ pub type DicRef = Rc<RefCell<HashMap<String, Valor>>>;
 /// Uma função definida em kaju, com o ambiente capturado (closure).
 pub struct FuncaoKaju {
     pub nome: Option<String>,
-    pub params: Vec<String>,
+    pub params: Vec<Parametro>,
     pub corpo: Vec<Cmd>,
     pub closure: Rc<RefCell<Ambiente>>,
 }

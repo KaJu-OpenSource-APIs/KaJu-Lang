@@ -252,6 +252,32 @@ fn lacos_e_controle() {
 }
 
 #[test]
+fn parametros_padrao_e_variadicos() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao saudar(nome, saud = "Olá") { retorne saud + ", " + nome }
+        escreva(saudar("Ana"))
+        escreva(saudar("Beto", "Oi"))
+        funcao soma(...ns) {
+            var t = 0
+            para cada n em ns { t += n }
+            retorne t
+        }
+        escreva(soma(), soma(1, 2, 3, 4))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "Olá, Ana\nOi, Beto\n0 10\n");
+}
+
+#[test]
+fn erro_argumentos_faltando() {
+    let (_, err, ok) = rodar("funcao f(a, b) { retorne a }\nf(1)");
+    assert!(!ok);
+    assert!(err.contains("erro[K201]"), "stderr: {err}");
+}
+
+#[test]
 fn funcoes_e_closures() {
     let (out, _, ok) = rodar(
         r#"

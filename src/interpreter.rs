@@ -700,27 +700,59 @@ impl Interpretador {
         }
     }
 
+    /// Liga os argumentos aos parâmetros no `escopo`, tratando valores padrão
+    /// (avaliados em `env_padrao`) e o parâmetro variádico (coleta o resto).
+    fn vincular_args(
+        &mut self,
+        nome_fn: &str,
+        params: &[crate::ast::Parametro],
+        args: Vec<Valor>,
+        escopo: &Rc<RefCell<Ambiente>>,
+        env_padrao: &Rc<RefCell<Ambiente>>,
+        span: &Span,
+    ) -> Result<(), Diagnostico> {
+        let tem_var = params.last().map(|p| p.variadico).unwrap_or(false);
+        let fixos = params.len() - if tem_var { 1 } else { 0 };
+        let obrig = params.iter().take(fixos).filter(|p| p.padrao.is_none()).count();
+
+        if args.len() < obrig || (!tem_var && args.len() > fixos) {
+            let msg = if tem_var {
+                format!("'{}' espera pelo menos {} argumento(s), mas recebeu {}", nome_fn, obrig, args.len())
+            } else if obrig == fixos {
+                format!("'{}' espera {} argumento(s), mas recebeu {}", nome_fn, fixos, args.len())
+            } else {
+                format!("'{}' espera de {} a {} argumento(s), mas recebeu {}", nome_fn, obrig, fixos, args.len())
+            };
+            return Err(Diagnostico::novo("K201", msg, span.clone())
+                .com_rotulo("número de argumentos incorreto"));
+        }
+
+        let mut it = args.into_iter();
+        for p in params.iter().take(fixos) {
+            let valor = match it.next() {
+                Some(v) => v,
+                None => match &p.padrao {
+                    Some(expr) => self.avaliar(expr, env_padrao)?,
+                    None => Valor::Nulo,
+                },
+            };
+            escopo.borrow_mut().definir(p.nome.clone(), valor, false);
+        }
+        if tem_var {
+            let resto: Vec<Valor> = it.collect();
+            escopo
+                .borrow_mut()
+                .definir(params[fixos].nome.clone(), Valor::Lista(Rc::new(RefCell::new(resto))), false);
+        }
+        Ok(())
+    }
+
     fn chamar(&mut self, alvo: Valor, args: Vec<Valor>, span: &Span) -> Result<Valor, Diagnostico> {
         match alvo {
             Valor::Funcao(f) => {
-                if args.len() != f.params.len() {
-                    let nome = f.nome.clone().unwrap_or_else(|| "a função".to_string());
-                    return Err(Diagnostico::novo(
-                        "K201",
-                        format!(
-                            "'{}' espera {} argumento(s), mas recebeu {}",
-                            nome,
-                            f.params.len(),
-                            args.len()
-                        ),
-                        span.clone(),
-                    )
-                    .com_rotulo("número de argumentos incorreto"));
-                }
+                let nome = f.nome.clone().unwrap_or_else(|| "a função".to_string());
                 let escopo = Ambiente::com_pai(f.closure.clone());
-                for (nome, valor) in f.params.iter().zip(args.into_iter()) {
-                    escopo.borrow_mut().definir(nome.clone(), valor, false);
-                }
+                self.vincular_args(&nome, &f.params, args, &escopo, &f.closure, span)?;
                 match self.executar_bloco(&f.corpo, &escopo)? {
                     Fluxo::Retorna(v) => Ok(v),
                     _ => Ok(Valor::Nulo),
@@ -1004,29 +1036,14 @@ impl Interpretador {
         args: Vec<Valor>,
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
-        if args.len() != metodo.params.len() {
-            let nome = metodo.nome.clone().unwrap_or_else(|| "o método".to_string());
-            return Err(Diagnostico::novo(
-                "K201",
-                format!(
-                    "'{}' espera {} argumento(s), mas recebeu {}",
-                    nome,
-                    metodo.params.len(),
-                    args.len()
-                ),
-                span.clone(),
-            )
-            .com_rotulo("número de argumentos incorreto"));
-        }
+        let nome = metodo.nome.clone().unwrap_or_else(|| "o método".to_string());
         let escopo = Ambiente::com_pai(metodo.closure.clone());
         {
             let mut e = escopo.borrow_mut();
             e.definir("isto", isto, true);
             e.definir("@classe", Valor::Classe(classe), true);
-            for (nome, valor) in metodo.params.iter().zip(args.into_iter()) {
-                e.definir(nome.clone(), valor, false);
-            }
         }
+        self.vincular_args(&nome, &metodo.params, args, &escopo, &metodo.closure, span)?;
         match self.executar_bloco(&metodo.corpo, &escopo)? {
             Fluxo::Retorna(v) => Ok(v),
             _ => Ok(Valor::Nulo),
