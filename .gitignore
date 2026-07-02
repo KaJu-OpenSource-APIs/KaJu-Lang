@@ -1,0 +1,7 @@
+# Artefatos de build do Rust/Cargo
+/target
+
+# Arquivos de backup e temporários
+*.bak
+*.tmp
+*~
