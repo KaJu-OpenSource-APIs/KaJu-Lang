@@ -16,6 +16,7 @@ mod token;
 mod valor;
 
 use std::io::{self, BufRead, Write};
+use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use interpreter::Interpretador;
@@ -42,7 +43,13 @@ fn executar_arquivo(caminho: &str) -> ExitCode {
         }
     };
 
-    match rodar(&fonte) {
+    let base = Path::new(caminho)
+        .parent()
+        .filter(|p| !p.as_os_str().is_empty())
+        .map(|p| p.to_path_buf())
+        .unwrap_or_else(|| PathBuf::from("."));
+
+    match rodar(&fonte, base) {
         Ok(()) => ExitCode::SUCCESS,
         Err(diag) => {
             eprint!("{}", diag.render(caminho, &fonte));
@@ -52,10 +59,10 @@ fn executar_arquivo(caminho: &str) -> ExitCode {
 }
 
 /// Pipeline completo: fonte -> tokens -> AST -> execução.
-fn rodar(fonte: &str) -> Result<(), erros::Diagnostico> {
+fn rodar(fonte: &str, base: PathBuf) -> Result<(), erros::Diagnostico> {
     let tokens = Lexer::novo(fonte).tokenizar()?;
     let programa = Parser::novo(tokens).analisar()?;
-    let mut interp = Interpretador::novo();
+    let mut interp = Interpretador::com_base(base);
     interp.executar_programa(&programa)
 }
 

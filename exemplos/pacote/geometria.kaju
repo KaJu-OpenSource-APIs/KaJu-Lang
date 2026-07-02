@@ -1,0 +1,20 @@
+// Módulo de geometria
+constante TAU = PI * 2
+
+funcao areaCirculo(raio) {
+    retorne PI * raio * raio
+}
+
+funcao areaRetangulo(largura, altura) {
+    retorne largura * altura
+}
+
+classe Ponto {
+    construtor(x, y) {
+        isto.x = x
+        isto.y = y
+    }
+    metodo distanciaAteOrigem() {
+        retorne raiz(isto.x * isto.x + isto.y * isto.y)
+    }
+}

@@ -57,6 +57,8 @@ pub enum TipoToken {
     Capture,
     Finalmente,
     Lance,
+    Importe,
+    Como,
 
     // Símbolos
     Mais,
@@ -132,6 +134,8 @@ pub fn palavra_chave(texto: &str) -> Option<TipoToken> {
         "capture" => TipoToken::Capture,
         "finalmente" => TipoToken::Finalmente,
         "lance" => TipoToken::Lance,
+        "importe" => TipoToken::Importe,
+        "como" => TipoToken::Como,
         _ => return None,
     };
     Some(tipo)

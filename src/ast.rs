@@ -197,5 +197,10 @@ pub enum Cmd {
         finalmente: Option<Vec<Cmd>>,
     },
     Lance(Expr, Span),
+    Importe {
+        caminho: String,
+        alias: Option<String>,
+        span: Span,
+    },
     Expressao(Expr),
 }

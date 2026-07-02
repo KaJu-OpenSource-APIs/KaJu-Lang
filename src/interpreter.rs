@@ -2,13 +2,16 @@
 
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::ambiente::{Ambiente, ResultadoAtrib};
 use crate::ast::{Cmd, Expr, OpBinaria, OpLogica, OpUnaria};
 use crate::embutidos;
 use crate::erros::{sugerir_nome, Diagnostico};
+use crate::lexer::Lexer;
 use crate::metodos;
+use crate::parser::Parser;
 use crate::token::Span;
 use crate::valor::{ClasseKaju, FuncaoKaju, Objeto, Valor};
 
@@ -24,14 +27,31 @@ pub struct Interpretador {
     global: Rc<RefCell<Ambiente>>,
     /// Classe embutida usada para embrulhar erros capturados por `tente`.
     classe_erro: Rc<ClasseKaju>,
+    /// Classe embutida usada para o objeto-namespace de `importe ... como`.
+    classe_modulo: Rc<ClasseKaju>,
+    /// Diretório-base para resolver caminhos de `importe`.
+    base_dir: PathBuf,
+    /// Cache de módulos já carregados (por caminho canônico).
+    modulos: HashMap<PathBuf, Rc<RefCell<Ambiente>>>,
 }
 
 impl Interpretador {
     pub fn novo() -> Self {
+        Self::com_base(PathBuf::from("."))
+    }
+
+    /// Cria o interpretador resolvendo `importe` relativo a `base_dir`.
+    pub fn com_base(base_dir: PathBuf) -> Self {
         let global = Ambiente::global();
         embutidos::registrar(&global);
         let classe_erro = Rc::new(ClasseKaju {
             nome: "Erro".to_string(),
+            construtor: None,
+            metodos: HashMap::new(),
+            superclasse: None,
+        });
+        let classe_modulo = Rc::new(ClasseKaju {
+            nome: "Modulo".to_string(),
             construtor: None,
             metodos: HashMap::new(),
             superclasse: None,
@@ -43,7 +63,78 @@ impl Interpretador {
         Interpretador {
             global,
             classe_erro,
+            classe_modulo,
+            base_dir,
+            modulos: HashMap::new(),
         }
+    }
+
+    /// Carrega (ou reaproveita do cache) o ambiente de um módulo.
+    fn carregar_modulo(
+        &mut self,
+        caminho: &str,
+        span: &Span,
+    ) -> Result<Rc<RefCell<Ambiente>>, Diagnostico> {
+        let completo = self.base_dir.join(caminho);
+        let canonico = std::fs::canonicalize(&completo).unwrap_or_else(|_| completo.clone());
+
+        if let Some(env) = self.modulos.get(&canonico) {
+            return Ok(env.clone());
+        }
+
+        let fonte = std::fs::read_to_string(&completo).map_err(|e| {
+            Diagnostico::novo(
+                "K220",
+                format!("não consegui importar \"{}\": {}", caminho, e),
+                span.clone(),
+            )
+            .com_rotulo("não foi possível abrir o arquivo")
+        })?;
+
+        let tokens = Lexer::novo(&fonte)
+            .tokenizar()
+            .map_err(|d| self.envolver_erro_modulo(caminho, &d, span))?;
+        let programa = Parser::novo(tokens)
+            .analisar()
+            .map_err(|d| self.envolver_erro_modulo(caminho, &d, span))?;
+
+        // O módulo roda num escopo filho do global; guardamos no cache ANTES de
+        // executar, para importações circulares não entrarem em loop.
+        let modulo_env = Ambiente::com_pai(self.global.clone());
+        self.modulos.insert(canonico, modulo_env.clone());
+
+        // Enquanto executa o módulo, resolvemos importes dele relativos à pasta dele.
+        let nova_base = completo
+            .parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("."));
+        let base_antiga = std::mem::replace(&mut self.base_dir, nova_base);
+
+        let mut resultado = Ok(());
+        for cmd in &programa {
+            if let Err(d) = self.executar(cmd, &modulo_env) {
+                resultado = Err(self.envolver_erro_modulo(caminho, &d, span));
+                break;
+            }
+        }
+
+        self.base_dir = base_antiga;
+        resultado?;
+        Ok(modulo_env)
+    }
+
+    /// Embrulha um erro ocorrido dentro de um módulo, apontando para o `importe`.
+    fn envolver_erro_modulo(&self, caminho: &str, interno: &Diagnostico, span: &Span) -> Diagnostico {
+        Diagnostico::novo(
+            "K221",
+            format!("erro ao importar \"{}\"", caminho),
+            span.clone(),
+        )
+        .com_rotulo("falha neste importe")
+        .com_nota(format!(
+            "dentro do módulo, linha {}: [{}] {}",
+            interno.span.linha, interno.codigo, interno.mensagem
+        ))
     }
 
     /// Constrói o objeto de erro que será passado ao `capture (erro)`.
@@ -266,6 +357,35 @@ impl Interpretador {
             }
             Cmd::Pare(_) => Ok(Fluxo::Pare),
             Cmd::Continue(_) => Ok(Fluxo::Continue),
+            Cmd::Importe {
+                caminho,
+                alias,
+                span,
+            } => {
+                let modulo_env = self.carregar_modulo(caminho, span)?;
+                let exports = modulo_env.borrow().exportar();
+                match alias {
+                    Some(nome) => {
+                        // cria um objeto-namespace: u.membro acessa os exports
+                        let mut campos = HashMap::new();
+                        for (n, v) in exports {
+                            campos.insert(n, v);
+                        }
+                        let obj = Valor::Objeto(Rc::new(RefCell::new(Objeto {
+                            classe: self.classe_modulo.clone(),
+                            campos,
+                        })));
+                        amb.borrow_mut().definir(nome.clone(), obj, false);
+                    }
+                    None => {
+                        // traz todos os nomes públicos para o escopo atual
+                        for (n, v) in exports {
+                            amb.borrow_mut().definir(n, v, false);
+                        }
+                    }
+                }
+                Ok(Fluxo::Segue)
+            }
             Cmd::Lance(expr, span) => {
                 let v = self.avaliar(expr, amb)?;
                 let mensagem = match &v {
@@ -650,17 +770,20 @@ impl Interpretador {
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
         let classe = obj.borrow().classe.clone();
-        match classe.buscar_metodo(nome) {
-            Some((metodo, classe_do_metodo)) => {
-                self.invocar_metodo(metodo, Valor::Objeto(obj), classe_do_metodo, args, span)
-            }
-            None => Err(Diagnostico::novo(
-                "K212",
-                format!("o objeto da classe '{}' não tem o método '{}'", classe.nome, nome),
-                span.clone(),
-            )
-            .com_rotulo("método inexistente")),
+        if let Some((metodo, classe_do_metodo)) = classe.buscar_metodo(nome) {
+            return self.invocar_metodo(metodo, Valor::Objeto(obj), classe_do_metodo, args, span);
         }
+        // Fallback: campo que guarda uma função (usado por 'importe ... como').
+        let campo = obj.borrow().campos.get(nome).cloned();
+        if let Some(f @ (Valor::Funcao(_) | Valor::Nativa(_))) = campo {
+            return self.chamar(f, args, span);
+        }
+        Err(Diagnostico::novo(
+            "K212",
+            format!("o objeto da classe '{}' não tem o método '{}'", classe.nome, nome),
+            span.clone(),
+        )
+        .com_rotulo("método inexistente"))
     }
 
     /// Chama um método (ou construtor) da superclasse via `base`.

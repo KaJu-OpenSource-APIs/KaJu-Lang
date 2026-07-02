@@ -67,6 +67,14 @@ impl Ambiente {
         ResultadoAtrib::NaoExiste
     }
 
+    /// Nomes definidos APENAS neste escopo (usado para exportar módulos).
+    pub fn exportar(&self) -> Vec<(String, Valor)> {
+        self.valores
+            .iter()
+            .map(|(nome, (valor, _))| (nome.clone(), valor.clone()))
+            .collect()
+    }
+
     /// Todos os nomes visíveis a partir deste escopo (para sugestões de erro).
     pub fn nomes_disponiveis(&self) -> Vec<String> {
         let mut nomes: Vec<String> = self.valores.keys().cloned().collect();

@@ -102,6 +102,7 @@ impl Parser {
         match &self.atual().tipo {
             TipoToken::Var => self.decl_var(false),
             TipoToken::Constante => self.decl_var(true),
+            TipoToken::Importe => self.decl_importe(),
             TipoToken::Classe => self.decl_classe(),
             TipoToken::Funcao => {
                 // pode ser declaração de função nomeada ou função anônima em expressão.
@@ -150,6 +151,32 @@ impl Parser {
             nome,
             params,
             corpo,
+            span: inicio.span,
+        })
+    }
+
+    fn decl_importe(&mut self) -> Result<Cmd, Diagnostico> {
+        let inicio = self.avancar(); // 'importe'
+        let caminho = self.consumir(
+            &TipoToken::Texto(String::new()),
+            "K017",
+            "esperava o caminho do arquivo entre aspas".into(),
+            "ex.: importe \"utilidades.kaju\"".into(),
+        )?;
+        let alias = if self.casar(&TipoToken::Como) {
+            let nome = self.consumir(
+                &TipoToken::Identificador(String::new()),
+                "K017",
+                "esperava um nome após 'como'".into(),
+                "ex.: importe \"mat.kaju\" como mat".into(),
+            )?;
+            Some(nome.lexema.clone())
+        } else {
+            None
+        };
+        Ok(Cmd::Importe {
+            caminho: caminho.lexema.clone(),
+            alias,
             span: inicio.span,
         })
     }

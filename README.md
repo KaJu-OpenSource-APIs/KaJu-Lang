@@ -5,7 +5,7 @@ Linguagem de programação de alto nível, **interpretada**, de **uso geral** e 
 > Especificação completa da linguagem: [`ESPECIFICACAO.md`](ESPECIFICACAO.md)
 > Pesquisa que embasou o design da documentação: [`PESQUISA-DOCUMENTACAO.md`](PESQUISA-DOCUMENTACAO.md)
 
-## Estado atual: Fase 2 (em andamento — OOP pronta)
+## Estado atual: Fase 2 completa
 
 Já funciona:
 - Tipos `numero`, `texto`, `logico`, `lista`, `dicionario`, `funcao`, `nulo`
@@ -24,9 +24,10 @@ Já funciona:
 - Matemática: `raiz`, `absoluto`, `potencia`, `piso`, `teto`, `arredonde`, `aleatorio` e a constante `PI`
 - **Orientação a objetos**: `classe`, `construtor`, `metodo`, `novo`, `isto`, campos, **herança** (`herda`) e chamadas à superclasse (`base.metodo()`, `base.construtor()`); `classeDe(obj)`
 - **Exceções**: `tente`/`capture`/`finalmente` e `lance`. O `capture (erro)` recebe um objeto com `.mensagem` e `.codigo`, e pega tanto o que você `lance` quanto os erros de runtime do interpretador (ex.: divisão por zero)
+- **Módulos**: `importe "arquivo.kaju"` traz os nomes para o escopo; `importe "arquivo.kaju" como m` cria um namespace `m.nome`. Caminhos relativos ao arquivo, com cache (cada módulo roda uma vez)
 - **Erros ricos em português** (estilo Rust): código do erro, trecho com `^^^^`, `nota:` e `ajuda:` com sugestão "você quis dizer X?"
 
-**Fase 2 em andamento.** Feito: OOP + exceções. Falta: módulos `importe`. Ver §14 da especificação.
+**Fase 2 completa.** A kaju já é uma linguagem de uso geral com OOP, exceções e módulos. Próximo possível (Fase 3, opcional): VM de bytecode para desempenho. Ver §14 da especificação.
 
 ## Como usar
 

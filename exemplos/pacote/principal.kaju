@@ -1,0 +1,12 @@
+// Importa trazendo os nomes para o escopo
+importe "geometria.kaju"
+
+escreva("área do círculo (r=2):", areaCirculo(2))
+var p = novo Ponto(3, 4)
+escreva("distância até a origem:", p.distanciaAteOrigem())
+
+// Importa sob um namespace com alias
+importe "geometria.kaju" como geo
+
+escreva("TAU via alias:", geo.TAU)
+escreva("área do retângulo 3x5:", geo.areaRetangulo(3, 5))

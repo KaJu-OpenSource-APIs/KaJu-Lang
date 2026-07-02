@@ -29,6 +29,24 @@ fn hash(s: &str) -> u64 {
     h.finish()
 }
 
+/// Cria um diretório temporário com vários arquivos .kaju e roda o `principal`.
+fn rodar_projeto(arquivos: &[(&str, &str)], principal: &str) -> (String, String, bool) {
+    let bin = env!("CARGO_BIN_EXE_kaju");
+    let combinado: String = arquivos.iter().map(|(n, c)| format!("{n}{c}")).collect();
+    let dir = std::env::temp_dir().join(format!("kaju_proj_{:x}", hash(&combinado)));
+    std::fs::create_dir_all(&dir).unwrap();
+    for (nome, conteudo) in arquivos {
+        std::fs::write(dir.join(nome), conteudo).unwrap();
+    }
+    let saida = Command::new(bin).arg(dir.join(principal)).output().unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    (
+        String::from_utf8_lossy(&saida.stdout).to_string(),
+        String::from_utf8_lossy(&saida.stderr).to_string(),
+        saida.status.success(),
+    )
+}
+
 #[test]
 fn ola_mundo() {
     let (out, _, ok) = rodar(r#"escreva("Olá, mundo!")"#);
@@ -304,6 +322,38 @@ fn lance_nao_capturado_falha() {
     let (_, err, ok) = rodar(r#"lance "erro solto""#);
     assert!(!ok);
     assert!(err.contains("erro[K230]"), "stderr: {err}");
+}
+
+#[test]
+fn importe_traz_nomes_e_alias() {
+    let modulo = r#"
+        constante PASSO = 10
+        funcao dobro(x) { retorne x * 2 }
+        classe Caixa { construtor(v) { isto.v = v } }
+    "#;
+    let principal = r#"
+        importe "mod.kaju"
+        escreva(dobro(21))
+        escreva(PASSO)
+        var c = novo Caixa(7)
+        escreva(c.v)
+
+        importe "mod.kaju" como m
+        escreva(m.dobro(5), m.PASSO)
+    "#;
+    let (out, err, ok) = rodar_projeto(
+        &[("mod.kaju", modulo), ("principal.kaju", principal)],
+        "principal.kaju",
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "42\n10\n7\n10 10\n");
+}
+
+#[test]
+fn erro_importe_arquivo_inexistente() {
+    let (_, err, ok) = rodar(r#"importe "naoexiste.kaju""#);
+    assert!(!ok);
+    assert!(err.contains("erro[K220]"), "stderr: {err}");
 }
 
 #[test]
