@@ -370,20 +370,38 @@ impl Interpretador {
                 variavel,
                 de,
                 ate,
+                passo,
                 corpo,
             } => {
                 let de_v = self.numero(de, amb, "o início do laço 'para'")?;
                 let ate_v = self.numero(ate, amb, "o fim do laço 'para'")?;
-                // Se ambos os limites são inteiros, a variável do laço é inteira.
-                let inteiros = matches!(de_v, Valor::Inteiro(_)) && matches!(ate_v, Valor::Inteiro(_));
+                let passo_v = match passo {
+                    Some(e) => Some(self.numero(e, amb, "o passo do laço 'para'")?),
+                    None => None,
+                };
+                // A variável do laço é inteira quando todos os limites e o passo são inteiros.
+                let inteiros = matches!(de_v, Valor::Inteiro(_))
+                    && matches!(ate_v, Valor::Inteiro(_))
+                    && passo_v.as_ref().is_none_or(|p| matches!(p, Valor::Inteiro(_)));
                 let inicio = de_v.como_f64().unwrap();
                 let fim = ate_v.como_f64().unwrap();
-                let mut passo = inicio;
-                while passo <= fim {
+                let incremento = passo_v.as_ref().map(|p| p.como_f64().unwrap()).unwrap_or(1.0);
+                if incremento == 0.0 {
+                    return Err(Diagnostico::novo(
+                        "K205",
+                        "o passo do laço 'para' não pode ser zero",
+                        de.span(),
+                    )
+                    .com_rotulo("um passo zero nunca termina o laço"));
+                }
+                let mut passo_atual = inicio;
+                while (incremento > 0.0 && passo_atual <= fim)
+                    || (incremento < 0.0 && passo_atual >= fim)
+                {
                     let valor = if inteiros {
-                        Valor::Inteiro(passo as i64)
+                        Valor::Inteiro(passo_atual as i64)
                     } else {
-                        Valor::Decimal(passo)
+                        Valor::Decimal(passo_atual)
                     };
                     let filho = Ambiente::com_pai(amb.clone());
                     filho.borrow_mut().definir(variavel.clone(), valor, false);
@@ -392,7 +410,7 @@ impl Interpretador {
                         Fluxo::Pare => break,
                         Fluxo::Retorna(v) => return Ok(Fluxo::Retorna(v)),
                     }
-                    passo += 1.0;
+                    passo_atual += incremento;
                 }
                 Ok(Fluxo::Segue)
             }

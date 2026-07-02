@@ -709,11 +709,18 @@ impl Parser {
                 "use 'para X de A ate B'".into(),
             )?;
             let ate = self.expressao()?;
+            // 'passo EXPR' é opcional; permite contagem regressiva com passo negativo.
+            let passo = if self.casar(&TipoToken::Passo) {
+                Some(self.expressao()?)
+            } else {
+                None
+            };
             let corpo = self.corpo_laco()?;
             Ok(Cmd::ParaNumerico {
                 variavel: var.lexema,
                 de,
                 ate,
+                passo,
                 corpo,
             })
         }

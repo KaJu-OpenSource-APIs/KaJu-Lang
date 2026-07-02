@@ -865,6 +865,25 @@ fn erro_constante_reatribuida() {
 }
 
 #[test]
+fn para_com_passo_regressivo_e_positivo() {
+    let (out, err, ok) = rodar(
+        r#"para i de 3 ate 1 passo -1 { escrevaSemQuebra(paraTexto(i)) }
+escreva("")
+para i de 0 ate 6 passo 2 { escrevaSemQuebra(paraTexto(i)) }
+escreva("")"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "321\n0246\n");
+}
+
+#[test]
+fn erro_para_com_passo_zero() {
+    let (_, err, ok) = rodar("para i de 1 ate 3 passo 0 { escreva(i) }");
+    assert!(!ok);
+    assert!(err.contains("erro[K205]"), "stderr: {err}");
+}
+
+#[test]
 fn igualdade_estrutural_de_listas_e_dicionarios() {
     let (out, err, ok) = rodar(
         r#"escreva([1, 2] == [1, 2])

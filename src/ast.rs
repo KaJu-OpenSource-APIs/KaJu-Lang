@@ -221,6 +221,9 @@ pub enum Cmd {
         variavel: String,
         de: Expr,
         ate: Expr,
+        /// Incremento por iteração; ausente equivale a passo 1. Pode ser
+        /// negativo para contar de forma regressiva.
+        passo: Option<Expr>,
         corpo: Vec<Cmd>,
     },
     ParaCada {

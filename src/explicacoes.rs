@@ -441,13 +441,17 @@ Veja também: K201, K211.",
         "K205" => "\
 K205 — laço 'para' precisa de números
 
-Os limites de 'para i de A ate B' devem ser números.
+Os limites de 'para i de A ate B' devem ser números. O passo (em
+'para i de A ate B passo P') também precisa ser um número, e não pode ser
+zero — um passo zero nunca terminaria o laço.
 
 Errado:
     para i de \"a\" ate 10 { ... }
+    para i de 1 ate 10 passo 0 { ... }
 
 Correto:
     para i de 1 ate 10 { ... }
+    para i de 10 ate 1 passo -1 { ... }   // contagem regressiva
 
 Veja também: K006, K202.",
 
