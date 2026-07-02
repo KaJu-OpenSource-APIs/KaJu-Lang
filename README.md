@@ -94,7 +94,7 @@ Veja mais em [`exemplos/`](exemplos/).
 
 ```
 src/
-├── main.rs         CLI e REPL
+├── main.rs         CLI, REPL e comando 'explique'
 ├── token.rs        tokens e Span (posição no código)
 ├── lexer.rs        fonte -> tokens
 ├── ast.rs          árvore sintática (Expr, Cmd)
@@ -104,6 +104,7 @@ src/
 ├── interpreter.rs  percorre a AST e executa
 ├── metodos.rs      métodos das coleções (.mapeie, .ordene, ...)
 ├── embutidos.rs    biblioteca padrão (funções globais)
+├── explicacoes.rs  explicações dos erros (kaju explique)
 └── erros.rs        diagnósticos ricos em português
 ```
 
