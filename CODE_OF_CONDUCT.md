@@ -39,7 +39,7 @@ Exemplos de comportamento inaceitável:
 ## Aplicação
 
 Casos de comportamento abusivo, de assédio ou de outra forma inaceitável podem
-ser reportados aos responsáveis pela aplicação em **juliobarbosa@centranet.com.br**.
+ser reportados aos responsáveis pela aplicação em **juliocesarbs558@gmail.com**.
 Todas as queixas serão analisadas e investigadas de forma rápida e justa.
 
 Todos os líderes da comunidade são obrigados a respeitar a privacidade e a

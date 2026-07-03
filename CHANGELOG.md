@@ -42,5 +42,4 @@ biblioteca padrão totalmente em português.
 - **Ferramentas de editor**: extensão de VS Code e registro de tipo MIME/ícone
   no Linux.
 
-[Não lançado]: https://example.com/kaju/compare/v0.1.0...HEAD
-[0.1.0]: https://example.com/kaju/releases/tag/v0.1.0
+
