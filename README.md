@@ -65,9 +65,9 @@ Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adi
 
 > Alternativa: `cargo build --release` gera o binário em `target\release\kaju.exe`, que você pode copiar para qualquer pasta do seu `PATH`. O `install.sh` também roda no Windows via **WSL** ou **Git Bash**.
 
-### Já tenho o binário (sem Rust)
+### Binário pronto (sem Rust)
 
-Se alguém te passou um binário `kaju` pronto (ou você o gerou com `cargo build --release`), basta colocá-lo no `PATH`:
+A cada versão publicada, binários pré-compilados para Linux, Windows e macOS ficam disponíveis na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases). Baixe o pacote do seu sistema, extraia e coloque o `kaju` num diretório do seu `PATH`:
 
 ```bash
 chmod +x kaju

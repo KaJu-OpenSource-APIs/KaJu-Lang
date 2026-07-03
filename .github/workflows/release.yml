@@ -1,0 +1,70 @@
+name: Release
+
+# Dispara ao publicar uma tag de versão, ex.: git tag v0.1.0 && git push origin v0.1.0
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  binarios:
+    name: Binário (${{ matrix.alvo }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            alvo: x86_64-unknown-linux-gnu
+            arquivo: kaju-linux-x86_64.tar.gz
+          - os: windows-latest
+            alvo: x86_64-pc-windows-msvc
+            arquivo: kaju-windows-x86_64.zip
+          - os: macos-latest
+            alvo: aarch64-apple-darwin
+            arquivo: kaju-macos-arm64.tar.gz
+          - os: macos-13
+            alvo: x86_64-apple-darwin
+            arquivo: kaju-macos-x86_64.tar.gz
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.alvo }}
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Compilar
+        run: cargo build --release --target ${{ matrix.alvo }}
+
+      - name: Empacotar (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          mkdir dist
+          cp "target/${{ matrix.alvo }}/release/kaju" dist/
+          cp README.md LICENSE dist/
+          tar -czf "${{ matrix.arquivo }}" -C dist .
+
+      - name: Empacotar (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist | Out-Null
+          Copy-Item "target/${{ matrix.alvo }}/release/kaju.exe" dist/
+          Copy-Item README.md, LICENSE dist/
+          Compress-Archive -Path dist/* -DestinationPath "${{ matrix.arquivo }}"
+
+      - name: Publicar no Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.arquivo }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
