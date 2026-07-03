@@ -21,6 +21,8 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
   especificação e reescrito em tom de direções, não de fases internas).
 - Extensão de VS Code 1.0.0: **snippets** para as construções da linguagem,
   auto-indentação ao abrir blocos, dobra por regiões e metadados do repositório.
+  Instala-se pelo repositório com `editores/vscode-kaju/instalar.sh` (sem
+  Marketplace).
 
 ### Corrigido (documentação)
 

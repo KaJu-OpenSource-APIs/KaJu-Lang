@@ -9,18 +9,21 @@ Realce de sintaxe, snippets, ícone de arquivo e configuração da linguagem [ka
 - **Ícone** para arquivos `.kaju`.
 - **Configuração da linguagem**: comentários `//` e `/* */`, auto-fechamento de `{}`, `[]`, `()` e `""`, indentação automática ao abrir blocos e dobra de código por regiões (`// #regiao` / `// #fimregiao`).
 
-## Como instalar (modo local, sem publicar)
+## Como instalar
 
-A forma mais simples é copiar esta pasta para o diretório de extensões do VS Code e recarregar:
+Clone ou baixe o repositório e rode o instalador — ele copia a extensão para a
+pasta do VS Code (detecta também VSCodium/OSS e code-server) e remove versões
+antigas:
 
 ```bash
-# Linux/macOS
-cp -r editores/vscode-kaju ~/.vscode/extensions/kaju-1.0.0
+cd editores/vscode-kaju
+./instalar.sh
 ```
 
-Depois, no VS Code: `Ctrl+Shift+P` → **Developer: Reload Window**.
+Depois, no editor: `Ctrl+Shift+P` → **Developer: Reload Window**. Abra um arquivo
+`.kaju` e o realce e os snippets já funcionam.
 
-Abra qualquer arquivo `.kaju` e o realce será aplicado automaticamente.
+Para remover: `./desinstalar.sh` (e recarregue o editor).
 
 ### Alternativa: modo desenvolvimento
 
@@ -28,7 +31,7 @@ Abra a pasta `editores/vscode-kaju` no VS Code e pressione **F5** — abre uma j
 
 ### Alternativa: empacotar em .vsix
 
-Se tiver o `vsce` instalado (`npm install -g @vscode/vsce`):
+Se tiver o `vsce` (`npm install -g @vscode/vsce`), dá para gerar um pacote instalável:
 
 ```bash
 cd editores/vscode-kaju

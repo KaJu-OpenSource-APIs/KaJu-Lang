@@ -16,6 +16,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
   comentário de bloco.
 - Metadados do repositório (`repository`, `homepage`, `bugs`, `keywords`) e a
   categoria "Snippets".
+- Scripts `instalar.sh` e `desinstalar.sh` para instalar a extensão a partir do
+  repositório (VS Code, VSCodium/OSS e code-server), sem precisar do Marketplace.
 
 ## [0.1.0]
 
