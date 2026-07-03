@@ -18,6 +18,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     registrar_uma(&mut a, "tamanho", tamanho);
     registrar_uma(&mut a, "tipo", tipo);
     registrar_uma(&mut a, "classeDe", classe_de);
+    registrar_uma(&mut a, "afirme", afirme);
     registrar_uma(&mut a, "paraTexto", para_texto);
     registrar_uma(&mut a, "paraNumero", para_numero);
     registrar_uma(&mut a, "paraInteiro", para_inteiro);
@@ -30,7 +31,7 @@ pub fn registrar(amb: &Rc<RefCell<Ambiente>>) {
     // JSON
     registrar_uma(&mut a, "paraJSON", para_json);
     registrar_uma(&mut a, "deJSON", de_json);
-    // Matemática (na Fase 2 vira o módulo 'matematica' via importe)
+    // Matemática
     registrar_uma(&mut a, "raiz", raiz);
     registrar_uma(&mut a, "absoluto", absoluto);
     registrar_uma(&mut a, "potencia", potencia);
@@ -59,6 +60,21 @@ fn registrar_uma(amb: &mut Ambiente, nome: &str, func: fn(Vec<Valor>) -> Result<
         })),
         true,
     );
+}
+
+/// `afirme(condicao)` ou `afirme(condicao, mensagem)`: falha se a condição for
+/// falsa. O interpretador intercepta esta embutida para emitir o código K231;
+/// este corpo é apenas um fallback caso ela seja chamada de forma indireta.
+fn afirme(args: Vec<Valor>) -> Result<Valor, String> {
+    let ok = args.first().map(|v| v.eh_verdadeiro()).unwrap_or(false);
+    if ok {
+        Ok(Valor::Nulo)
+    } else {
+        match args.get(1) {
+            Some(m) => Err(format!("afirmação falhou: {}", m.para_texto())),
+            None => Err("afirmação falhou".to_string()),
+        }
+    }
 }
 
 fn escreva(args: Vec<Valor>) -> Result<Valor, String> {

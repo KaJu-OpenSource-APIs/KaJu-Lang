@@ -980,6 +980,20 @@ impl Interpretador {
             Valor::Nativa(n) if n.nome == "paraTexto" && args.len() == 1 => {
                 Ok(Valor::Texto(self.exibir(&args[0], span)?))
             }
+            // afirme(condicao[, mensagem]): falha com K231 se a condição for falsa.
+            Valor::Nativa(n) if n.nome == "afirme" => {
+                let cond = args.first().map(|v| v.eh_verdadeiro()).unwrap_or(false);
+                if cond {
+                    Ok(Valor::Nulo)
+                } else {
+                    let msg = match args.get(1) {
+                        Some(m) => format!("afirmação falhou: {}", self.exibir(m, span)?),
+                        None => "afirmação falhou".to_string(),
+                    };
+                    Err(Diagnostico::novo("K231", msg, span.clone())
+                        .com_rotulo("esta afirmação é falsa"))
+                }
+            }
             Valor::Nativa(n) => (n.func)(args).map_err(|msg| {
                 Diagnostico::novo("K203", msg, span.clone()).com_rotulo("nesta chamada")
             }),
@@ -1343,6 +1357,22 @@ impl Interpretador {
         }
     }
 
+    /// Igualdade para `==`/`!=`. Se o operando esquerdo é um objeto cuja classe
+    /// define `igual(outro)`, usa esse método; senão cai na igualdade padrão
+    /// (estrutural para coleções, identidade para objetos).
+    fn valores_iguais(&mut self, a: &Valor, b: &Valor, span: &Span) -> Result<bool, Diagnostico> {
+        if let Valor::Objeto(o) = a {
+            let metodo = o.borrow().classe.buscar_metodo("igual");
+            if let Some((m, classe)) = metodo {
+                if m.params.len() == 1 {
+                    let r = self.invocar_metodo(m, a.clone(), classe, vec![b.clone()], span)?;
+                    return Ok(r.eh_verdadeiro());
+                }
+            }
+        }
+        Ok(a.igual(b))
+    }
+
     fn aplicar_binaria(
         &mut self,
         op: &OpBinaria,
@@ -1369,8 +1399,8 @@ impl Interpretador {
             Maior => self.comparar(&a, &b, span, ">", |o| o.is_gt()),
             MenorIgual => self.comparar(&a, &b, span, "<=", |o| o.is_le()),
             MaiorIgual => self.comparar(&a, &b, span, ">=", |o| o.is_ge()),
-            Igual => Ok(Valor::Logico(a.igual(&b))),
-            Diferente => Ok(Valor::Logico(!a.igual(&b))),
+            Igual => Ok(Valor::Logico(self.valores_iguais(&a, &b, span)?)),
+            Diferente => Ok(Valor::Logico(!self.valores_iguais(&a, &b, span)?)),
             EBit => self.bit_op(&a, &b, span, "&", |x, y| x & y),
             OuBit => self.bit_op(&a, &b, span, "|", |x, y| x | y),
             XorBit => self.bit_op(&a, &b, span, "^", |x, y| x ^ y),

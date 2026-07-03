@@ -865,6 +865,45 @@ fn erro_constante_reatribuida() {
 }
 
 #[test]
+fn afirme_passa_e_falha() {
+    let (out, err, ok) = rodar(
+        r#"afirme(2 + 2 == 4)
+afirme([1, 2] == [1, 2], "listas iguais")
+escreva("tudo certo")"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "tudo certo\n");
+
+    let (_, err2, ok2) = rodar(r#"afirme(1 == 2, "deveria falhar")"#);
+    assert!(!ok2);
+    assert!(err2.contains("erro[K231]"), "stderr: {err2}");
+    assert!(err2.contains("deveria falhar"), "stderr: {err2}");
+}
+
+#[test]
+fn afirme_e_capturavel() {
+    let (out, err, ok) = rodar(
+        r#"tente { afirme(falso) } capture (erro) { escreva("peguei", erro.codigo) }"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "peguei K231\n");
+}
+
+#[test]
+fn objeto_define_igualdade_com_metodo_igual() {
+    let (out, err, ok) = rodar(
+        r#"classe Dinheiro {
+    construtor(centavos) { isto.centavos = centavos }
+    metodo igual(outro) { retorne isto.centavos == outro.centavos }
+}
+escreva(novo Dinheiro(5) == novo Dinheiro(5))
+escreva(novo Dinheiro(5) == novo Dinheiro(9))"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "verdadeiro\nfalso\n");
+}
+
+#[test]
 fn objeto_customiza_impressao_com_para_texto() {
     let (out, err, ok) = rodar(
         r#"classe Ponto {

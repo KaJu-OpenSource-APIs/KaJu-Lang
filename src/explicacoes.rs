@@ -720,6 +720,25 @@ Correto:
 
 Veja também: K015.",
 
+        "K231" => "\
+K231 — afirmação falhou
+
+A função 'afirme(condicao)' verifica que a condição é verdadeira; se for falsa,
+o programa para com este erro. É útil para escrever testes na própria linguagem.
+Você pode passar uma mensagem: 'afirme(condicao, \"mensagem\")'.
+
+Errado:
+    afirme(2 + 2 == 5)
+    afirme(soma(1, 2) == 4, \"soma deu errado\")
+
+Correto:
+    afirme(2 + 2 == 4)
+    afirme(soma(1, 2) == 3)
+
+Como um erro de runtime, pode ser capturado com 'tente ... capture'.
+
+Veja também: K230.",
+
         _ => return None,
     };
     Some(texto)
@@ -733,7 +752,7 @@ pub fn codigos_conhecidos() -> &'static [&'static str] {
         "K019", "K020", "K021", "K022", "K101", "K102", "K103", "K104", "K201",
         "K202", "K203", "K204", "K205", "K206", "K207", "K208", "K209", "K210",
         "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218", "K220",
-        "K221", "K222", "K230",
+        "K221", "K222", "K230", "K231",
     ]
 }
 
