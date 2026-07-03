@@ -17,6 +17,10 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Operador de encadeamento `|>`** (pipe): `x |> f(a)` passa `x` como primeiro
+  argumento (`f(x, a)`). Entende funções livres e métodos — se o nome à direita
+  não for uma função em escopo, vira chamada de método (`x |> maiusculas` ≡
+  `x.maiusculas()`), permitindo encadear os métodos de coleção.
 - **Argumentos nomeados** em chamadas: `f(nome: valor)`, também em construtores
   (`novo Classe(x: 1)`) e métodos definidos em kaju. Podem ser reordenados e
   combinam com parâmetros padrão; posicionais sempre vêm antes dos nomeados.

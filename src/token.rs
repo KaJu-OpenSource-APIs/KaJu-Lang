@@ -105,6 +105,7 @@ pub enum TipoToken {
     Til,         // ~
     DeslocaEsq,  // <<
     DeslocaDir,  // >>
+    Pipe,        // |>  (encadeamento)
     ParenEsq,
     ParenDir,
     ChaveEsq,

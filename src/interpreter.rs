@@ -823,6 +823,7 @@ impl Interpretador {
                     }
                 }
             }
+            Expr::Pipe { esq, dir, span } => self.avaliar_pipe(esq, dir, amb, span),
             Expr::Ternario {
                 condicao,
                 entao,
@@ -887,51 +888,8 @@ impl Interpretador {
                     for a in args {
                         vals.push(self.avaliar(a, amb)?);
                     }
-                    // Métodos de ordem superior de lista precisam chamar funções kaju,
-                    // então são tratados aqui (onde há acesso ao interpretador).
-                    if let Valor::Lista(l) = &recv {
-                        if matches!(
-                            membro.as_str(),
-                            "mapeie"
-                                | "filtre"
-                                | "reduza"
-                                | "ordenePor"
-                                | "encontre"
-                                | "algum"
-                                | "todos"
-                                | "agrupe"
-                        ) {
-                            let nom = self.avaliar_nomeados(nomeados, amb)?;
-                            self.erro_se_nomeados(&nom, span)?;
-                            return self.metodo_lista_superior(l.clone(), membro, vals, span);
-                        }
-                    }
                     let nom = self.avaliar_nomeados(nomeados, amb)?;
-                    return match recv {
-                        Valor::Objeto(obj) => {
-                            self.chamar_metodo_objeto(obj, membro, vals, &nom, span)
-                        }
-                        // Classe.metodoEstatico(...)
-                        Valor::Classe(c) => match c.buscar_metodo_estatico(membro) {
-                            Some(f) => self.invocar_funcao(f, vals, &nom, span),
-                            None => Err(Diagnostico::novo(
-                                "K212",
-                                format!(
-                                    "a classe '{}' não tem o método estático '{}'",
-                                    c.nome, membro
-                                ),
-                                span.clone(),
-                            )
-                            .com_rotulo("método estático inexistente")),
-                        },
-                        outro => {
-                            self.erro_se_nomeados(&nom, span)?;
-                            metodos::chamar_metodo(outro, membro, vals).map_err(|(cod, msg)| {
-                                Diagnostico::novo(cod, msg, span.clone())
-                                    .com_rotulo("nesta chamada de método")
-                            })
-                        }
-                    };
+                    return self.despachar_metodo(recv, membro, vals, nom, span);
                 }
                 // Chamada normal de função
                 let f = self.avaliar(alvo, amb)?;
@@ -940,13 +898,7 @@ impl Interpretador {
                     vals.push(self.avaliar(a, amb)?);
                 }
                 let nom = self.avaliar_nomeados(nomeados, amb)?;
-                match f {
-                    Valor::Funcao(fk) => self.invocar_funcao(fk, vals, &nom, span),
-                    outro => {
-                        self.erro_se_nomeados(&nom, span)?;
-                        self.chamar(outro, vals, span)
-                    }
-                }
+                self.chamar_com_nomeados(f, vals, nom, span)
             }
             Expr::Acesso {
                 alvo,
@@ -1575,6 +1527,120 @@ impl Interpretador {
         }
 
         Ok(valor_obj)
+    }
+
+    /// Avalia `esq |> dir`. O valor da esquerda entra como primeiro argumento da
+    /// chamada da direita. Se o alvo da direita é um nome que não corresponde a
+    /// uma função em escopo, a chamada é interpretada como método (`esq.nome(...)`).
+    fn avaliar_pipe(
+        &mut self,
+        esq: &Expr,
+        dir: &Expr,
+        amb: &Rc<RefCell<Ambiente>>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let v = self.avaliar(esq, amb)?;
+        // Separa o alvo da chamada (e seus argumentos) da forma de `dir`.
+        let (alvo_expr, args_expr, nomeados_expr): (&Expr, &[Expr], &[(String, Expr)]) =
+            match dir {
+                Expr::Chamada {
+                    alvo,
+                    args,
+                    nomeados,
+                    ..
+                } => (alvo, args, nomeados),
+                outro => (outro, &[], &[]),
+            };
+        let mut args_vals = Vec::with_capacity(args_expr.len());
+        for a in args_expr {
+            args_vals.push(self.avaliar(a, amb)?);
+        }
+        let nom = self.avaliar_nomeados(nomeados_expr, amb)?;
+
+        // Alvo é um nome simples: pode ser função em escopo ou nome de método.
+        if let Expr::Variavel(nome, _) = alvo_expr {
+            let em_escopo = amb.borrow().obter(nome);
+            match em_escopo {
+                Some(f @ (Valor::Funcao(_) | Valor::Nativa(_))) => {
+                    let mut todos = Vec::with_capacity(args_vals.len() + 1);
+                    todos.push(v);
+                    todos.extend(args_vals);
+                    return self.chamar_com_nomeados(f, todos, nom, span);
+                }
+                // Nome não é função em escopo → trata como método de `v`.
+                _ => return self.despachar_metodo(v, nome, args_vals, nom, span),
+            }
+        }
+
+        // Alvo é uma expressão (acesso a módulo, função anônima, etc.): função.
+        let alvo_val = self.avaliar(alvo_expr, amb)?;
+        let mut todos = Vec::with_capacity(args_vals.len() + 1);
+        todos.push(v);
+        todos.extend(args_vals);
+        self.chamar_com_nomeados(alvo_val, todos, nom, span)
+    }
+
+    /// Chama um valor com posicionais e nomeados; nomeados só valem para funções kaju.
+    fn chamar_com_nomeados(
+        &mut self,
+        alvo: Valor,
+        args: Vec<Valor>,
+        nomeados: Vec<(String, Valor)>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        match alvo {
+            Valor::Funcao(f) => self.invocar_funcao(f, args, &nomeados, span),
+            outro => {
+                self.erro_se_nomeados(&nomeados, span)?;
+                self.chamar(outro, args, span)
+            }
+        }
+    }
+
+    /// Despacha `recv.membro(vals)` para o alvo certo: métodos de ordem superior
+    /// de lista, métodos de objeto, método estático de classe ou método embutido.
+    fn despachar_metodo(
+        &mut self,
+        recv: Valor,
+        membro: &str,
+        vals: Vec<Valor>,
+        nomeados: Vec<(String, Valor)>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        // Métodos de ordem superior de lista precisam chamar funções kaju,
+        // então são tratados aqui (onde há acesso ao interpretador).
+        if let Valor::Lista(l) = &recv {
+            if matches!(
+                membro,
+                "mapeie" | "filtre" | "reduza" | "ordenePor" | "encontre" | "algum" | "todos"
+                    | "agrupe"
+            ) {
+                self.erro_se_nomeados(&nomeados, span)?;
+                return self.metodo_lista_superior(l.clone(), membro, vals, span);
+            }
+        }
+        match recv {
+            Valor::Objeto(obj) => self.chamar_metodo_objeto(obj, membro, vals, &nomeados, span),
+            // Classe.metodoEstatico(...)
+            Valor::Classe(c) => match c.buscar_metodo_estatico(membro) {
+                Some(f) => self.invocar_funcao(f, vals, &nomeados, span),
+                None => Err(Diagnostico::novo(
+                    "K212",
+                    format!(
+                        "a classe '{}' não tem o método estático '{}'",
+                        c.nome, membro
+                    ),
+                    span.clone(),
+                )
+                .com_rotulo("método estático inexistente")),
+            },
+            outro => {
+                self.erro_se_nomeados(&nomeados, span)?;
+                metodos::chamar_metodo(outro, membro, vals).map_err(|(cod, msg)| {
+                    Diagnostico::novo(cod, msg, span.clone()).com_rotulo("nesta chamada de método")
+                })
+            }
+        }
     }
 
     /// Chama um método de um objeto, subindo pela cadeia de herança.

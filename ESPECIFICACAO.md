@@ -104,6 +104,7 @@ lance      importe     como
 ? :                       (operador condicional / ternário)
 ??                        (coalescência de nulo)
 ?.                        (acesso opcional / encadeamento seguro)
+|>                        (encadeamento / pipe)
 ( ) { } [ ]              (agrupamento/blocos/coleções)
 ,  :  .                   (separadores/acesso)
 ...                       (parâmetro variádico)
@@ -205,6 +206,15 @@ var rotulo = idade >= 18 ? "adulto" : "menor"
 var cidade = usuario?.endereco?.cidade ?? "desconhecida"
 ```
 
+### 4.7.1 Encadeamento (`|>`)
+`esq |> dir` passa `esq` como **primeiro argumento** da chamada `dir`. Se o alvo de `dir` é um nome que resolve para uma função em escopo, chama-a: `x |> f(a)` ≡ `f(x, a)`. Caso o nome não seja uma função em escopo, a chamada é interpretada como **método**: `x |> maiusculas` ≡ `x.maiusculas()`. Isso permite encadear tanto funções livres quanto os métodos de coleção.
+```kaju
+usuarios
+  |> filtre(funcao(u) { retorne u.ativo })
+  |> mapeie(funcao(u) { retorne u.nome })
+  |> junte(", ")
+```
+
 ### 4.8 Interpolação de texto
 Um literal `$"..."` avalia cada `{expressao}` interna e concatena tudo como texto (equivale a somar as partes com `+`, sempre em contexto de texto):
 ```kaju
@@ -227,9 +237,10 @@ Segue exatamente a cadeia do analisador sintático:
 10. `|` (ou bit a bit)
 11. `e`
 12. `ou`
-13. `??` (coalescência de nulo)
-14. `? :` (ternário)
-15. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
+13. `|>` (encadeamento / pipe)
+14. `??` (coalescência de nulo)
+15. `? :` (ternário)
+16. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
 
 ### 4.10 Indexação e fatiamento
 `alvo[i]` acessa o elemento no índice `i` (lista/texto) ou a chave `i` (dicionário). Índices de lista/texto são inteiros não negativos, contados a partir de `0`.
@@ -718,7 +729,8 @@ bloco         = "{" { declaracao } "}" ;
 expressao     = atribuicao ;
 atribuicao    = ternario [ ( "=" | "+=" | "-=" | "*=" | "/=" | "%=" ) atribuicao ] ;
 ternario      = coalescencia [ "?" ternario ":" ternario ] ;
-coalescencia  = ou_logico { "??" ou_logico } ;
+coalescencia  = pipe { "??" pipe } ;
+pipe          = ou_logico { "|>" ou_logico } ;   (* x |> f(a) injeta x como 1º argumento *)
 ou_logico     = e_logico { "ou" e_logico } ;
 e_logico      = ou_bit { "e" ou_bit } ;
 ou_bit        = xor_bit { "|" xor_bit } ;

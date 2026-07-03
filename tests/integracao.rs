@@ -482,6 +482,30 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn operador_pipe() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao dobro(x) { retorne x * 2 }
+        funcao soma(a, b) { retorne a + b }
+        funcao ehPar(n) { retorne n % 2 == 0 }
+        escreva(5 |> dobro)
+        escreva(5 |> dobro |> dobro)
+        escreva(3 |> soma(10))
+        escreva([1, 2, 3, 4] |> tamanho)
+        escreva("ana" |> maiusculas)
+        escreva("  kaju  " |> apara |> maiusculas)
+        escreva([1, 2, 3, 4] |> filtre(funcao(x) { retorne x % 2 == 0 }) |> junte("-"))
+        escreva([1, 2, 3, 4, 5, 6] |> filtre(ehPar))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "10\n20\n13\n4\nANA\nKAJU\n2-4\n[2, 4, 6]\n"
+    );
+}
+
+#[test]
 fn argumentos_nomeados() {
     let (out, err, ok) = rodar(
         r#"

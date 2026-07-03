@@ -904,13 +904,29 @@ impl Parser {
 
     // Coalescência de nulo `??` — precedência menor que `ou`/`e`, maior que o ternário.
     fn coalescencia(&mut self) -> Result<Expr, Diagnostico> {
-        let mut esq = self.ou_logico()?;
+        let mut esq = self.pipe()?;
         while self.verificar(&TipoToken::InterrogacaoDupla) {
             self.avancar();
-            let dir = self.ou_logico()?;
+            let dir = self.pipe()?;
             let span = unir_span(&esq.span(), &dir.span());
             esq = Expr::Logica {
                 op: OpLogica::CoalesceNulo,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
+        }
+        Ok(esq)
+    }
+
+    // Encadeamento `|>`: `x |> f(a)` vira `f(x, a)`; `x |> f` vira `f(x)`.
+    fn pipe(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.ou_logico()?;
+        while self.verificar(&TipoToken::Pipe) {
+            self.avancar();
+            let dir = self.ou_logico()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Pipe {
                 esq: Box::new(esq),
                 dir: Box::new(dir),
                 span,

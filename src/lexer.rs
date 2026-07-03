@@ -132,7 +132,14 @@ impl Lexer {
             '/' => self.talvez_igual('/', TipoToken::BarraIgual, TipoToken::Barra),
             '%' => self.talvez_igual('%', TipoToken::PorcentoIgual, TipoToken::Porcento),
             '&' => (TipoToken::EBit, 1),
-            '|' => (TipoToken::OuBit, 1),
+            '|' => {
+                if self.atual() == '>' {
+                    self.avancar();
+                    (TipoToken::Pipe, 2)
+                } else {
+                    (TipoToken::OuBit, 1)
+                }
+            }
             '^' => (TipoToken::OuExclusivo, 1),
             '~' => (TipoToken::Til, 1),
             '(' => (TipoToken::ParenEsq, 1),

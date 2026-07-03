@@ -6,7 +6,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
 
 ### Adicionado
 
-- Realce dos operadores `??` (coalescência de nulo) e `?.` (acesso opcional).
+- Realce dos operadores `??` (coalescência de nulo), `?.` (acesso opcional) e
+  `|>` (encadeamento).
 
 ## [1.0.0]
 

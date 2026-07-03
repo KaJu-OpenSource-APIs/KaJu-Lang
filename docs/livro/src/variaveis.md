@@ -115,6 +115,27 @@ var cidade = usuario?.endereco?.cidade ?? "desconhecida"
 
 > Se você usar `.` (sem `?`) sobre um valor nulo, isso continua sendo um erro — o `?.` é a forma explícita de dizer "aceite nulo aqui".
 
+## Encadeamento com `|>`
+
+O operador `|>` (pipe) passa o valor da esquerda como **primeiro argumento** da chamada à direita. Ele deixa uma sequência de transformações legível de cima para baixo, sem aninhar chamadas:
+
+```kaju
+funcao dobro(x) { retorne x * 2 }
+escreva(5 |> dobro)          // dobro(5) -> 10
+escreva(3 |> soma(10))       // soma(3, 10)
+```
+
+O pipe entende tanto **funções** quanto **métodos**: se o nome à direita não for uma função em escopo, ele vira uma chamada de método sobre o valor. Assim dá para encadear os métodos de coleção de forma fluente:
+
+```kaju
+var nomes = usuarios
+    |> filtre(funcao(u) { retorne u.ativo })
+    |> mapeie(funcao(u) { retorne u.nome })
+    |> junte(", ")
+
+escreva("  kaju  " |> apara |> maiusculas)   // "KAJU"
+```
+
 ## Operadores de bits
 
 Sobre inteiros, o kaju oferece operações bit a bit: `&` (e), `|` (ou), `^` (ou-exclusivo), `~` (não) e os deslocamentos `<<` e `>>`.

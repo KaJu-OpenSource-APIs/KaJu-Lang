@@ -115,6 +115,14 @@ pub enum Expr {
         dir: Box<Expr>,
         span: Span,
     },
+    /// Encadeamento `esq |> dir`: injeta `esq` como primeiro argumento da chamada
+    /// `dir`. Se o alvo de `dir` for um nome que não é uma função em escopo, a
+    /// chamada é interpretada como método (`esq.dir(...)`).
+    Pipe {
+        esq: Box<Expr>,
+        dir: Box<Expr>,
+        span: Span,
+    },
     Ternario {
         condicao: Box<Expr>,
         entao: Box<Expr>,
@@ -163,6 +171,7 @@ impl Expr {
             | Expr::Unaria { span: s, .. }
             | Expr::Binaria { span: s, .. }
             | Expr::Logica { span: s, .. }
+            | Expr::Pipe { span: s, .. }
             | Expr::Ternario { span: s, .. }
             | Expr::Atribuicao { span: s, .. }
             | Expr::Chamada { span: s, .. }
