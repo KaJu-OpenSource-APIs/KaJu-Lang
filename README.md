@@ -29,48 +29,13 @@ para cada fruta em frutas {
 
 ## Instalação
 
-O `kaju` é um executável nativo autossuficiente: depois de instalado, **usar** o kaju não exige ter Rust instalado. O Rust é necessário apenas para **compilar** o kaju a partir do código-fonte — que é como se instala hoje, enquanto não há binários prontos publicados.
+O `kaju` é um executável nativo autossuficiente: para **usar** o kaju basta o binário no `PATH` — **não precisa ter Rust instalado**. Há duas formas de instalar: baixar um **binário pronto** (mais simples) ou **compilar a partir do código-fonte** (precisa de Rust).
 
-Em todos os casos, comece clonando o repositório:
+### Binário pronto (sem Rust) — recomendado
 
-```bash
-git clone https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git
-cd KaJu-Lang
-```
+A cada versão, binários pré-compilados ficam na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases). Não precisa clonar o repositório.
 
-### Linux e macOS
-
-**Opção A — script de instalação (recomendado).** Compila e instala o comando `kaju` em `~/.local/bin`:
-
-```bash
-./install.sh
-```
-
-Precisa do [Rust](https://www.rust-lang.org/pt-BR) instalado. Para instalar para todos os usuários (em `/usr/local/bin`), use `PREFIX=/usr/local ./install.sh`. Se o script avisar que a pasta não está no `PATH`, ele mostra a linha exata para adicionar ao seu `~/.bashrc` ou `~/.zshrc`.
-
-**Opção B — via cargo.** Instala o comando `kaju` em `~/.cargo/bin` (que o `rustup` já coloca no `PATH`):
-
-```bash
-cargo install --path .
-```
-
-### Windows
-
-Instale o [Rust](https://www.rust-lang.org/pt-BR) com o `rustup` e, no PowerShell ou no Prompt de Comando, dentro da pasta do projeto:
-
-```powershell
-cargo install --path .
-```
-
-Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adiciona ao `PATH`. Depois, `kaju` funciona em qualquer terminal.
-
-> Alternativa: `cargo build --release` gera o binário em `target\release\kaju.exe`, que você pode copiar para qualquer pasta do seu `PATH`. O `install.sh` também roda no Windows via **WSL** ou **Git Bash**.
-
-### Binário pronto (sem Rust)
-
-A cada versão publicada, binários pré-compilados para Linux, Windows e macOS ficam disponíveis na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases).
-
-**Linux x86_64 (servidor/VPS, via linha de comando):**
+**Linux x86_64 (inclusive servidor/VPS, via linha de comando):**
 
 ```bash
 curl -L -o kaju.tar.gz https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases/latest/download/kaju-linux-x86_64.tar.gz
@@ -86,6 +51,29 @@ Sem `sudo`? Instale só para o seu usuário: `mkdir -p ~/.local/bin && mv kaju ~
 **Windows:** baixe `kaju-windows-x86_64.zip`, extraia o `kaju.exe` para uma pasta e adicione essa pasta ao `PATH` (Configurações → variáveis de ambiente).
 
 > Descompactar apenas coloca o binário na pasta atual; o que o torna disponível em qualquer lugar é **movê-lo para um diretório do `PATH`**.
+
+### Compilar a partir do código-fonte (precisa de [Rust](https://www.rust-lang.org/pt-BR))
+
+Comece clonando o repositório:
+
+```bash
+git clone https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git
+cd KaJu-Lang
+```
+
+**Linux e macOS** — o script de instalação compila e instala o `kaju` em `~/.local/bin`:
+
+```bash
+./install.sh          # ou: PREFIX=/usr/local ./install.sh  (para todos os usuários)
+```
+
+Alternativa multiplataforma (Linux, macOS e **Windows**), instalando em `~/.cargo/bin`, que o `rustup` já deixa no `PATH`:
+
+```bash
+cargo install --path .
+```
+
+> No Windows, rode isso no PowerShell dentro da pasta do projeto. O `install.sh` também funciona no Windows via **WSL** ou **Git Bash**.
 
 ## Uso
 
