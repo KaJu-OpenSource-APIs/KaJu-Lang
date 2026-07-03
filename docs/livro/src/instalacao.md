@@ -1,36 +1,48 @@
 # Instalação e primeiros passos
 
-O `kaju` é um **executável nativo autossuficiente**. Para *usar* o kaju, você só precisa do binário `kaju`; **não precisa ter o Rust instalado**. O Rust só entra em cena quando alguém quer *compilar* o kaju a partir do código-fonte.
-
-## Para usar o kaju
-
-Pegue o executável `kaju` — o arquivo `target/release/kaju` gerado pela compilação, ou um binário já distribuído — e coloque-o num diretório do seu `PATH`:
+O `kaju` é um **executável nativo autossuficiente**: uma vez instalado, *usar* o kaju **não exige ter o Rust instalado**. Por enquanto — enquanto não há binários prontos publicados — a instalação é feita compilando a partir do código-fonte, o que precisa do [Rust](https://www.rust-lang.org/pt-BR). Em todos os casos, comece clonando o repositório:
 
 ```bash
-# copia o binário para um lugar no PATH do seu usuário
+git clone https://github.com/USUARIO/kaju.git
+cd kaju
+```
+
+## Linux e macOS
+
+O jeito mais simples é o script de instalação, que compila e coloca o comando `kaju` em `~/.local/bin`:
+
+```bash
+./install.sh
+```
+
+Se preferir, instale via cargo (em `~/.cargo/bin`, que o `rustup` já deixa no `PATH`):
+
+```bash
+cargo install --path .
+```
+
+Se o `install.sh` avisar que `~/.local/bin` não está no seu `PATH`, ele mostra a linha exata para adicionar ao `~/.bashrc` ou `~/.zshrc`. Para instalar para todos os usuários, use `PREFIX=/usr/local ./install.sh`.
+
+## Windows
+
+Instale o [Rust](https://www.rust-lang.org/pt-BR) com o `rustup` e, no PowerShell dentro da pasta do projeto:
+
+```powershell
+cargo install --path .
+```
+
+Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adiciona ao `PATH`. Depois, `kaju` funciona em qualquer terminal. (O `install.sh` também roda no Windows via WSL ou Git Bash.)
+
+## Já tenho o binário (sem Rust)
+
+Se você já tem um binário `kaju` pronto — o `target/release/kaju` gerado por `cargo build --release`, ou um distribuído por alguém —, basta colocá-lo num diretório do seu `PATH`:
+
+```bash
 cp target/release/kaju ~/.local/bin/kaju
 chmod +x ~/.local/bin/kaju
 ```
 
-Pronto: o comando `kaju` passa a funcionar em qualquer diretório, sem mais nada instalado.
-
-```bash
-kaju meu_programa.kaju
-```
-
 O binário depende apenas das bibliotecas do sistema (`libc`), então roda em qualquer máquina compatível.
-
-## Para compilar o kaju a partir do código-fonte
-
-Se você quer construir o kaju do zero — por exemplo, para contribuir com o interpretador —, aí sim precisa do [Rust](https://www.rust-lang.org/pt-BR). Na pasta do projeto:
-
-```bash
-# gera o binário otimizado em target/release/kaju
-cargo build --release
-
-# ou instala direto no PATH (~/.cargo/bin)
-cargo install --path .
-```
 
 > Durante o desenvolvimento, `cargo run -- arquivo.kaju` recompila e executa a versão mais recente do código de uma vez só.
 
@@ -83,6 +95,8 @@ No REPL:
 kaju meu_programa.kaju      # executa um arquivo
 kaju                        # abre o REPL
 kaju explique K020          # explica um código de erro em detalhe
+kaju --versao               # mostra a versão instalada
+kaju --ajuda                # lista os comandos disponíveis
 ```
 
 Próximo: [Valores e tipos](./tipos.md)
