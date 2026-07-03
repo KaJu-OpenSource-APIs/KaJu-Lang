@@ -1151,19 +1151,47 @@ impl Parser {
                 };
             } else if self.verificar(&TipoToken::ColcheteEsq) {
                 self.avancar();
-                let indice = self.expressao()?;
-                let fim = self.consumir(
-                    &TipoToken::ColcheteDir,
-                    "K004",
-                    "esperava ']' para fechar a indexação".into(),
-                    "feche o índice com ']'".into(),
-                )?;
-                let span = unir_span(&expr.span(), &fim.span);
-                expr = Expr::Indice {
-                    alvo: Box::new(expr),
-                    indice: Box::new(indice),
-                    span,
+                // Pode ser indexação `a[i]` ou fatiamento `a[i:j]`, `a[i:]`,
+                // `a[:j]`, `a[:]`. O ':' distingue os dois.
+                let inicio = if self.verificar(&TipoToken::DoisPontos) {
+                    None
+                } else {
+                    Some(Box::new(self.expressao()?))
                 };
+                if self.casar(&TipoToken::DoisPontos) {
+                    let fim = if self.verificar(&TipoToken::ColcheteDir) {
+                        None
+                    } else {
+                        Some(Box::new(self.expressao()?))
+                    };
+                    let tok_fim = self.consumir(
+                        &TipoToken::ColcheteDir,
+                        "K004",
+                        "esperava ']' para fechar o fatiamento".into(),
+                        "feche o fatiamento com ']'".into(),
+                    )?;
+                    let span = unir_span(&expr.span(), &tok_fim.span);
+                    expr = Expr::Fatia {
+                        alvo: Box::new(expr),
+                        inicio,
+                        fim,
+                        span,
+                    };
+                } else {
+                    let tok_fim = self.consumir(
+                        &TipoToken::ColcheteDir,
+                        "K004",
+                        "esperava ']' para fechar a indexação".into(),
+                        "feche o índice com ']'".into(),
+                    )?;
+                    let span = unir_span(&expr.span(), &tok_fim.span);
+                    expr = Expr::Indice {
+                        alvo: Box::new(expr),
+                        // `inicio` é sempre Some aqui: sem ':', a expressão foi lida acima.
+                        indice: inicio.unwrap(),
+                        span,
+                    };
+                }
             } else if self.verificar(&TipoToken::Ponto)
                 || self.verificar(&TipoToken::InterrogacaoPonto)
             {

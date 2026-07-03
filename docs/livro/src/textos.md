@@ -70,7 +70,13 @@ escreva("caju".substitua("u", "!")) // "caj!"
 escreva("ab".repita(3))             // "ababab"
 ```
 
-`fatie(inicio, fim)` recorta um trecho: começa no índice `inicio` e vai até logo **antes** de `fim`.
+`fatie(inicio, fim)` recorta um trecho: começa no índice `inicio` e vai até logo **antes** de `fim`. Para recortes rápidos, existe também a sintaxe de fatiamento com colchetes `[inicio:fim]`, com limites opcionais e índices negativos contando a partir do fim:
+
+```kaju
+escreva("kajuzinho"[0:4])   // "kaju"
+escreva("kajuzinho"[-3:])   // "nho"  (os três últimos)
+escreva("kajuzinho"[:-5])   // "kaju" (tudo menos os cinco últimos)
+```
 
 Há ainda um par de métodos que conectam textos e listas. `divida` quebra um texto em uma lista, usando um separador; `junte` faz o caminho inverso, unindo os elementos de uma lista com um separador entre eles:
 

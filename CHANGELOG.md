@@ -17,6 +17,9 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Fatiamento com colchetes**: `lista[a:b]`, `lista[a:]`, `lista[:b]` e `lista[:]`
+  para listas e textos, com limites opcionais e índices negativos (contados a
+  partir do fim). Limites fora da faixa são ajustados sem erro.
 - Operador **`??` (coalescência de nulo)**: `a ?? b` devolve `a` se não for nulo,
   senão `b`. Reage apenas a `nulo` (`0`, `""` e `falso` passam intactos).
 - Operador **`?.` (acesso opcional)**: `a?.membro` e `a?.metodo(...)` resultam em

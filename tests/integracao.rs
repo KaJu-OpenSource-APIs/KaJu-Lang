@@ -482,6 +482,31 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn fatiamento_com_colchetes() {
+    let (out, err, ok) = rodar(
+        r#"
+        var l = [10, 20, 30, 40, 50]
+        escreva(l[1:3])
+        escreva(l[2:])
+        escreva(l[:2])
+        escreva(l[:])
+        escreva(l[:-1])
+        escreva(l[-2:])
+        escreva(l[3:1])
+        escreva(l[10:20])
+        var t = "kajuzinho"
+        escreva(t[0:4])
+        escreva(t[-3:])
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "[20, 30]\n[30, 40, 50]\n[10, 20]\n[10, 20, 30, 40, 50]\n[10, 20, 30, 40]\n[40, 50]\n[]\n[]\nkaju\nnho\n"
+    );
+}
+
+#[test]
 fn json_ida_e_volta() {
     let (out, err, ok) = rodar(
         r#"

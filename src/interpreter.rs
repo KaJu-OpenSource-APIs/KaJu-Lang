@@ -742,6 +742,29 @@ impl Interpretador {
                 let idx = self.avaliar(indice, amb)?;
                 self.indexar(base, idx, span)
             }
+            Expr::Fatia {
+                alvo,
+                inicio,
+                fim,
+                span,
+            } => {
+                let base = self.avaliar(alvo, amb)?;
+                let ini = match inicio {
+                    Some(e) => {
+                        let v = self.avaliar(e, amb)?;
+                        Some(self.fatia_limite(&v, span)?)
+                    }
+                    None => None,
+                };
+                let f = match fim {
+                    Some(e) => {
+                        let v = self.avaliar(e, amb)?;
+                        Some(self.fatia_limite(&v, span)?)
+                    }
+                    None => None,
+                };
+                self.fatiar(base, ini, f, span)
+            }
             Expr::AtribIndice {
                 alvo,
                 indice,
@@ -1876,6 +1899,62 @@ impl Interpretador {
                 span.clone(),
             )
             .com_rotulo("esperava um 'numero' aqui")),
+        }
+    }
+
+    /// Converte um limite de fatiamento em inteiro (pode ser negativo).
+    fn fatia_limite(&self, v: &Valor, span: &Span) -> Result<i64, Diagnostico> {
+        match v {
+            Valor::Inteiro(i) => Ok(*i),
+            Valor::Decimal(f) if f.fract() == 0.0 => Ok(*f as i64),
+            outro => Err(Diagnostico::novo(
+                "K207",
+                format!(
+                    "o limite de um fatiamento deve ser um inteiro, mas é um '{}'",
+                    outro.tipo_nome()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("esperava um inteiro aqui")),
+        }
+    }
+
+    /// Normaliza os limites de um fatiamento para o intervalo `[ini, fim)` dentro
+    /// de `len`. Índices negativos contam a partir do fim; `None` vira 0 (início)
+    /// ou `len` (fim). O resultado sempre satisfaz `0 <= ini <= fim <= len`.
+    fn normalizar_fatia(len: usize, inicio: Option<i64>, fim: Option<i64>) -> (usize, usize) {
+        let n = len as i64;
+        let resolver = |v: i64| if v < 0 { n + v } else { v }.clamp(0, n);
+        let ini = resolver(inicio.unwrap_or(0));
+        let f = resolver(fim.unwrap_or(n));
+        (ini as usize, f.max(ini) as usize)
+    }
+
+    /// Fatia uma lista ou um texto: `alvo[ini:fim]`.
+    fn fatiar(
+        &self,
+        base: Valor,
+        inicio: Option<i64>,
+        fim: Option<i64>,
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        match base {
+            Valor::Lista(l) => {
+                let lista = l.borrow();
+                let (i, f) = Self::normalizar_fatia(lista.len(), inicio, fim);
+                Ok(Valor::Lista(Rc::new(RefCell::new(lista[i..f].to_vec()))))
+            }
+            Valor::Texto(t) => {
+                let chars: Vec<char> = t.chars().collect();
+                let (i, f) = Self::normalizar_fatia(chars.len(), inicio, fim);
+                Ok(Valor::Texto(chars[i..f].iter().collect()))
+            }
+            outro => Err(Diagnostico::novo(
+                "K209",
+                format!("não é possível fatiar um '{}' com [:]", outro.tipo_nome()),
+                span.clone(),
+            )
+            .com_rotulo("só listas e textos podem ser fatiados")),
         }
     }
 

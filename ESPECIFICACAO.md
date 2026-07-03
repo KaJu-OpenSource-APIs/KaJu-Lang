@@ -231,6 +231,16 @@ Segue exatamente a cadeia do analisador sintático:
 14. `? :` (ternário)
 15. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
 
+### 4.10 Indexação e fatiamento
+`alvo[i]` acessa o elemento no índice `i` (lista/texto) ou a chave `i` (dicionário). Índices de lista/texto são inteiros não negativos, contados a partir de `0`.
+
+`alvo[inicio:fim]` **fatia** uma lista ou texto, devolvendo os elementos de `inicio` até logo **antes** de `fim`. Ambos os limites são opcionais (`[inicio:]`, `[:fim]`, `[:]`) e podem ser **negativos**, contando a partir do fim (`-1` é o último). Limites fora da faixa são ajustados ao tamanho, então o fatiamento nunca gera erro de índice. O resultado é sempre uma nova lista/texto.
+```kaju
+[10, 20, 30, 40][1:3]   // [20, 30]
+[10, 20, 30, 40][:-1]   // [10, 20, 30]
+"kaju"[-2:]             // "ju"
+```
+
 ---
 
 ## 5. Declarações e comandos
@@ -711,7 +721,8 @@ deslocamento  = soma { ( "<<" | ">>" ) soma } ;
 soma          = produto { ( "+" | "-" ) produto } ;
 produto       = unario { ( "*" | "/" | "%" ) unario } ;
 unario        = ( "nao" | "-" | "~" ) unario | chamada ;
-chamada       = primario { "(" [ args ] ")" | "[" expressao "]" | ( "." | "?." ) IDENT } ;
+chamada       = primario { "(" [ args ] ")" | indexa_ou_fatia | ( "." | "?." ) IDENT } ;
+indexa_ou_fatia = "[" ( expressao [ ":" [ expressao ] ] | ":" [ expressao ] ) "]" ;
 args          = expressao { "," expressao } ;
 
 primario      = NUMERO | TEXTO | TEXTO_INTERP

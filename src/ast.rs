@@ -60,6 +60,15 @@ pub enum Expr {
         indice: Box<Expr>,
         span: Span,
     },
+    Fatia {
+        alvo: Box<Expr>,
+        /// Limites opcionais do fatiamento `alvo[inicio:fim]`. `None` significa
+        /// "do começo" (início) ou "até o fim" (fim). Índices negativos contam
+        /// a partir do fim.
+        inicio: Option<Box<Expr>>,
+        fim: Option<Box<Expr>>,
+        span: Span,
+    },
     Acesso {
         alvo: Box<Expr>,
         membro: String,
@@ -142,6 +151,7 @@ impl Expr {
             | Expr::Dicionario(_, s)
             | Expr::Variavel(_, s)
             | Expr::Indice { span: s, .. }
+            | Expr::Fatia { span: s, .. }
             | Expr::Acesso { span: s, .. }
             | Expr::AtribIndice { span: s, .. }
             | Expr::AtribCampo { span: s, .. }

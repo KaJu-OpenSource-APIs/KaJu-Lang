@@ -45,6 +45,22 @@ escreva(["x", "y", "z"].enumere())            // [[0, x], [1, y], [2, z]]  (índ
 - `combine(outra)` casa esta lista com `outra` posição a posição, formando pares `[a, b]` (para no fim da menor);
 - `enumere()` devolve cada elemento acompanhado do seu índice, no formato `[indice, valor]` — útil em `para cada`.
 
+### Fatiando com colchetes
+
+Além do método `fatie`, você pode extrair uma sublista com a sintaxe `[inicio:fim]` — do índice `inicio` até logo **antes** de `fim`. Qualquer um dos lados pode ser omitido, e índices **negativos** contam a partir do fim (`-1` é o último):
+
+```kaju
+var l = [10, 20, 30, 40, 50]
+escreva(l[1:3])    // [20, 30]
+escreva(l[2:])     // [30, 40, 50]   (do índice 2 até o fim)
+escreva(l[:2])     // [10, 20]       (do começo até antes do 2)
+escreva(l[:-1])    // [10, 20, 30, 40]  (tudo menos o último)
+escreva(l[-2:])    // [40, 50]       (os dois últimos)
+escreva(l[:])      // cópia da lista inteira
+```
+
+Limites fora da faixa são ajustados automaticamente, então fatiar nunca dá erro de índice. A mesma sintaxe funciona em textos (veja [Textos](./textos.md)).
+
 ### Transformando listas
 
 Alguns métodos recebem uma **função** como argumento e a aplicam a cada elemento. Eles são muito úteis para transformar ou filtrar dados sem escrever laços manualmente:
