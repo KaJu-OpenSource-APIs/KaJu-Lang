@@ -15,6 +15,11 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - Seção de instalação reordenada (binário pronto primeiro, sem clonar; o `git clone`
   passa a aparecer só na parte de compilar da fonte).
 
+### Adicionado
+
+- `ROADMAP.md` com as direções futuras do projeto (extraído da §14 da
+  especificação e reescrito em tom de direções, não de fases internas).
+
 ### Corrigido (documentação)
 
 - `tipos.md` dizia que estouro de inteiro "promove para decimal"; na verdade dá o

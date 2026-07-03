@@ -93,6 +93,7 @@ No REPL, digite código e pressione Enter; blocos com `{ }` pedem mais linhas; a
 - **[O Livro do kaju](docs/livro)** — tutorial completo, do zero ao avançado.
 - **[Especificação da linguagem](ESPECIFICACAO.md)** — referência normativa da sintaxe e semântica.
 - **[Exemplos](exemplos/)** — programas prontos para rodar.
+- **[Direções futuras](ROADMAP.md)** — para onde o kaju pode crescer.
 
 ## Estrutura do código
 

@@ -18,7 +18,6 @@
 11. [Tratamento de erros](#11-tratamento-de-erros)
 12. [Gramática (EBNF)](#12-gramática-ebnf)
 13. [Arquitetura do interpretador (Rust)](#13-arquitetura-do-interpretador-rust)
-14. [Roadmap de implementação](#14-roadmap-de-implementação)
 
 ---
 
@@ -753,24 +752,4 @@ kaju/
 
 ---
 
-## 14. Roadmap de implementação
-
-**Fase 1 — núcleo executável**
-Lexer → parser → AST → interpretador para: literais, `var`/`constante`, aritmética, `+` em texto, comparação, `e`/`ou`/`nao`, `se/senao`, `enquanto`, `para`, funções + closures, `escreva`. Entregável: rodar os exemplos básicos. **Erros ricos (§11) desde já.**
-
-**Fase 2 — OOP e robustez**
-Classes, herança, `isto`/`base`, `novo` (§7); exceções `tente`/`capture`/`finalmente`/`lance` (§8); módulos `importe` (§9).
-
-**Fase 3 — "todas as funções"**
-Listas e dicionários completos com métodos, módulos de stdlib `texto`/`matematica`/`arquivo`, `leia`, conversões, mais embutidos. REPL interativo.
-
-**Fase 4 — desempenho (opcional)**
-Compilar a AST para **bytecode** e executar numa VM em Rust (modelo `clox` do *Crafting Interpreters*).
-
-**Documentação (em paralelo, seguindo a pesquisa):**
-Este `ESPECIFICACAO.md` é o artefato normativo. Depois: "O Livro do kaju" (tutorial), referência da stdlib gerada com exemplos **testados no CI** (a lição mais forte da pesquisa), e guias how-to. Estrutura Diátaxis.
-
----
-
-### Próximo passo sugerido
-Confirmada a spec, começo a **Fase 1**: crio o projeto Cargo e implemento lexer + parser + interpretador até rodar os exemplos deste documento.
+> As direções futuras do kaju ficam no [ROADMAP.md](ROADMAP.md).
