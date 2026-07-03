@@ -160,4 +160,25 @@ escreva(Contador.quantos())  // 2
 
 O campo `total` não vive em nenhuma instância; ele vive na classe `Contador`, e por isso o construtor o incrementa através de `Contador.total`. Métodos estáticos, por sua vez, funcionam sem um objeto e servem para operações ligadas à classe em geral, não a uma instância específica.
 
+## Registros: classes de dados prontas
+
+Muitas vezes você só quer agrupar alguns valores — um ponto, uma cor, uma pessoa — sem escrever um construtor, um `paraTexto` e um `igual` na mão. Para isso existe o **registro**:
+
+```kaju
+registro Ponto(x, y)
+
+var a = Ponto(1, 2)          // pode usar 'novo', mas não é obrigatório
+escreva(a)                   // Ponto(1, 2)
+escreva(a.x)                 // 1
+escreva(a == Ponto(1, 2))    // verdadeiro — compara os campos, não a identidade
+```
+
+Um `registro Nome(campos...)` cria uma classe com três coisas prontas:
+
+- um **construtor** que recebe os campos (por posição ou por nome: `Ponto(y: 2, x: 1)`);
+- **igualdade estrutural**: dois registros do mesmo tipo são iguais quando todos os campos são iguais — o que também faz `lista.contem(...)` funcionar como esperado;
+- um **`paraTexto`** que mostra `Nome(valor1, valor2, ...)`.
+
+Todos os campos são obrigatórios na construção. Um registro guarda dados; quando você precisar de comportamento (métodos), use uma `classe`.
+
 Com funções e objetos você já consegue estruturar programas completos. Quando algo dá errado durante a execução, é hora de tratar [erros e exceções](./erros.md).

@@ -8,6 +8,7 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.
 
 - Realce dos operadores `??` (coalescência de nulo), `?.` (acesso opcional) e
   `|>` (encadeamento).
+- Realce da palavra-chave `registro` e snippet `registro`.
 
 ## [1.0.0]
 

@@ -58,6 +58,7 @@ impl Interpretador {
             metodos_estaticos: HashMap::new(),
             campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
+            campos_registro: None,
         });
         let classe_modulo = Rc::new(ClasseKaju {
             nome: "Modulo".to_string(),
@@ -66,6 +67,7 @@ impl Interpretador {
             metodos_estaticos: HashMap::new(),
             campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
+            campos_registro: None,
         });
         // Torna a classe Erro visível para o usuário também.
         global
@@ -331,6 +333,21 @@ impl Interpretador {
                     metodos_estaticos: mapa_estaticos,
                     campos_estaticos: RefCell::new(campos),
                     superclasse: super_rc,
+                    campos_registro: None,
+                });
+                amb.borrow_mut()
+                    .definir(nome.clone(), Valor::Classe(classe), false);
+                Ok(Fluxo::Segue)
+            }
+            Cmd::DeclRegistro { nome, campos, .. } => {
+                let classe = Rc::new(ClasseKaju {
+                    nome: nome.clone(),
+                    construtor: None,
+                    metodos: HashMap::new(),
+                    metodos_estaticos: HashMap::new(),
+                    campos_estaticos: RefCell::new(HashMap::new()),
+                    superclasse: None,
+                    campos_registro: Some(campos.clone()),
                 });
                 amb.borrow_mut()
                     .definir(nome.clone(), Valor::Classe(classe), false);
@@ -1576,6 +1593,12 @@ impl Interpretador {
             nomeados.push((nome.clone(), self.avaliar(e, amb)?));
         }
 
+        // Registro: vincula os argumentos aos campos declarados (por posição ou nome).
+        if let Some(campos) = &classe.campos_registro {
+            self.preencher_registro(&valor_obj, &classe.nome, campos, vals, nomeados, span)?;
+            return Ok(valor_obj);
+        }
+
         match classe.buscar_construtor() {
             Some((ctor, classe_ctor)) => {
                 self.invocar_metodo(ctor, valor_obj.clone(), classe_ctor, vals, &nomeados, span)?;
@@ -1596,6 +1619,78 @@ impl Interpretador {
         }
 
         Ok(valor_obj)
+    }
+
+    /// Preenche os campos de um registro a partir dos argumentos posicionais e
+    /// nomeados. Todos os campos são obrigatórios.
+    fn preencher_registro(
+        &mut self,
+        obj: &Valor,
+        nome_registro: &str,
+        campos: &[String],
+        vals: Vec<Valor>,
+        nomeados: Vec<(String, Valor)>,
+        span: &Span,
+    ) -> Result<(), Diagnostico> {
+        if vals.len() > campos.len() {
+            return Err(Diagnostico::novo(
+                "K201",
+                format!(
+                    "o registro '{}' tem {} campo(s), mas recebeu {} posicionais",
+                    nome_registro,
+                    campos.len(),
+                    vals.len()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("argumentos demais"));
+        }
+        let mut slots: Vec<Option<Valor>> = vec![None; campos.len()];
+        for (i, v) in vals.into_iter().enumerate() {
+            slots[i] = Some(v);
+        }
+        for (nome, v) in nomeados {
+            match campos.iter().position(|c| c == &nome) {
+                Some(idx) => {
+                    if slots[idx].is_some() {
+                        return Err(Diagnostico::novo(
+                            "K225",
+                            format!("o campo '{}' foi informado mais de uma vez", nome),
+                            span.clone(),
+                        )
+                        .com_rotulo("valor duplicado para este campo"));
+                    }
+                    slots[idx] = Some(v);
+                }
+                None => {
+                    return Err(Diagnostico::novo(
+                        "K224",
+                        format!("o registro '{}' não tem o campo '{}'", nome_registro, nome),
+                        span.clone(),
+                    )
+                    .com_rotulo("campo inexistente"));
+                }
+            }
+        }
+        let Valor::Objeto(o) = obj else {
+            unreachable!("preencher_registro recebe sempre um objeto")
+        };
+        for (campo, slot) in campos.iter().zip(slots) {
+            match slot {
+                Some(v) => {
+                    o.borrow_mut().campos.insert(campo.clone(), v);
+                }
+                None => {
+                    return Err(Diagnostico::novo(
+                        "K201",
+                        format!("o registro '{}' — falta o campo '{}'", nome_registro, campo),
+                        span.clone(),
+                    )
+                    .com_rotulo("campo obrigatório não informado"));
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Avalia `esq |> dir`. O valor da esquerda entra como primeiro argumento da
@@ -1656,6 +1751,16 @@ impl Interpretador {
     ) -> Result<Valor, Diagnostico> {
         match alvo {
             Valor::Funcao(f) => self.invocar_funcao(f, args, &nomeados, span),
+            // Um registro pode ser instanciado como uma chamada: `Ponto(1, 2)`.
+            Valor::Classe(c) if c.campos_registro.is_some() => {
+                let obj = Valor::Objeto(Rc::new(RefCell::new(Objeto {
+                    classe: c.clone(),
+                    campos: HashMap::new(),
+                })));
+                let campos = c.campos_registro.as_ref().unwrap();
+                self.preencher_registro(&obj, &c.nome, campos, args, nomeados, span)?;
+                Ok(obj)
+            }
             outro => {
                 self.erro_se_nomeados(&nomeados, span)?;
                 self.chamar(outro, args, span)
@@ -1933,6 +2038,17 @@ impl Interpretador {
                         });
                     }
                 }
+                // Registro sem paraTexto próprio: "Nome(campo1, campo2, ...)".
+                let registro = o.borrow().classe.campos_registro.clone();
+                if let Some(campos) = registro {
+                    let nome = o.borrow().classe.nome.clone();
+                    let mut partes = Vec::with_capacity(campos.len());
+                    for c in &campos {
+                        let val = o.borrow().campos.get(c).cloned().unwrap_or(Valor::Nulo);
+                        partes.push(self.exibir(&val, span)?);
+                    }
+                    return Ok(format!("{}({})", nome, partes.join(", ")));
+                }
                 Ok(v.para_texto())
             }
             Valor::Lista(l) => {
@@ -1970,6 +2086,7 @@ impl Interpretador {
                 }
             }
         }
+        // Registros e coleções caem na igualdade estrutural de `Valor::igual`.
         Ok(a.igual(b))
     }
 

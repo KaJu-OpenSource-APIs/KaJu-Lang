@@ -482,6 +482,39 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn registros() {
+    let (out, err, ok) = rodar(
+        r#"
+        registro Ponto(x, y)
+        var a = Ponto(1, 2)
+        var b = novo Ponto(1, 2)
+        escreva(a)
+        escreva(a.x, a.y)
+        escreva(a == b)
+        escreva(a == Ponto(3, 4))
+        escreva(Ponto(y: 5, x: 2))
+        registro Retangulo(canto, tamanho)
+        var r = Retangulo(Ponto(0, 0), Ponto(10, 20))
+        escreva(r)
+        escreva(r == Retangulo(Ponto(0, 0), Ponto(10, 20)))
+        escreva([Ponto(1, 1), Ponto(2, 2)].contem(Ponto(2, 2)))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "Ponto(1, 2)\n1 2\nverdadeiro\nfalso\nPonto(2, 5)\nRetangulo(Ponto(0, 0), Ponto(10, 20))\nverdadeiro\nverdadeiro\n"
+    );
+}
+
+#[test]
+fn erro_registro_campo_faltando() {
+    let (_, err, ok) = rodar("registro Ponto(x, y)\nescreva(Ponto(1))");
+    assert!(!ok);
+    assert!(err.contains("erro[K201]"), "stderr: {err}");
+}
+
+#[test]
 fn pattern_matching_no_escolha() {
     let (out, err, ok) = rodar(
         r#"

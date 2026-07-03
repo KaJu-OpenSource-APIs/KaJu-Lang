@@ -17,6 +17,9 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Registros (`registro Nome(campos...)`)**: classes de dados com construtor,
+  igualdade estrutural e `paraTexto` gerados automaticamente. Instanciáveis com
+  ou sem `novo`, por posição ou nome. Nova palavra reservada `registro`.
 - **Pattern matching no `escolha`**: cada `caso` aceita padrões além de valores —
   literais (igualdade), nomes (vinculam), `_` (curinga), listas
   (`caso [x, 0]`, com `...resto`) e dicionários (`caso {"tipo": t}`). Cada ramo

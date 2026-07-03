@@ -65,6 +65,7 @@ pub enum TipoToken {
 
     // Palavras-chave de orientação a objetos (Fase 2)
     Classe,
+    Registro,
     Herda,
     Metodo,
     Construtor,
@@ -166,6 +167,7 @@ pub fn palavra_chave(texto: &str) -> Option<TipoToken> {
         "falso" => TipoToken::Falso,
         "nulo" => TipoToken::Nulo,
         "classe" => TipoToken::Classe,
+        "registro" => TipoToken::Registro,
         "herda" => TipoToken::Herda,
         "metodo" => TipoToken::Metodo,
         "construtor" => TipoToken::Construtor,

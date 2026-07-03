@@ -71,7 +71,7 @@ Começam por letra (incluindo acentuadas) ou `_`, seguidos de letras, dígitos o
 Válidos: `nome`, `total_geral`, `número`, `_temp`. Diferenciam maiúsculas de minúsculas.
 
 ### 2.3 Palavras-chave reservadas
-São 39 palavras reservadas:
+São 40 palavras reservadas:
 ```
 var        constante   funcao      retorne
 se         senao       senaose     escolha
@@ -79,10 +79,10 @@ caso       padrao      enquanto    para
 cada       em          de          ate
 passo      pare        continue    e
 ou         nao         verdadeiro  falso
-nulo       classe      herda       metodo
-construtor novo        isto        base
-estatico   tente       capture     finalmente
-lance      importe     como
+nulo       classe      registro    herda
+metodo     construtor  novo        isto
+base       estatico    tente       capture
+finalmente lance       importe     como
 ```
 
 ### 2.4 Literais
@@ -502,6 +502,22 @@ escreva(p)                         // (1, 2)
 escreva(novo Ponto(1, 2) == p)     // verdadeiro
 ```
 
+### 7.6 Registros (`registro`)
+Um **registro** é uma classe de dados enxuta: `registro Nome(campo1, campo2, ...)` declara um tipo cujo construtor, igualdade estrutural e `paraTexto` são **gerados automaticamente**.
+```kaju
+registro Ponto(x, y)
+
+var a = Ponto(1, 2)             // ou 'novo Ponto(1, 2)'
+escreva(a)                      // Ponto(1, 2)
+escreva(a == Ponto(1, 2))       // verdadeiro (compara os campos)
+escreva(a.x)                    // 1
+```
+- **Construção:** `Ponto(1, 2)` ou `novo Ponto(1, 2)`; os argumentos podem ser posicionais ou nomeados (`Ponto(y: 2, x: 1)`). Todos os campos são obrigatórios; faltar/sobrar campo é `K201`, campo inexistente por nome é `K224`, campo repetido é `K225`.
+- **Igualdade:** dois registros são iguais quando são do mesmo tipo e todos os campos são iguais (recursivamente). Vale em `==`, em `lista.contem(...)`, etc.
+- **Texto:** `paraTexto` gera `Nome(v1, v2, ...)`.
+
+Um registro não tem métodos próprios; para comportamento, use uma `classe`.
+
 ---
 
 ## 8. Exceções (tente/capture)
@@ -706,7 +722,7 @@ Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **54 có
 programa      = { declaracao } ;
 
 declaracao    = decl_var | decl_const | decl_funcao
-              | decl_classe | decl_importe | comando ;
+              | decl_classe | decl_registro | decl_importe | comando ;
 
 (* 'var'/'constante' aceitam desempacotamento: vários nomes, vários valores
    (ou uma única lista à direita) *)
@@ -719,6 +735,7 @@ decl_funcao   = "funcao" IDENT "(" [ params ] ")" bloco ;
 params        = param { "," param } ;
 param         = [ "..." ] IDENT [ "=" expressao ] ;   (* variádico e/ou valor padrão *)
 
+decl_registro = "registro" IDENT "(" [ IDENT { "," IDENT } ] ")" ;
 decl_classe   = "classe" IDENT [ "herda" IDENT ] "{" { membro } "}" ;
 membro        = construtor | metodo | membro_estatico ;
 construtor    = "construtor" "(" [ params ] ")" bloco ;

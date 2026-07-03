@@ -63,6 +63,11 @@
     ],
     "description": "Escolha (switch) com caso e padrao"
   },
+  "Registro": {
+    "prefix": "registro",
+    "body": ["registro ${1:Nome}(${2:campos})"],
+    "description": "Registro (classe de dados) com igualdade e paraTexto automáticos"
+  },
   "Classe": {
     "prefix": "classe",
     "body": [

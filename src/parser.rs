@@ -8,6 +8,9 @@ use crate::erros::Diagnostico;
 use crate::lexer::Lexer;
 use crate::token::{Pedaco, Span, TipoToken, Token};
 
+/// Argumentos analisados de uma chamada: posicionais e nomeados (`nome`, expr).
+type Argumentos = (Vec<Expr>, Vec<(String, Expr)>);
+
 pub struct Parser {
     tokens: Vec<Token>,
     pos: usize,
@@ -145,6 +148,7 @@ impl Parser {
                     | TipoToken::Constante
                     | TipoToken::Funcao
                     | TipoToken::Classe
+                    | TipoToken::Registro
                     | TipoToken::Importe
                     | TipoToken::Se
                     | TipoToken::Enquanto
@@ -179,6 +183,7 @@ impl Parser {
             TipoToken::Constante => self.decl_var(true),
             TipoToken::Importe => self.decl_importe(),
             TipoToken::Classe => self.decl_classe(),
+            TipoToken::Registro => self.decl_registro(),
             TipoToken::Funcao => {
                 // pode ser declaração de função nomeada ou função anônima em expressão.
                 if let TipoToken::Identificador(_) = self.tokens[self.pos + 1].tipo {
@@ -290,6 +295,50 @@ impl Parser {
             caminho: caminho.lexema.clone(),
             alias,
             span: inicio.span,
+        })
+    }
+
+    /// `registro Nome(campo1, campo2, ...)` — uma classe de dados enxuta, com
+    /// construtor, igualdade estrutural e `paraTexto` gerados automaticamente.
+    fn decl_registro(&mut self) -> Result<Cmd, Diagnostico> {
+        let inicio = self.avancar(); // 'registro'
+        let nome_tok = self.consumir(
+            &TipoToken::Identificador(String::new()),
+            "K013",
+            "esperava o nome do registro".into(),
+            "dê um nome ao registro aqui".into(),
+        )?;
+        self.consumir(
+            &TipoToken::ParenEsq,
+            "K013",
+            "esperava '(' com os campos do registro".into(),
+            "liste os campos entre parênteses, ex.: registro Ponto(x, y)".into(),
+        )?;
+        let mut campos = Vec::new();
+        if !self.verificar(&TipoToken::ParenDir) {
+            loop {
+                let campo = self.consumir(
+                    &TipoToken::Identificador(String::new()),
+                    "K013",
+                    "esperava o nome de um campo".into(),
+                    "escreva o nome do campo aqui".into(),
+                )?;
+                campos.push(campo.lexema.clone());
+                if !self.casar(&TipoToken::Virgula) {
+                    break;
+                }
+            }
+        }
+        let fim = self.consumir(
+            &TipoToken::ParenDir,
+            "K013",
+            "esperava ')' para fechar os campos do registro".into(),
+            "feche os campos com ')'".into(),
+        )?;
+        Ok(Cmd::DeclRegistro {
+            nome: nome_tok.lexema.clone(),
+            campos,
+            span: unir_span(&inicio.span, &fim.span),
         })
     }
 
@@ -1248,9 +1297,7 @@ impl Parser {
     /// Analisa a lista de argumentos de uma chamada/construtor, aceitando
     /// posicionais (`expr`) e nomeados (`nome: expr`). Os nomeados só podem vir
     /// depois dos posicionais. O `(` já foi consumido; para no `)`.
-    fn analisar_argumentos(
-        &mut self,
-    ) -> Result<(Vec<Expr>, Vec<(String, Expr)>), Diagnostico> {
+    fn analisar_argumentos(&mut self) -> Result<Argumentos, Diagnostico> {
         let mut posicionais = Vec::new();
         let mut nomeados: Vec<(String, Expr)> = Vec::new();
         if !self.verificar(&TipoToken::ParenDir) {

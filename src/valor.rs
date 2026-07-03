@@ -32,6 +32,10 @@ pub struct ClasseKaju {
     pub metodos_estaticos: HashMap<String, Rc<FuncaoKaju>>,
     pub campos_estaticos: RefCell<HashMap<String, Valor>>,
     pub superclasse: Option<Rc<ClasseKaju>>,
+    /// Se esta classe foi declarada com `registro`, guarda os nomes dos campos
+    /// (na ordem). Habilita construtor, igualdade estrutural e `paraTexto`
+    /// automáticos. `None` para classes comuns.
+    pub campos_registro: Option<Vec<String>>,
 }
 
 impl ClasseKaju {
@@ -207,7 +211,23 @@ impl Valor {
             (Valor::Funcao(a), Valor::Funcao(b)) => Rc::ptr_eq(a, b),
             (Valor::Nativa(a), Valor::Nativa(b)) => Rc::ptr_eq(a, b),
             (Valor::Classe(a), Valor::Classe(b)) => Rc::ptr_eq(a, b),
-            (Valor::Objeto(a), Valor::Objeto(b)) => Rc::ptr_eq(a, b),
+            // Registros comparam por conteúdo (mesmo tipo + campos iguais); objetos
+            // comuns comparam por identidade. (`igual` definido pelo usuário é
+            // tratado no interpretador, antes de chegar aqui.)
+            (Valor::Objeto(a), Valor::Objeto(b)) => {
+                Rc::ptr_eq(a, b) || {
+                    let (oa, ob) = (a.borrow(), b.borrow());
+                    match &oa.classe.campos_registro {
+                        Some(campos) if Rc::ptr_eq(&oa.classe, &ob.classe) => {
+                            campos.iter().all(|c| match (oa.campos.get(c), ob.campos.get(c)) {
+                                (Some(x), Some(y)) => x.igual(y),
+                                _ => false,
+                            })
+                        }
+                        _ => false,
+                    }
+                }
+            }
             _ => false,
         }
     }

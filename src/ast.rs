@@ -252,6 +252,11 @@ pub enum Cmd {
         campos_estaticos: Vec<(String, Expr)>,
         span: Span,
     },
+    DeclRegistro {
+        nome: String,
+        campos: Vec<String>,
+        span: Span,
+    },
     DeclVar {
         nome: String,
         valor: Expr,
