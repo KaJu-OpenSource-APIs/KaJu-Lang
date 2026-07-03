@@ -1,0 +1,71 @@
+// Novos recursos da linguagem — um tour rápido.
+
+// --- Métodos de coleção de alta ordem ---
+var numeros = [1, 2, 3, 4, 5, 6]
+escreva(numeros.encontre(funcao(n) { retorne n > 4 }))   // 5
+escreva(numeros.algum(funcao(n) { retorne n > 5 }))       // verdadeiro
+escreva(numeros.todos(funcao(n) { retorne n > 0 }))       // verdadeiro
+escreva(numeros.agrupe(funcao(n) { retorne n % 2 == 0 ? "par" : "impar" }))
+escreva([[1, 2], [3], [4]].achate())                      // [1, 2, 3, 4]
+escreva([1, 2, 3].combine(["a", "b", "c"]))               // [[1, a], [2, b], [3, c]]
+escreva(["x", "y"].enumere())                             // [[0, x], [1, y]]
+
+// --- Acesso opcional (?.) e coalescência de nulo (??) ---
+registro Endereco(cidade)
+registro Usuario(nome, endereco)
+var u = Usuario("Ana", nulo)
+escreva(u?.endereco?.cidade ?? "sem cidade")              // sem cidade
+
+// --- Fatiamento ---
+escreva(numeros[1:4])     // [2, 3, 4]
+escreva(numeros[-2:])     // [5, 6]
+escreva("kajuzinho"[:4])  // kaju
+
+// --- Argumentos nomeados ---
+funcao conectar(host, porta = 8080, tls = falso) {
+    escreva(host, porta, tls)
+}
+conectar("exemplo.com", tls: verdadeiro)                  // exemplo.com 8080 verdadeiro
+
+// --- Pipe |> ---
+var frase = ["ola", "mundo", "kaju"]
+    |> mapeie(funcao(p) { retorne p.maiusculas() })
+    |> junte(" ")
+escreva(frase)                                            // OLA MUNDO KAJU
+
+// --- Espalhamento ... ---
+var a = [1, 2, 3]
+var b = [0, ...a, 4]
+escreva(b)                                                // [0, 1, 2, 3, 4]
+funcao soma3(x, y, z) { retorne x + y + z }
+escreva(soma3(...a))                                      // 6
+var estilo = {"cor": "azul", "tam": "M"}
+escreva({...estilo, "tam": "G"})                          // {"cor": azul, "tam": G}
+
+// --- Registros e enums ---
+enum Forma { Circulo, Quadrado, Triangulo }
+registro Figura(forma, lado)
+
+var fig = Figura(Forma.Quadrado, 5)
+escreva(fig)                                              // Figura(Forma.Quadrado, 5)
+escreva(fig == Figura(Forma.Quadrado, 5))                 // verdadeiro
+
+// --- Pattern matching: desestruturação, guardas e variantes de enum ---
+funcao classifica(par) {
+    escolha par {
+        caso [Forma.Quadrado, l] se l > 0 { retorne "quadrado de lado " + paraTexto(l) }
+        caso [forma, _] { retorne "forma: " + paraTexto(forma) }
+        padrao { retorne "?" }
+    }
+}
+escreva(classifica([Forma.Quadrado, 5]))     // quadrado de lado 5
+escreva(classifica([Forma.Circulo, 3]))      // forma: Forma.Circulo
+
+// --- Inteiros de precisão arbitrária ---
+funcao fatorial(n) {
+    var r = 1
+    para i de 2 ate n { r = r * i }
+    retorne r
+}
+escreva(fatorial(30))   // exato, bem além de 64 bits
+escreva(9223372036854775807 + 1)
