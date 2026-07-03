@@ -482,6 +482,49 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn argumentos_nomeados() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao criar(nome, idade, cidade) { escreva(nome, idade, cidade) }
+        criar("Ana", 30, "Recife")
+        criar(nome: "Bia", idade: 25, cidade: "Olinda")
+        criar("Carlos", cidade: "Natal", idade: 40)
+        funcao comPadrao(a, b = 10) { escreva(a, b) }
+        comPadrao(b: 99, a: 1)
+        comPadrao(a: 7)
+        classe Ponto {
+            construtor(x, y) {
+                isto.x = x
+                isto.y = y
+            }
+            metodo mostra() { escreva(isto.x, isto.y) }
+        }
+        (novo Ponto(y: 5, x: 2)).mostra()
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "Ana 30 Recife\nBia 25 Olinda\nCarlos 40 Natal\n1 99\n7 10\n2 5\n"
+    );
+}
+
+#[test]
+fn erros_de_argumentos_nomeados() {
+    let casos = [
+        ("funcao f(a) { retorne a }\nescreva(f(x: 1))", "K224"),
+        ("funcao f(a) { retorne a }\nescreva(f(1, a: 2))", "K225"),
+        ("escreva([1,2].mapeie(g: 3))", "K226"),
+        ("funcao f(a) { retorne a }\nescreva(f(x: 1, 2))", "K023"),
+    ];
+    for (fonte, cod) in casos {
+        let (_, err, ok) = rodar(fonte);
+        assert!(!ok, "deveria falhar: {fonte}");
+        assert!(err.contains(&format!("erro[{cod}]")), "esperava {cod}: {err}");
+    }
+}
+
+#[test]
 fn fatiamento_com_colchetes() {
     let (out, err, ok) = rodar(
         r#"

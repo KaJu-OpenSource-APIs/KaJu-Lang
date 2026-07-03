@@ -360,6 +360,15 @@ soma(1, 2, 3)            // 6
 - Parâmetros sem padrão não podem vir depois de um com padrão.
 - O parâmetro variádico (`...`) deve ser o último.
 
+### 6.2 Argumentos nomeados
+Na chamada, um argumento pode ser identificado pelo nome do parâmetro: `f(nome: valor)`. Os nomeados vêm sempre **depois** dos posicionais (senão `K023`) e podem estar em qualquer ordem entre si. Também valem para construtores (`novo Classe(x: 1)`) e métodos definidos em kaju; funções embutidas e métodos de coleção só aceitam argumentos posicionais (`K226`).
+```kaju
+funcao conectar(host, porta = 8080, tls = falso) { ... }
+conectar("exemplo.com", tls: verdadeiro)   // porta usa o padrão
+```
+- Passar um nome que não é parâmetro da função gera `K224`; o parâmetro variádico não pode ser passado por nome.
+- Preencher o mesmo parâmetro por posição e por nome (ou repetir o nome) gera `K225`.
+
 ---
 
 ## 7. Classes e objetos
@@ -637,13 +646,13 @@ nota: a divisão por zero não é definida em kaju.
 ```
 
 ### 11.3 Categorias e códigos
-Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **49 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
+Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **53 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
 
-- **Núcleo — análise e semântica (`K0xx`, K001–K022).** É a faixa mais antiga e mistura:
-  - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla);
+- **Núcleo — análise e semântica (`K0xx`, K001–K023).** É a faixa mais antiga e mistura:
+  - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla, `K023` argumento posicional depois de nomeado);
   - **execução** que nasceu junto do núcleo — `K001` variável não definida, `K012` operação entre tipos incompatíveis (também usada por bits/deslocamento), `K020` divisão por zero.
 - **Léxico (`K1xx`, K101–K104).** Caractere inesperado, texto sem fechar aspas, número mal formado, escape/interpolação inválidos.
-- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K231` afirmação falhou (`afirme`), entre outros.
+- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K224`/`K225` argumentos nomeados inválidos (parâmetro inexistente / informado duas vezes), `K226` argumentos nomeados onde não são aceitos, `K231` afirmação falhou (`afirme`), entre outros.
 
 > Cada código tem uma página longa consultável com `kaju explique <codigo>` (ex.: `kaju explique K016`), à la `rustc --explain`. Ao relatar um erro, o interpretador ainda sugere `dica: rode 'kaju explique Kxxx'`.
 
@@ -723,7 +732,8 @@ produto       = unario { ( "*" | "/" | "%" ) unario } ;
 unario        = ( "nao" | "-" | "~" ) unario | chamada ;
 chamada       = primario { "(" [ args ] ")" | indexa_ou_fatia | ( "." | "?." ) IDENT } ;
 indexa_ou_fatia = "[" ( expressao [ ":" [ expressao ] ] | ":" [ expressao ] ) "]" ;
-args          = expressao { "," expressao } ;
+args          = argumento { "," argumento } ;   (* nomeados só depois dos posicionais *)
+argumento     = [ IDENT ":" ] expressao ;       (* 'IDENT :' marca um argumento nomeado *)
 
 primario      = NUMERO | TEXTO | TEXTO_INTERP
               | "verdadeiro" | "falso" | "nulo"

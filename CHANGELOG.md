@@ -17,6 +17,11 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Argumentos nomeados** em chamadas: `f(nome: valor)`, também em construtores
+  (`novo Classe(x: 1)`) e métodos definidos em kaju. Podem ser reordenados e
+  combinam com parâmetros padrão; posicionais sempre vêm antes dos nomeados.
+  Novos erros K023 (posicional após nomeado), K224 (parâmetro inexistente),
+  K225 (argumento informado duas vezes) e K226 (nomeados não aceitos aqui).
 - **Fatiamento com colchetes**: `lista[a:b]`, `lista[a:]`, `lista[:b]` e `lista[:]`
   para listas e textos, com limites opcionais e índices negativos (contados a
   partir do fim). Limites fora da faixa são ajustados sem erro.

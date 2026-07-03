@@ -94,6 +94,8 @@ pub enum Expr {
         /// vindo de um módulo importado com `como` (`geo.Ponto`).
         classe: Box<Expr>,
         args: Vec<Expr>,
+        /// Argumentos nomeados `Classe(nome: valor)`, sempre depois dos posicionais.
+        nomeados: Vec<(String, Expr)>,
         span: Span,
     },
     Unaria {
@@ -127,6 +129,8 @@ pub enum Expr {
     Chamada {
         alvo: Box<Expr>,
         args: Vec<Expr>,
+        /// Argumentos nomeados `f(nome: valor)`, sempre depois dos posicionais.
+        nomeados: Vec<(String, Expr)>,
         span: Span,
     },
     FuncaoAnon {

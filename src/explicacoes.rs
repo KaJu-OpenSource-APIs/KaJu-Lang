@@ -370,6 +370,21 @@ Correto:
     var a, b, c = 1, 2, 3"
         }
 
+        "K023" => {
+            "\
+K023 — argumento posicional depois de nomeado
+
+Numa chamada, os argumentos nomeados ('nome: valor') vêm sempre depois dos
+posicionais. Não é possível voltar a um posicional depois de começar a nomear.
+
+Errado:
+    criar(nome: \"Ana\", 30)
+
+Correto:
+    criar(30, nome: \"Ana\")
+    criar(nome: \"Ana\", idade: 30)"
+        }
+
         "K101" => {
             "\
 K101 — caractere inesperado
@@ -796,6 +811,53 @@ Como evitar:
 Veja também: K020."
         }
 
+        "K224" => {
+            "\
+K224 — parâmetro nomeado inexistente
+
+Um argumento nomeado usa um nome que a função (ou o construtor) não tem entre
+seus parâmetros. Confira a grafia do parâmetro. O parâmetro variádico ('...')
+não pode ser passado por nome.
+
+Errado:
+    funcao saudar(nome) { ... }
+    saudar(nomee: \"Ana\")
+
+Correto:
+    saudar(nome: \"Ana\")"
+        }
+
+        "K225" => {
+            "\
+K225 — argumento informado mais de uma vez
+
+Um parâmetro recebeu valor duas vezes — por exemplo, uma vez por posição e de
+novo por nome, ou o mesmo nome repetido.
+
+Errado:
+    funcao criar(nome, idade) { ... }
+    criar(\"Ana\", nome: \"Bia\")
+
+Correto:
+    criar(\"Ana\", 30)
+    criar(nome: \"Ana\", idade: 30)"
+        }
+
+        "K226" => {
+            "\
+K226 — argumentos nomeados não suportados aqui
+
+Argumentos nomeados só funcionam com funções, métodos e construtores definidos
+em kaju. Funções embutidas e métodos de coleção (como 'mapeie') recebem os
+argumentos apenas por posição.
+
+Errado:
+    [1, 2, 3].mapeie(f: dobro)
+
+Correto:
+    [1, 2, 3].mapeie(dobro)"
+        }
+
         "K230" => {
             "\
 K230 — erro lançado e não capturado
@@ -847,9 +909,9 @@ pub fn codigos_conhecidos() -> &'static [&'static str] {
     &[
         "K001", "K002", "K003", "K004", "K005", "K006", "K007", "K008", "K009", "K010", "K011",
         "K012", "K013", "K014", "K015", "K016", "K017", "K018", "K019", "K020", "K021", "K022",
-        "K101", "K102", "K103", "K104", "K201", "K202", "K203", "K204", "K205", "K206", "K207",
-        "K208", "K209", "K210", "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218",
-        "K220", "K221", "K222", "K230", "K231",
+        "K023", "K101", "K102", "K103", "K104", "K201", "K202", "K203", "K204", "K205", "K206",
+        "K207", "K208", "K209", "K210", "K211", "K212", "K213", "K214", "K215", "K216", "K217",
+        "K218", "K220", "K221", "K222", "K224", "K225", "K226", "K230", "K231",
     ]
 }
 

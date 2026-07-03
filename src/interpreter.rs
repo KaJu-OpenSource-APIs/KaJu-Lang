@@ -721,7 +721,12 @@ impl Interpretador {
                 span.clone(),
             )
             .com_rotulo("use 'base.metodo(...)'")),
-            Expr::Novo { classe, args, span } => self.instanciar(classe, args, amb, span),
+            Expr::Novo {
+                classe,
+                args,
+                nomeados,
+                span,
+            } => self.instanciar(classe, args, nomeados, amb, span),
             Expr::Lista(itens, _) => {
                 let mut vs = Vec::with_capacity(itens.len());
                 for it in itens {
@@ -849,7 +854,12 @@ impl Interpretador {
                     }
                 }
             }
-            Expr::Chamada { alvo, args, span } => {
+            Expr::Chamada {
+                alvo,
+                args,
+                nomeados,
+                span,
+            } => {
                 // Chamada de método: `receptor.membro(args)`
                 if let Expr::Acesso {
                     alvo: receptor,
@@ -864,7 +874,8 @@ impl Interpretador {
                         for a in args {
                             vals.push(self.avaliar(a, amb)?);
                         }
-                        return self.chamar_base(membro, vals, amb, span);
+                        let nom = self.avaliar_nomeados(nomeados, amb)?;
+                        return self.chamar_base(membro, vals, &nom, amb, span);
                     }
                     let recv = self.avaliar(receptor, amb)?;
                     // Acesso opcional `?.`: se o receptor for nulo, a chamada
@@ -890,14 +901,19 @@ impl Interpretador {
                                 | "todos"
                                 | "agrupe"
                         ) {
+                            let nom = self.avaliar_nomeados(nomeados, amb)?;
+                            self.erro_se_nomeados(&nom, span)?;
                             return self.metodo_lista_superior(l.clone(), membro, vals, span);
                         }
                     }
+                    let nom = self.avaliar_nomeados(nomeados, amb)?;
                     return match recv {
-                        Valor::Objeto(obj) => self.chamar_metodo_objeto(obj, membro, vals, span),
+                        Valor::Objeto(obj) => {
+                            self.chamar_metodo_objeto(obj, membro, vals, &nom, span)
+                        }
                         // Classe.metodoEstatico(...)
                         Valor::Classe(c) => match c.buscar_metodo_estatico(membro) {
-                            Some(f) => self.chamar(Valor::Funcao(f), vals, span),
+                            Some(f) => self.invocar_funcao(f, vals, &nom, span),
                             None => Err(Diagnostico::novo(
                                 "K212",
                                 format!(
@@ -909,6 +925,7 @@ impl Interpretador {
                             .com_rotulo("método estático inexistente")),
                         },
                         outro => {
+                            self.erro_se_nomeados(&nom, span)?;
                             metodos::chamar_metodo(outro, membro, vals).map_err(|(cod, msg)| {
                                 Diagnostico::novo(cod, msg, span.clone())
                                     .com_rotulo("nesta chamada de método")
@@ -922,7 +939,14 @@ impl Interpretador {
                 for a in args {
                     vals.push(self.avaliar(a, amb)?);
                 }
-                self.chamar(f, vals, span)
+                let nom = self.avaliar_nomeados(nomeados, amb)?;
+                match f {
+                    Valor::Funcao(fk) => self.invocar_funcao(fk, vals, &nom, span),
+                    outro => {
+                        self.erro_se_nomeados(&nom, span)?;
+                        self.chamar(outro, vals, span)
+                    }
+                }
             }
             Expr::Acesso {
                 alvo,
@@ -1038,15 +1062,22 @@ impl Interpretador {
 
     /// Liga os argumentos aos parâmetros no `escopo`, tratando valores padrão
     /// (avaliados em `env_padrao`) e o parâmetro variádico (coleta o resto).
+    #[allow(clippy::too_many_arguments)]
     fn vincular_args(
         &mut self,
         nome_fn: &str,
         params: &[crate::ast::Parametro],
         args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
         escopo: &Rc<RefCell<Ambiente>>,
         env_padrao: &Rc<RefCell<Ambiente>>,
         span: &Span,
     ) -> Result<(), Diagnostico> {
+        if !nomeados.is_empty() {
+            return self.vincular_args_nomeados(
+                nome_fn, params, args, nomeados, escopo, env_padrao, span,
+            );
+        }
         let tem_var = params.last().map(|p| p.variadico).unwrap_or(false);
         let fixos = params.len() - if tem_var { 1 } else { 0 };
         let obrig = params
@@ -1105,17 +1136,160 @@ impl Interpretador {
         Ok(())
     }
 
-    fn chamar(&mut self, alvo: Valor, args: Vec<Valor>, span: &Span) -> Result<Valor, Diagnostico> {
-        match alvo {
-            Valor::Funcao(f) => {
-                let nome = f.nome.clone().unwrap_or_else(|| "a função".to_string());
-                let escopo = Ambiente::com_pai(f.closure.clone());
-                self.vincular_args(&nome, &f.params, args, &escopo, &f.closure, span)?;
-                match self.executar_bloco(&f.corpo, &escopo)? {
-                    Fluxo::Retorna(v) => Ok(v),
-                    _ => Ok(Valor::Nulo),
+    /// Vinculação com argumentos nomeados: preenche cada parâmetro por posição
+    /// ou por nome, aplica valores padrão nos faltantes e coleta o variádico.
+    #[allow(clippy::too_many_arguments)]
+    fn vincular_args_nomeados(
+        &mut self,
+        nome_fn: &str,
+        params: &[crate::ast::Parametro],
+        args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
+        escopo: &Rc<RefCell<Ambiente>>,
+        env_padrao: &Rc<RefCell<Ambiente>>,
+        span: &Span,
+    ) -> Result<(), Diagnostico> {
+        let tem_var = params.last().map(|p| p.variadico).unwrap_or(false);
+        let fixos = params.len() - if tem_var { 1 } else { 0 };
+
+        if !tem_var && args.len() > fixos {
+            return Err(Diagnostico::novo(
+                "K201",
+                format!(
+                    "'{}' espera {} argumento(s), mas recebeu {} posicionais",
+                    nome_fn,
+                    fixos,
+                    args.len()
+                ),
+                span.clone(),
+            )
+            .com_rotulo("argumentos posicionais demais"));
+        }
+
+        // Slots dos parâmetros fixos, preenchidos primeiro pelos posicionais.
+        let mut slots: Vec<Option<Valor>> = vec![None; fixos];
+        let mut it = args.into_iter();
+        for slot in slots.iter_mut() {
+            match it.next() {
+                Some(v) => *slot = Some(v),
+                None => break,
+            }
+        }
+        let extras_variadicos: Vec<Valor> = it.collect();
+
+        // Depois, os nomeados casam por nome.
+        for (nome, val) in nomeados {
+            match params.iter().take(fixos).position(|p| &p.nome == nome) {
+                Some(idx) => {
+                    if slots[idx].is_some() {
+                        return Err(Diagnostico::novo(
+                            "K225",
+                            format!("o argumento '{}' foi informado mais de uma vez", nome),
+                            span.clone(),
+                        )
+                        .com_rotulo("valor duplicado para este parâmetro"));
+                    }
+                    slots[idx] = Some(val.clone());
+                }
+                None => {
+                    let msg = if tem_var && params[fixos].nome == *nome {
+                        format!(
+                            "'{}' é o parâmetro variádico e não pode ser passado por nome",
+                            nome
+                        )
+                    } else {
+                        format!("'{}' não tem o parâmetro '{}'", nome_fn, nome)
+                    };
+                    return Err(Diagnostico::novo("K224", msg, span.clone())
+                        .com_rotulo("parâmetro nomeado inexistente"));
                 }
             }
+        }
+
+        // Preenche faltantes com o valor padrão, ou falha se for obrigatório.
+        for (i, p) in params.iter().take(fixos).enumerate() {
+            if slots[i].is_none() {
+                match &p.padrao {
+                    Some(expr) => slots[i] = Some(self.avaliar(expr, env_padrao)?),
+                    None => {
+                        return Err(Diagnostico::novo(
+                            "K201",
+                            format!("'{}' — falta o argumento '{}'", nome_fn, p.nome),
+                            span.clone(),
+                        )
+                        .com_rotulo("argumento obrigatório não informado"));
+                    }
+                }
+            }
+        }
+
+        for (p, slot) in params.iter().take(fixos).zip(slots) {
+            escopo
+                .borrow_mut()
+                .definir(p.nome.clone(), slot.unwrap(), false);
+        }
+        if tem_var {
+            escopo.borrow_mut().definir(
+                params[fixos].nome.clone(),
+                Valor::Lista(Rc::new(RefCell::new(extras_variadicos))),
+                false,
+            );
+        }
+        Ok(())
+    }
+
+    /// Avalia as expressões dos argumentos nomeados no ambiente da chamada.
+    fn avaliar_nomeados(
+        &mut self,
+        nomeados: &[(String, Expr)],
+        amb: &Rc<RefCell<Ambiente>>,
+    ) -> Result<Vec<(String, Valor)>, Diagnostico> {
+        let mut v = Vec::with_capacity(nomeados.len());
+        for (nome, e) in nomeados {
+            v.push((nome.clone(), self.avaliar(e, amb)?));
+        }
+        Ok(v)
+    }
+
+    /// Falha (K226) se houver argumentos nomeados onde eles não são aceitos
+    /// (funções embutidas e métodos de coleção).
+    fn erro_se_nomeados(
+        &self,
+        nomeados: &[(String, Valor)],
+        span: &Span,
+    ) -> Result<(), Diagnostico> {
+        if nomeados.is_empty() {
+            Ok(())
+        } else {
+            Err(Diagnostico::novo(
+                "K226",
+                "argumentos nomeados só funcionam com funções, métodos e construtores definidos em kaju",
+                span.clone(),
+            )
+            .com_rotulo("argumento nomeado não é aceito aqui"))
+        }
+    }
+
+    /// Invoca uma função kaju, com argumentos posicionais e/ou nomeados.
+    fn invocar_funcao(
+        &mut self,
+        f: Rc<FuncaoKaju>,
+        args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
+        span: &Span,
+    ) -> Result<Valor, Diagnostico> {
+        let nome = f.nome.clone().unwrap_or_else(|| "a função".to_string());
+        let escopo = Ambiente::com_pai(f.closure.clone());
+        self.vincular_args(&nome, &f.params, args, nomeados, &escopo, &f.closure, span)?;
+        match self.executar_bloco(&f.corpo, &escopo)? {
+            Fluxo::Retorna(v) => Ok(v),
+            _ => Ok(Valor::Nulo),
+        }
+    }
+
+    fn chamar(&mut self, alvo: Valor, args: Vec<Valor>, span: &Span) -> Result<Valor, Diagnostico> {
+        match alvo {
+            Valor::Funcao(f) => self.invocar_funcao(f, args, &[], span),
             // Embutidas que produzem/consomem texto passam pelo 'exibir', para
             // respeitarem o método paraTexto() dos objetos.
             Valor::Nativa(n) if n.nome == "escreva" || n.nome == "escrevaSemQuebra" => {
@@ -1343,6 +1517,7 @@ impl Interpretador {
         &mut self,
         classe_expr: &Expr,
         args_expr: &[Expr],
+        nomeados_expr: &[(String, Expr)],
         amb: &Rc<RefCell<Ambiente>>,
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
@@ -1375,18 +1550,22 @@ impl Interpretador {
         for a in args_expr {
             vals.push(self.avaliar(a, amb)?);
         }
+        let mut nomeados = Vec::with_capacity(nomeados_expr.len());
+        for (nome, e) in nomeados_expr {
+            nomeados.push((nome.clone(), self.avaliar(e, amb)?));
+        }
 
         match classe.buscar_construtor() {
             Some((ctor, classe_ctor)) => {
-                self.invocar_metodo(ctor, valor_obj.clone(), classe_ctor, vals, span)?;
+                self.invocar_metodo(ctor, valor_obj.clone(), classe_ctor, vals, &nomeados, span)?;
             }
-            None if !vals.is_empty() => {
+            None if !vals.is_empty() || !nomeados.is_empty() => {
                 return Err(Diagnostico::novo(
                     "K201",
                     format!(
                         "a classe '{}' não tem construtor, mas recebeu {} argumento(s)",
                         classe.nome,
-                        vals.len()
+                        vals.len() + nomeados.len()
                     ),
                     span.clone(),
                 )
@@ -1404,15 +1583,27 @@ impl Interpretador {
         obj: Rc<RefCell<Objeto>>,
         nome: &str,
         args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
         let classe = obj.borrow().classe.clone();
         if let Some((metodo, classe_do_metodo)) = classe.buscar_metodo(nome) {
-            return self.invocar_metodo(metodo, Valor::Objeto(obj), classe_do_metodo, args, span);
+            return self.invocar_metodo(
+                metodo,
+                Valor::Objeto(obj),
+                classe_do_metodo,
+                args,
+                nomeados,
+                span,
+            );
         }
         // Fallback: campo que guarda uma função (usado por 'importe ... como').
         let campo = obj.borrow().campos.get(nome).cloned();
-        if let Some(f @ (Valor::Funcao(_) | Valor::Nativa(_))) = campo {
+        if let Some(Valor::Funcao(f)) = &campo {
+            return self.invocar_funcao(f.clone(), args, nomeados, span);
+        }
+        if let Some(f @ Valor::Nativa(_)) = campo {
+            self.erro_se_nomeados(nomeados, span)?;
             return self.chamar(f, args, span);
         }
         Err(Diagnostico::novo(
@@ -1431,6 +1622,7 @@ impl Interpretador {
         &mut self,
         membro: &str,
         args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
         amb: &Rc<RefCell<Ambiente>>,
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
@@ -1467,7 +1659,7 @@ impl Interpretador {
 
         match achado {
             Some((metodo, classe_do_metodo)) => {
-                self.invocar_metodo(metodo, isto, classe_do_metodo, args, span)
+                self.invocar_metodo(metodo, isto, classe_do_metodo, args, nomeados, span)
             }
             None => Err(Diagnostico::novo(
                 "K212",
@@ -1485,6 +1677,7 @@ impl Interpretador {
         isto: Valor,
         classe: Rc<ClasseKaju>,
         args: Vec<Valor>,
+        nomeados: &[(String, Valor)],
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
         let nome = metodo
@@ -1497,7 +1690,7 @@ impl Interpretador {
             e.definir("isto", isto, true);
             e.definir("@classe", Valor::Classe(classe), true);
         }
-        self.vincular_args(&nome, &metodo.params, args, &escopo, &metodo.closure, span)?;
+        self.vincular_args(&nome, &metodo.params, args, nomeados, &escopo, &metodo.closure, span)?;
         match self.executar_bloco(&metodo.corpo, &escopo)? {
             Fluxo::Retorna(v) => Ok(v),
             _ => Ok(Valor::Nulo),
@@ -1542,7 +1735,7 @@ impl Interpretador {
                 let metodo = o.borrow().classe.buscar_metodo("paraTexto");
                 if let Some((m, classe)) = metodo {
                     if m.params.is_empty() {
-                        let r = self.invocar_metodo(m, v.clone(), classe, vec![], span)?;
+                        let r = self.invocar_metodo(m, v.clone(), classe, vec![], &[], span)?;
                         // Evita recursão infinita se paraTexto devolver o próprio objeto.
                         return Ok(match r {
                             Valor::Objeto(_) => r.para_texto(),
@@ -1582,7 +1775,7 @@ impl Interpretador {
             let metodo = o.borrow().classe.buscar_metodo("igual");
             if let Some((m, classe)) = metodo {
                 if m.params.len() == 1 {
-                    let r = self.invocar_metodo(m, a.clone(), classe, vec![b.clone()], span)?;
+                    let r = self.invocar_metodo(m, a.clone(), classe, vec![b.clone()], &[], span)?;
                     return Ok(r.eh_verdadeiro());
                 }
             }

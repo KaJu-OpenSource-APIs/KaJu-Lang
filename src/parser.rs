@@ -61,6 +61,12 @@ impl Parser {
         matches!(self.atual().tipo, TipoToken::FimDeArquivo)
     }
 
+    /// Espia o tipo do próximo token (sem consumir).
+    fn proximo(&self) -> &TipoToken {
+        let i = (self.pos + 1).min(self.tokens.len() - 1);
+        &self.tokens[i].tipo
+    }
+
     fn avancar(&mut self) -> Token {
         let t = self.tokens[self.pos].clone();
         if !self.fim() {
@@ -1123,20 +1129,52 @@ impl Parser {
         }
     }
 
+    /// Analisa a lista de argumentos de uma chamada/construtor, aceitando
+    /// posicionais (`expr`) e nomeados (`nome: expr`). Os nomeados só podem vir
+    /// depois dos posicionais. O `(` já foi consumido; para no `)`.
+    fn analisar_argumentos(
+        &mut self,
+    ) -> Result<(Vec<Expr>, Vec<(String, Expr)>), Diagnostico> {
+        let mut posicionais = Vec::new();
+        let mut nomeados: Vec<(String, Expr)> = Vec::new();
+        if !self.verificar(&TipoToken::ParenDir) {
+            loop {
+                // Argumento nomeado: IDENT seguido de ':'
+                if matches!(self.atual().tipo, TipoToken::Identificador(_))
+                    && matches!(self.proximo(), TipoToken::DoisPontos)
+                {
+                    let nome = self.avancar().lexema;
+                    self.avancar(); // consome ':'
+                    let valor = self.expressao()?;
+                    nomeados.push((nome, valor));
+                } else {
+                    if !nomeados.is_empty() {
+                        return Err(Diagnostico::novo(
+                            "K023",
+                            "argumento posicional depois de um argumento nomeado",
+                            self.atual().span.clone(),
+                        )
+                        .com_rotulo("este argumento deveria vir antes dos nomeados")
+                        .com_ajuda(
+                            "coloque todos os argumentos posicionais antes dos nomeados",
+                        ));
+                    }
+                    posicionais.push(self.expressao()?);
+                }
+                if !self.casar(&TipoToken::Virgula) {
+                    break;
+                }
+            }
+        }
+        Ok((posicionais, nomeados))
+    }
+
     fn chamada(&mut self) -> Result<Expr, Diagnostico> {
         let mut expr = self.primario()?;
         loop {
             if self.verificar(&TipoToken::ParenEsq) {
                 self.avancar();
-                let mut args = Vec::new();
-                if !self.verificar(&TipoToken::ParenDir) {
-                    loop {
-                        args.push(self.expressao()?);
-                        if !self.casar(&TipoToken::Virgula) {
-                            break;
-                        }
-                    }
-                }
+                let (args, nomeados) = self.analisar_argumentos()?;
                 let fim = self.consumir(
                     &TipoToken::ParenDir,
                     "K004",
@@ -1147,6 +1185,7 @@ impl Parser {
                 expr = Expr::Chamada {
                     alvo: Box::new(expr),
                     args,
+                    nomeados,
                     span,
                 };
             } else if self.verificar(&TipoToken::ColcheteEsq) {
@@ -1324,15 +1363,7 @@ impl Parser {
                     "esperava '(' para os argumentos do construtor".into(),
                     "abra os parênteses aqui".into(),
                 )?;
-                let mut args = Vec::new();
-                if !self.verificar(&TipoToken::ParenDir) {
-                    loop {
-                        args.push(self.expressao()?);
-                        if !self.casar(&TipoToken::Virgula) {
-                            break;
-                        }
-                    }
-                }
+                let (args, nomeados) = self.analisar_argumentos()?;
                 let fim = self.consumir(
                     &TipoToken::ParenDir,
                     "K014",
@@ -1343,6 +1374,7 @@ impl Parser {
                 Ok(Expr::Novo {
                     classe: Box::new(classe),
                     args,
+                    nomeados,
                     span,
                 })
             }

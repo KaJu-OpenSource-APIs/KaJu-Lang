@@ -68,6 +68,28 @@ saudar("Ana", "Bom dia")  // Bom dia, Ana
 
 Parâmetros com valor padrão devem vir depois dos parâmetros sem padrão. Assim, os argumentos que você fornece sempre preenchem os primeiros parâmetros, e os que faltam recorrem aos padrões.
 
+## Argumentos nomeados
+
+Ao chamar uma função, você pode identificar os argumentos pelo nome do parâmetro, na forma `nome: valor`. Isso deixa a chamada mais clara e libera a ordem:
+
+```kaju
+funcao criar(nome, idade, cidade) {
+    escreva(nome, idade, cidade)
+}
+
+criar(nome: "Ana", cidade: "Recife", idade: 30)   // ordem livre
+criar("Ana", cidade: "Recife", idade: 30)         // posicionais primeiro
+```
+
+Você pode misturar os dois estilos, desde que os **posicionais venham antes** dos nomeados. Argumentos nomeados combinam bem com parâmetros padrão — informe só os que quiser mudar:
+
+```kaju
+funcao conectar(host, porta = 8080, tls = falso) { ... }
+conectar("exemplo.com", tls: verdadeiro)   // usa a porta padrão
+```
+
+As mesmas regras valem para construtores (`novo Classe(x: 1, y: 2)`) e métodos de classes. Passar um nome que não existe, repetir um argumento ou usar nomes em funções embutidas gera um erro claro.
+
 ## Parâmetros variádicos
 
 Às vezes você não sabe de antemão quantos argumentos uma função vai receber. Um parâmetro precedido de `...` coleta todos os argumentos restantes em uma lista:
