@@ -263,7 +263,12 @@ impl Lexer {
         let tipo = if !eh_decimal {
             match lexema.parse::<i64>() {
                 Ok(i) => TipoToken::Inteiro(i),
-                Err(_) => TipoToken::Decimal(lexema.parse().unwrap_or(0.0)),
+                // Inteiro grande demais para i64 vira inteiro de precisão arbitrária
+                // (exato), em vez de perder precisão como decimal.
+                Err(_) => match lexema.parse::<num_bigint::BigInt>() {
+                    Ok(n) => TipoToken::GrandeInteiro(n),
+                    Err(_) => TipoToken::Decimal(lexema.parse().unwrap_or(0.0)),
+                },
             }
         } else {
             TipoToken::Decimal(lexema.parse().unwrap_or(0.0))

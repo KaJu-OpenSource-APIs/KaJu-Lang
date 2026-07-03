@@ -1504,6 +1504,11 @@ impl Parser {
                 self.avancar();
                 Ok(Expr::Inteiro(*n, tok.span))
             }
+            TipoToken::GrandeInteiro(n) => {
+                let n = n.clone();
+                self.avancar();
+                Ok(Expr::GrandeInteiro(n, tok.span))
+            }
             TipoToken::Decimal(n) => {
                 self.avancar();
                 Ok(Expr::Decimal(*n, tok.span))

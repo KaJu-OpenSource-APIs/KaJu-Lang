@@ -31,6 +31,7 @@ pub enum Pedaco {
 pub enum TipoToken {
     // Literais
     Inteiro(i64),
+    GrandeInteiro(num_bigint::BigInt),
     Decimal(f64),
     Texto(String),
     TextoInterp(Vec<Pedaco>),

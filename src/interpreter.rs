@@ -13,7 +13,8 @@ use crate::lexer::Lexer;
 use crate::metodos;
 use crate::parser::Parser;
 use crate::token::Span;
-use crate::valor::{ClasseKaju, FuncaoKaju, Objeto, Valor};
+use crate::valor::{ClasseKaju, FuncaoKaju, Objeto, Valor, inteiro_de_big};
+use num_bigint::BigInt;
 
 /// Sinal de controle de fluxo propagado ao executar comandos.
 enum Fluxo {
@@ -760,6 +761,7 @@ impl Interpretador {
     fn avaliar(&mut self, expr: &Expr, amb: &Rc<RefCell<Ambiente>>) -> Result<Valor, Diagnostico> {
         match expr {
             Expr::Inteiro(n, _) => Ok(Valor::Inteiro(*n)),
+            Expr::GrandeInteiro(n, _) => Ok(inteiro_de_big(n.clone())),
             Expr::Decimal(n, _) => Ok(Valor::Decimal(*n)),
             Expr::Texto(t, _) => Ok(Valor::Texto(t.clone())),
             Expr::Booleano(b, _) => Ok(Valor::Logico(*b)),
@@ -2027,7 +2029,12 @@ impl Interpretador {
         match op {
             OpUnaria::Negacao => Ok(Valor::Logico(!v.eh_verdadeiro())),
             OpUnaria::Negativo => match v {
-                Valor::Inteiro(i) => Ok(Valor::Inteiro(i.wrapping_neg())),
+                // -i64::MIN estoura o i64; promove para inteiro grande.
+                Valor::Inteiro(i) => Ok(match i.checked_neg() {
+                    Some(n) => Valor::Inteiro(n),
+                    None => inteiro_de_big(-BigInt::from(i)),
+                }),
+                Valor::GrandeInteiro(n) => Ok(inteiro_de_big(-n)),
                 Valor::Decimal(f) => Ok(Valor::Decimal(-f)),
                 outro => Err(Diagnostico::novo(
                     "K012",
@@ -2149,9 +2156,33 @@ impl Interpretador {
                     self.exibir(&b, span)?
                 )))
             }
-            Soma => self.num_op(&a, &b, span, "+", |x, y| x.checked_add(y), |x, y| x + y),
-            Subtracao => self.num_op(&a, &b, span, "-", |x, y| x.checked_sub(y), |x, y| x - y),
-            Multiplicacao => self.num_op(&a, &b, span, "*", |x, y| x.checked_mul(y), |x, y| x * y),
+            Soma => self.num_op(
+                &a,
+                &b,
+                span,
+                "+",
+                |x, y| x.checked_add(y),
+                |x, y| x + y,
+                |x, y| x + y,
+            ),
+            Subtracao => self.num_op(
+                &a,
+                &b,
+                span,
+                "-",
+                |x, y| x.checked_sub(y),
+                |x, y| x - y,
+                |x, y| x - y,
+            ),
+            Multiplicacao => self.num_op(
+                &a,
+                &b,
+                span,
+                "*",
+                |x, y| x.checked_mul(y),
+                |x, y| x * y,
+                |x, y| x * y,
+            ),
             Divisao => self.divisao_real(&a, &b, span),
             Resto => self.resto(&a, &b, span),
             Menor => self.comparar(&a, &b, span, "<", |o| o.is_lt()),
@@ -2241,23 +2272,19 @@ impl Interpretador {
         simbolo: &str,
         fi: impl Fn(i64, i64) -> Option<i64>,
         ff: impl Fn(f64, f64) -> f64,
+        fb: impl Fn(BigInt, BigInt) -> BigInt,
     ) -> Result<Valor, Diagnostico> {
         match (a, b) {
+            // Caminho rápido: dois i64. Se estourar, promove para inteiro grande
+            // (resultado exato) em vez de perder precisão.
             (Valor::Inteiro(x), Valor::Inteiro(y)) => match fi(*x, *y) {
                 Some(r) => Ok(Valor::Inteiro(r)),
-                None => Err(Diagnostico::novo(
-                    "K222",
-                    format!(
-                        "estouro de inteiro em '{} {} {}': o resultado passou do alcance dos inteiros",
-                        x, simbolo, y
-                    ),
-                    span.clone(),
-                )
-                .com_rotulo("esta operação estoura o inteiro")
-                .com_nota(
-                    "inteiros vão de -9223372036854775808 a 9223372036854775807",
-                )),
+                None => Ok(inteiro_de_big(fb(BigInt::from(*x), BigInt::from(*y)))),
             },
+            // Qualquer combinação de inteiros (com ao menos um grande) usa BigInt.
+            _ if a.como_big().is_some() && b.como_big().is_some() => {
+                Ok(inteiro_de_big(fb(a.como_big().unwrap(), b.como_big().unwrap())))
+            }
             _ => match (a.como_f64(), b.como_f64()) {
                 (Some(x), Some(y)) => Ok(Valor::Decimal(ff(x, y))),
                 _ => Err(self.erro_tipos(simbolo, a, b, span)),
@@ -2294,6 +2321,13 @@ impl Interpretador {
                 }
                 Ok(Valor::Inteiro(x % y))
             }
+            _ if a.como_big().is_some() && b.como_big().is_some() => {
+                let (x, y) = (a.como_big().unwrap(), b.como_big().unwrap());
+                if y == BigInt::from(0) {
+                    return Err(zero(span));
+                }
+                Ok(inteiro_de_big(x % y))
+            }
             _ => match (a.como_f64(), b.como_f64()) {
                 (Some(x), Some(y)) => {
                     if y == 0.0 {
@@ -2317,6 +2351,12 @@ impl Interpretador {
         let ordem = match (a, b) {
             // texto compara em ordem alfabética (lexicográfica)
             (Valor::Texto(x), Valor::Texto(y)) => x.cmp(y),
+            // dois inteiros (com algum grande): comparação exata via BigInt
+            _ if matches!(a, Valor::Inteiro(_) | Valor::GrandeInteiro(_))
+                && matches!(b, Valor::Inteiro(_) | Valor::GrandeInteiro(_)) =>
+            {
+                a.como_big().unwrap().cmp(&b.como_big().unwrap())
+            }
             _ => match (a.como_f64(), b.como_f64()) {
                 (Some(x), Some(y)) => match x.partial_cmp(&y) {
                     Some(o) => o,

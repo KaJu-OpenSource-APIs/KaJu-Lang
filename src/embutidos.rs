@@ -401,6 +401,17 @@ fn valor_para_json(v: &Valor) -> Result<serde_json::Value, String> {
     use serde_json::Value;
     Ok(match v {
         Valor::Inteiro(i) => Value::from(*i),
+        // Inteiro grande não cabe num número JSON exato; serializa como f64 (aprox.).
+        Valor::GrandeInteiro(n) => {
+            use num_traits::ToPrimitive;
+            let f = n
+                .to_f64()
+                .filter(|x| x.is_finite())
+                .ok_or("inteiro grande demais para virar JSON")?;
+            serde_json::Number::from_f64(f)
+                .map(Value::Number)
+                .ok_or("inteiro grande demais para virar JSON")?
+        }
         Valor::Decimal(f) => serde_json::Number::from_f64(*f)
             .map(Value::Number)
             .ok_or("número não finito não pode virar JSON")?,

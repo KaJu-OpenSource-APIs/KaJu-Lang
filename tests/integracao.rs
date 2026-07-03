@@ -1276,10 +1276,28 @@ escreva([[1], [2]] == [[1], [2]])"#,
 }
 
 #[test]
-fn erro_estouro_de_inteiro() {
-    let (_, err, ok) = rodar("escreva(9223372036854775807 + 1)");
-    assert!(!ok);
-    assert!(err.contains("erro[K222]"), "stderr: {err}");
+fn inteiros_grandes() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva(9223372036854775807 + 1)
+        var g = 123456789012345678901234567890
+        escreva(g)
+        escreva(g + 1)
+        escreva(tipo(g))
+        escreva((g + 1) - g)
+        escreva(tipo((g + 1) - g))
+        escreva(g == 123456789012345678901234567890)
+        escreva(g > 1000000)
+        var f = 1
+        para i de 2 ate 25 { f = f * i }
+        escreva(f)
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "9223372036854775808\n123456789012345678901234567890\n123456789012345678901234567891\nnumero\n1\nnumero\nverdadeiro\nverdadeiro\n15511210043330985984000000\n"
+    );
 }
 
 #[test]

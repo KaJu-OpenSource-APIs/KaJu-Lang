@@ -17,6 +17,10 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Inteiros de precisão arbitrária**: operações que passam do alcance de 64 bits
+  (e literais grandes) são promovidas automaticamente, mantendo o valor exato
+  (fatoriais grandes, `9223372036854775807 + 1`, etc.). Os valores voltam a caber
+  em 64 bits quando possível, de forma transparente.
 - **Enums (`enum Nome { Variante1, Variante2 }`)**: tipos com um conjunto fixo de
   valores nomeados, acessados como `Nome.Variante`, comparáveis e usáveis em
   `escolha`/`caso`. Nova palavra reservada `enum`.
@@ -59,6 +63,12 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
   auto-indentação ao abrir blocos, dobra por regiões e metadados do repositório.
   Instala-se pelo repositório com `editores/vscode-kaju/instalar.sh` (sem
   Marketplace).
+
+### Alterado
+
+- **Estouro de inteiro** não gera mais o erro `K222`: em vez de falhar, `+`, `-`
+  e `*` promovem o resultado para inteiro de precisão arbitrária. O código `K222`
+  fica como histórico (não é mais emitido).
 
 ### Corrigido (documentação)
 

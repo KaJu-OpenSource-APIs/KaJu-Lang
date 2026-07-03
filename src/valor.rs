@@ -4,6 +4,9 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use num_bigint::BigInt;
+use num_traits::ToPrimitive;
+
 use crate::ambiente::Ambiente;
 use crate::ast::{Cmd, Parametro};
 
@@ -101,6 +104,10 @@ pub enum Valor {
     // Número é um único tipo para o usuário ('numero'), mas internamente
     // distingue inteiro (i64) de decimal (f64), à la Lua 5.3.
     Inteiro(i64),
+    /// Inteiro de precisão arbitrária. Surge quando uma operação com inteiros
+    /// estoura o alcance de i64 (ou de um literal grande demais). Mantém-se
+    /// **canônico**: valores que cabem em i64 são sempre `Inteiro`, nunca aqui.
+    GrandeInteiro(BigInt),
     Decimal(f64),
     Texto(String),
     Logico(bool),
@@ -123,11 +130,20 @@ pub fn formatar_decimal(n: f64) -> String {
     }
 }
 
+/// Cria um `Valor` inteiro a partir de um `BigInt`, demovendo para `Inteiro(i64)`
+/// quando couber. Mantém a representação canônica (i64 sempre que possível).
+pub fn inteiro_de_big(n: BigInt) -> Valor {
+    match n.to_i64() {
+        Some(i) => Valor::Inteiro(i),
+        None => Valor::GrandeInteiro(n),
+    }
+}
+
 impl Valor {
     /// Nome do tipo, como devolvido por `tipo(x)`.
     pub fn tipo_nome(&self) -> &'static str {
         match self {
-            Valor::Inteiro(_) | Valor::Decimal(_) => "numero",
+            Valor::Inteiro(_) | Valor::GrandeInteiro(_) | Valor::Decimal(_) => "numero",
             Valor::Texto(_) => "texto",
             Valor::Logico(_) => "logico",
             Valor::Lista(_) => "lista",
@@ -148,7 +164,17 @@ impl Valor {
     pub fn como_f64(&self) -> Option<f64> {
         match self {
             Valor::Inteiro(i) => Some(*i as f64),
+            Valor::GrandeInteiro(n) => n.to_f64(),
             Valor::Decimal(f) => Some(*f),
+            _ => None,
+        }
+    }
+
+    /// Valor como `BigInt`, se for um inteiro (exato ou grande).
+    pub fn como_big(&self) -> Option<BigInt> {
+        match self {
+            Valor::Inteiro(i) => Some(BigInt::from(*i)),
+            Valor::GrandeInteiro(n) => Some(n.clone()),
             _ => None,
         }
     }
@@ -157,6 +183,7 @@ impl Valor {
     pub fn para_texto(&self) -> String {
         match self {
             Valor::Inteiro(i) => i.to_string(),
+            Valor::GrandeInteiro(n) => n.to_string(),
             Valor::Decimal(f) => formatar_decimal(*f),
             Valor::Texto(t) => t.clone(),
             Valor::Logico(b) => if *b { "verdadeiro" } else { "falso" }.to_string(),
@@ -190,10 +217,15 @@ impl Valor {
     pub fn igual(&self, outro: &Valor) -> bool {
         match (self, outro) {
             (Valor::Inteiro(a), Valor::Inteiro(b)) => a == b,
+            (Valor::GrandeInteiro(a), Valor::GrandeInteiro(b)) => a == b,
+            // Um inteiro grande nunca é igual a um i64 (é sempre fora da faixa).
+            (Valor::GrandeInteiro(_), Valor::Inteiro(_))
+            | (Valor::Inteiro(_), Valor::GrandeInteiro(_)) => false,
             // Comparação mista/decimal é matemática: 5 == 5.0 é verdadeiro.
-            (Valor::Inteiro(_) | Valor::Decimal(_), Valor::Inteiro(_) | Valor::Decimal(_)) => {
-                self.como_f64() == outro.como_f64()
-            }
+            (
+                Valor::Inteiro(_) | Valor::GrandeInteiro(_) | Valor::Decimal(_),
+                Valor::Inteiro(_) | Valor::GrandeInteiro(_) | Valor::Decimal(_),
+            ) => self.como_f64() == outro.como_f64(),
             (Valor::Texto(a), Valor::Texto(b)) => a == b,
             (Valor::Logico(a), Valor::Logico(b)) => a == b,
             (Valor::Nulo, Valor::Nulo) => true,

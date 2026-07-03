@@ -41,7 +41,7 @@ As regras que governam essa distinção:
 - `%` (resto) dá inteiro entre inteiros e decimal caso contrário.
 - Comparações são matemáticas: `5 == 5.0` é `verdadeiro`.
 - Ao imprimir, decimais mostram o ponto (`5.0`) para se distinguir dos inteiros (`5`).
-- Se uma operação com inteiros (`+`, `-`, `*`) ultrapassa o limite do inteiro, o kaju interrompe com o erro `K222` em vez de perder precisão silenciosamente; para valores muito grandes, trabalhe com decimais (`9223372036854775807.0 + 1.0`).
+- Inteiros têm **precisão arbitrária**: uma operação (`+`, `-`, `*`) cujo resultado ultrapassa os 64 bits usuais é promovida automaticamente, sem perder precisão. Por isso um fatorial grande ou `9223372036854775807 + 1` dão o valor exato. Os números voltam a caber em 64 bits sempre que possível, então isso é transparente. (Números **com** casas decimais continuam sendo `decimal`, de ponto flutuante.)
 
 > Não existe operador de divisão inteira com `//` (essa sequência inicia um comentário). Para obter a parte inteira de uma divisão, use `piso(a / b)`.
 

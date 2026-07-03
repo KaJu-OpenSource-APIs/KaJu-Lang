@@ -118,7 +118,7 @@ $"..."                    (prefixo de texto interpolado, com {} internos)
 
 | Tipo kaju | Descrição | Exemplo |
 |-----------|-----------|---------|
-| `numero`  | Número inteiro (i64) ou decimal (f64) — ver nota abaixo | `42`, `3.14` |
+| `numero`  | Número inteiro (precisão arbitrária) ou decimal (f64) — ver nota abaixo | `42`, `3.14` |
 | `texto`   | Cadeia de caracteres UTF-8 | `"caju"` |
 | `logico`  | Verdadeiro ou falso | `verdadeiro` |
 | `lista`   | Sequência ordenada e mutável | `[1, "dois", verdadeiro]` |
@@ -130,7 +130,7 @@ $"..."                    (prefixo de texto interpolado, com {} internos)
 
 > `tipo(x)` retorna `"objeto"` para instâncias; para descobrir a classe use `classeDe(x)` (retorna o nome da classe como `texto`).
 
-**Modelo numérico (inteiro/decimal sob um só `numero`, à la Lua 5.3):** existe um único tipo visível `numero` (`tipo(x)` sempre retorna `"numero"`), mas internamente um número é **inteiro** (i64) ou **decimal** (f64):
+**Modelo numérico (inteiro/decimal sob um só `numero`, à la Lua 5.3):** existe um único tipo visível `numero` (`tipo(x)` sempre retorna `"numero"`), mas internamente um número é **inteiro** ou **decimal** (f64). O inteiro usa i64 no caminho comum e é promovido a **precisão arbitrária** quando necessário (ver abaixo):
 
 - Literais sem ponto são inteiros (`5`); com ponto são decimais (`5.0`, `3.14`).
 - `+ - *` entre inteiros dão inteiro (com valor exato, inclusive grandes); se qualquer lado é decimal, o resultado é decimal (`5 + 2.5` → `7.5`).
@@ -139,7 +139,7 @@ $"..."                    (prefixo de texto interpolado, com {} internos)
 - Comparações são matemáticas: `5 == 5.0` → `verdadeiro`.
 - Ao imprimir, decimais mostram o ponto (`5.0`) para se distinguirem de inteiros (`5`).
 - `piso`, `teto`, `arredonde` retornam inteiro; `raiz` e `aleatorio` retornam decimal; `potencia` retorna inteiro quando base e expoente são inteiros (expoente ≥ 0), senão decimal; `absoluto` preserva o tipo.
-- Em caso de estouro de i64 em `+ - *` entre inteiros (resultado fora do alcance de -9223372036854775808 a 9223372036854775807), a operação falha com o erro `K222`, em vez de virar decimal silenciosamente.
+- **Precisão arbitrária:** quando `+ - *` (ou a negação, ou um literal) entre inteiros ultrapassa os 64 bits (-9223372036854775808 a 9223372036854775807), o inteiro é promovido automaticamente, mantendo o valor **exato** (ex.: fatoriais grandes). Os valores voltam a caber em i64 sempre que possível, então a promoção é transparente. (Antes, isso dava o erro `K222`, hoje não emitido — ver §11.3.)
 
 > Divisão inteira não usa `//` (que é comentário); use `piso(a / b)`.
 
@@ -724,7 +724,7 @@ Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **54 có
   - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla, `K023` argumento posicional depois de nomeado);
   - **execução** que nasceu junto do núcleo — `K001` variável não definida, `K012` operação entre tipos incompatíveis (também usada por bits/deslocamento), `K020` divisão por zero.
 - **Léxico (`K1xx`, K101–K104).** Caractere inesperado, texto sem fechar aspas, número mal formado, escape/interpolação inválidos.
-- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K224`/`K225` argumentos nomeados inválidos (parâmetro inexistente / informado duas vezes), `K226` argumentos nomeados onde não são aceitos, `K227` espalhamento (`...`) de um valor que não é a coleção esperada, `K231` afirmação falhou (`afirme`), entre outros.
+- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` (histórico) estouro de inteiro — não é mais emitido, pois inteiros têm precisão arbitrária e a operação é promovida em vez de falhar, `K224`/`K225` argumentos nomeados inválidos (parâmetro inexistente / informado duas vezes), `K226` argumentos nomeados onde não são aceitos, `K227` espalhamento (`...`) de um valor que não é a coleção esperada, `K231` afirmação falhou (`afirme`), entre outros.
 
 > Cada código tem uma página longa consultável com `kaju explique <codigo>` (ex.: `kaju explique K016`), à la `rustc --explain`. Ao relatar um erro, o interpretador ainda sugere `dica: rode 'kaju explique Kxxx'`.
 

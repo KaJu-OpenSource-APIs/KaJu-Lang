@@ -54,6 +54,7 @@ pub enum EntradaDic {
 #[derive(Clone, Debug)]
 pub enum Expr {
     Inteiro(i64, Span),
+    GrandeInteiro(num_bigint::BigInt, Span),
     Decimal(f64, Span),
     Texto(String, Span),
     Booleano(bool, Span),
@@ -164,6 +165,7 @@ impl Expr {
     pub fn span(&self) -> Span {
         match self {
             Expr::Inteiro(_, s)
+            | Expr::GrandeInteiro(_, s)
             | Expr::Decimal(_, s)
             | Expr::Texto(_, s)
             | Expr::Booleano(_, s)

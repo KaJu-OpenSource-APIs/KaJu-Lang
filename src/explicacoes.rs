@@ -794,21 +794,17 @@ Veja também: K220."
 
         "K222" => {
             "\
-K222 — estouro de inteiro
+K222 — estouro de inteiro (histórico)
 
-Uma operação com inteiros (soma, subtração ou multiplicação) produziu um valor
-fora do alcance dos inteiros, que vão de -9223372036854775808 a
-9223372036854775807. Em vez de perder precisão silenciosamente, o kaju para e
-avisa.
+Este código não é mais emitido. Antes, uma operação com inteiros cujo resultado
+passasse do alcance de 64 bits parava o programa. Hoje o kaju usa inteiros de
+precisão arbitrária: quando o resultado excede esse alcance, ele é promovido
+automaticamente, sem perda de precisão.
 
-Errado:
-    var x = 9223372036854775807 + 1
+    var x = 9223372036854775807 + 1   // 9223372036854775808 (exato)
 
-Como evitar:
-    // trabalhe com decimais quando esperar números muito grandes
-    var x = 9223372036854775807.0 + 1.0
-
-Veja também: K020."
+Os valores voltam a caber em 64 bits sempre que possível, então isso é
+transparente. Números com casas decimais continuam sendo 'decimal' (f64)."
         }
 
         "K224" => {
