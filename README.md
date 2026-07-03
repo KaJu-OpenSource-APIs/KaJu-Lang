@@ -22,7 +22,7 @@ para cada fruta em frutas {
 - **Um tipo `numero`** que distingue internamente inteiro exato (i64) e decimal (f64), sem expor a diferença.
 - **Coleções ricas** — listas e dicionários com métodos encadeáveis (`.mapeie`, `.filtre`, `.ordene`, `.reduza`…).
 - **Funções de primeira classe** — closures, parâmetros padrão (`b = 10`) e variádicos (`...resto`).
-- **Erros ricos em português**, no estilo do Rust: código do erro, trecho do código com `^^^^`, `nota:` e `ajuda:` com sugestões ("você quis dizer X?").
+- **Erros ricos em português**: código do erro, trecho do código com `^^^^`, `nota:` e `ajuda:` com sugestões ("você quis dizer X?").
 
 ## Instalação
 
@@ -119,4 +119,4 @@ Contribuições são bem-vindas. Veja o [guia de contribuição](CONTRIBUTING.md
 
 ## Licença
 
-[MIT](LICENSE) © 2026 Julio Barbosa. Uso, modificação e distribuição livres, inclusive comercial, mantendo o aviso de copyright.
+[MIT](LICENSE) © 2026 Julio Barbosa e Kauan Turcato. Uso, modificação e distribuição livres, inclusive comercial, mantendo o aviso de copyright.
