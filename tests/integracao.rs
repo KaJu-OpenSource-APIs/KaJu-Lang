@@ -573,17 +573,22 @@ fn inteiro_e_decimal() {
 
 #[test]
 fn arquivos_escreve_e_le() {
-    let (out, err, ok) = rodar(
+    // Usa o diretório temporário do SO (portável); barras normais funcionam
+    // também no Windows, e evitam escapes na string do programa kaju.
+    let caminho = std::env::temp_dir().join("kaju_io_teste_integracao.txt");
+    let caminho_str = caminho.to_string_lossy().replace('\\', "/");
+    let programa = format!(
         r#"
-        var caminho = "/tmp/kaju_io_teste_integracao.txt"
+        var caminho = "{caminho_str}"
         escrevaArquivo(caminho, "a\nb\nc")
         escreva(existeArquivo(caminho))
         escreva(tamanho(leiaArquivo(caminho).divida("\n")))
-    "#,
+    "#
     );
+    let (out, err, ok) = rodar(&programa);
     assert!(ok, "stderr: {err}");
     assert_eq!(out, "verdadeiro\n3\n");
-    let _ = std::fs::remove_file("/tmp/kaju_io_teste_integracao.txt");
+    let _ = std::fs::remove_file(&caminho);
 }
 
 #[test]
