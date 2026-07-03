@@ -865,6 +865,30 @@ fn erro_constante_reatribuida() {
 }
 
 #[test]
+fn objeto_customiza_impressao_com_para_texto() {
+    let (out, err, ok) = rodar(
+        r#"classe Ponto {
+    construtor(x, y) { isto.x = x  isto.y = y }
+    metodo paraTexto() { retorne "(" + paraTexto(isto.x) + ", " + paraTexto(isto.y) + ")" }
+}
+var p = novo Ponto(3, 4)
+escreva(p)
+escreva("ponto: " + p)
+escreva($"valor {p}")
+escreva([p, p])"#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "(3, 4)\nponto: (3, 4)\nvalor (3, 4)\n[(3, 4), (3, 4)]\n");
+}
+
+#[test]
+fn objeto_sem_para_texto_usa_representacao_padrao() {
+    let (out, err, ok) = rodar("classe C { construtor() {} }\nescreva(novo C())");
+    assert!(ok, "stderr: {err}");
+    assert_eq!(out, "<objeto C>\n");
+}
+
+#[test]
 fn para_com_passo_regressivo_e_positivo() {
     let (out, err, ok) = rodar(
         r#"para i de 3 ate 1 passo -1 { escrevaSemQuebra(paraTexto(i)) }

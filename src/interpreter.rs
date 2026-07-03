@@ -960,6 +960,26 @@ impl Interpretador {
                     _ => Ok(Valor::Nulo),
                 }
             }
+            // Embutidas que produzem/consomem texto passam pelo 'exibir', para
+            // respeitarem o método paraTexto() dos objetos.
+            Valor::Nativa(n) if n.nome == "escreva" || n.nome == "escrevaSemQuebra" => {
+                use std::io::Write;
+                let mut partes = Vec::with_capacity(args.len());
+                for a in &args {
+                    partes.push(self.exibir(a, span)?);
+                }
+                let linha = partes.join(" ");
+                if n.nome == "escreva" {
+                    println!("{}", linha);
+                } else {
+                    print!("{}", linha);
+                    let _ = std::io::stdout().flush();
+                }
+                Ok(Valor::Nulo)
+            }
+            Valor::Nativa(n) if n.nome == "paraTexto" && args.len() == 1 => {
+                Ok(Valor::Texto(self.exibir(&args[0], span)?))
+            }
             Valor::Nativa(n) => (n.func)(args).map_err(|msg| {
                 Diagnostico::novo("K203", msg, span.clone()).com_rotulo("nesta chamada")
             }),
@@ -1281,8 +1301,50 @@ impl Interpretador {
         }
     }
 
+    /// Converte um valor em texto para exibição, despachando para o método
+    /// `paraTexto()` do objeto quando ele existe (com aridade 0). Coleções são
+    /// formatadas recursivamente, então uma lista de objetos também respeita o
+    /// `paraTexto` de cada item.
+    fn exibir(&mut self, v: &Valor, span: &Span) -> Result<String, Diagnostico> {
+        match v {
+            Valor::Objeto(o) => {
+                let metodo = o.borrow().classe.buscar_metodo("paraTexto");
+                if let Some((m, classe)) = metodo {
+                    if m.params.is_empty() {
+                        let r = self.invocar_metodo(m, v.clone(), classe, vec![], span)?;
+                        // Evita recursão infinita se paraTexto devolver o próprio objeto.
+                        return Ok(match r {
+                            Valor::Objeto(_) => r.para_texto(),
+                            outro => self.exibir(&outro, span)?,
+                        });
+                    }
+                }
+                Ok(v.para_texto())
+            }
+            Valor::Lista(l) => {
+                let itens = l.borrow().clone();
+                let mut partes = Vec::with_capacity(itens.len());
+                for item in &itens {
+                    partes.push(self.exibir(item, span)?);
+                }
+                Ok(format!("[{}]", partes.join(", ")))
+            }
+            Valor::Dicionario(d) => {
+                let mapa = d.borrow().clone();
+                let mut chaves: Vec<&String> = mapa.keys().collect();
+                chaves.sort();
+                let mut partes = Vec::with_capacity(chaves.len());
+                for c in chaves {
+                    partes.push(format!("\"{}\": {}", c, self.exibir(&mapa[c], span)?));
+                }
+                Ok(format!("{{{}}}", partes.join(", ")))
+            }
+            outro => Ok(outro.para_texto()),
+        }
+    }
+
     fn aplicar_binaria(
-        &self,
+        &mut self,
         op: &OpBinaria,
         a: Valor,
         b: Valor,
@@ -1292,7 +1354,11 @@ impl Interpretador {
         match op {
             // '+' concatena quando qualquer lado é texto (§4.1); senão soma numérica.
             Soma if matches!(a, Valor::Texto(_)) || matches!(b, Valor::Texto(_)) => {
-                Ok(Valor::Texto(format!("{}{}", a.para_texto(), b.para_texto())))
+                Ok(Valor::Texto(format!(
+                    "{}{}",
+                    self.exibir(&a, span)?,
+                    self.exibir(&b, span)?
+                )))
             }
             Soma => self.num_op(&a, &b, span, "+", |x, y| x.checked_add(y), |x, y| x + y),
             Subtracao => self.num_op(&a, &b, span, "-", |x, y| x.checked_sub(y), |x, y| x - y),
