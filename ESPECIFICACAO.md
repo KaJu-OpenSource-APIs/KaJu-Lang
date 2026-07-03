@@ -535,7 +535,7 @@ var p = novo geo.Ponto(1, 2)  // instancia uma classe qualificada pelo módulo
 
 ### 10.4 Métodos (`.`)
 
-- **lista:** `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte(sep)`, `indiceDe`, `fatie(inicio, fim)`, `ordene`, `ordenePor(f)`, `soma`, `mapeie(f)`, `filtre(f)`, `reduza(inicial, f)`
+- **lista:** `adicione`, `remova`, `tamanho`, `contem`, `inverta`, `junte(sep)`, `indiceDe`, `fatie(inicio, fim)`, `ordene`, `ordenePor(f)`, `soma`, `achate`, `combine(outra)`, `enumere`, `mapeie(f)`, `filtre(f)`, `reduza(inicial, f)`, `encontre(f)`, `algum(f)`, `todos(f)`, `agrupe(f)`
 - **texto:** `maiusculas`, `minusculas`, `tamanho`, `contem`, `apara`, `substitua(de, para)`, `divida(sep)`, `fatie(inicio, fim)`, `indiceDe(sub)`, `comecaCom`, `terminaCom`, `repita(n)`
 - **dicionario:** `chaves`, `valores`, `tem(chave)`, `obtem(chave, padrao)`, `remova(chave)`, `tamanho`
 

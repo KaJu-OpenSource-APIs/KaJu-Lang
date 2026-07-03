@@ -57,6 +57,20 @@ fn arg_texto(nome: &str, args: &[Valor], i: usize) -> Result<String, ErroMetodo>
     }
 }
 
+fn arg_lista(nome: &str, args: &[Valor], i: usize) -> Result<ListaRef, ErroMetodo> {
+    match &args[i] {
+        Valor::Lista(l) => Ok(l.clone()),
+        outro => Err((
+            "K203",
+            format!(
+                "o método '{}' espera uma 'lista', mas recebeu um '{}'",
+                nome,
+                outro.tipo_nome()
+            ),
+        )),
+    }
+}
+
 fn arg_indice(nome: &str, args: &[Valor], i: usize) -> Result<usize, ErroMetodo> {
     match &args[i] {
         Valor::Inteiro(n) if *n >= 0 => Ok(*n as usize),
@@ -141,6 +155,49 @@ fn metodo_lista(l: &ListaRef, nome: &str, args: Vec<Valor>) -> Result<Valor, Err
         "soma" => {
             checar_aridade(nome, &args, 0)?;
             somar_lista(l)
+        }
+        "achate" => {
+            // Achata um nível: cada item que for lista é expandido; os demais
+            // entram como estão.
+            checar_aridade(nome, &args, 0)?;
+            let mut saida: Vec<Valor> = Vec::new();
+            for item in l.borrow().iter() {
+                match item {
+                    Valor::Lista(interna) => saida.extend(interna.borrow().iter().cloned()),
+                    outro => saida.push(outro.clone()),
+                }
+            }
+            Ok(Valor::Lista(Rc::new(RefCell::new(saida))))
+        }
+        "combine" => {
+            // Zíper: combina esta lista com outra, formando pares [a, b].
+            // Para no fim da menor lista.
+            checar_aridade(nome, &args, 1)?;
+            let outra = arg_lista(nome, &args, 0)?;
+            let a = l.borrow();
+            let b = outra.borrow();
+            let pares: Vec<Valor> = a
+                .iter()
+                .zip(b.iter())
+                .map(|(x, y)| Valor::Lista(Rc::new(RefCell::new(vec![x.clone(), y.clone()]))))
+                .collect();
+            Ok(Valor::Lista(Rc::new(RefCell::new(pares))))
+        }
+        "enumere" => {
+            // Devolve pares [indice, item] para cada item da lista.
+            checar_aridade(nome, &args, 0)?;
+            let pares: Vec<Valor> = l
+                .borrow()
+                .iter()
+                .enumerate()
+                .map(|(i, item)| {
+                    Valor::Lista(Rc::new(RefCell::new(vec![
+                        Valor::Inteiro(i as i64),
+                        item.clone(),
+                    ])))
+                })
+                .collect();
+            Ok(Valor::Lista(Rc::new(RefCell::new(pares))))
         }
         outro => Err((
             "K212",

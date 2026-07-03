@@ -33,19 +33,46 @@ escreva([1, 2, 3].junte("-"))  // "1-2-3"  (une os elementos num texto)
 escreva([1, 2, 3, 4].soma())   // 10
 ```
 
+Alguns métodos ajudam a reorganizar a estrutura da lista:
+
+```kaju
+escreva([[1, 2], [3], [4, 5]].achate())       // [1, 2, 3, 4, 5]  (achata um nível)
+escreva([1, 2, 3].combine(["a", "b", "c"]))   // [[1, a], [2, b], [3, c]]  (zíper)
+escreva(["x", "y", "z"].enumere())            // [[0, x], [1, y], [2, z]]  (índice + valor)
+```
+
+- `achate()` junta as sublistas em uma só, expandindo um nível de profundidade;
+- `combine(outra)` casa esta lista com `outra` posição a posição, formando pares `[a, b]` (para no fim da menor);
+- `enumere()` devolve cada elemento acompanhado do seu índice, no formato `[indice, valor]` — útil em `para cada`.
+
 ### Transformando listas
 
 Alguns métodos recebem uma **função** como argumento e a aplicam a cada elemento. Eles são muito úteis para transformar ou filtrar dados sem escrever laços manualmente:
 
 - `mapeie(f)` cria uma nova lista aplicando `f` a cada elemento;
 - `filtre(f)` cria uma nova lista só com os elementos para os quais `f` devolve verdadeiro;
-- `reduza(inicial, f)` combina todos os elementos em um único valor, partindo de `inicial`.
+- `reduza(inicial, f)` combina todos os elementos em um único valor, partindo de `inicial`;
+- `encontre(f)` devolve o primeiro elemento para o qual `f` é verdadeiro, ou `nulo`;
+- `algum(f)` devolve verdadeiro se `f` for verdadeiro para **ao menos um** elemento;
+- `todos(f)` devolve verdadeiro se `f` for verdadeiro para **todos** os elementos;
+- `agrupe(f)` monta um dicionário agrupando os elementos pela chave devolvida por `f`.
 
 ```kaju
 var nums = [1, 2, 3, 4, 5]
 escreva(nums.mapeie(funcao(x) { retorne x * 2 }))            // [2, 4, 6, 8, 10]
 escreva(nums.filtre(funcao(x) { retorne x % 2 == 0 }))       // [2, 4]
 escreva(nums.reduza(0, funcao(acc, x) { retorne acc + x }))  // 15
+escreva(nums.encontre(funcao(x) { retorne x > 3 }))          // 4
+escreva(nums.algum(funcao(x) { retorne x > 4 }))             // verdadeiro
+escreva(nums.todos(funcao(x) { retorne x > 0 }))             // verdadeiro
+```
+
+O `agrupe` é ótimo para classificar dados: a chave devolvida por `f` (convertida em texto) vira a chave do dicionário, e o valor é a lista dos elementos daquele grupo.
+
+```kaju
+var palavras = ["ana", "ari", "bia", "bruno"]
+escreva(palavras.agrupe(funcao(p) { retorne p.fatie(0, 1) }))
+// {"a": [ana, ari], "b": [bia, bruno]}
 ```
 
 Para ordenar por um critério próprio, `ordenePor(f)` usa o valor devolvido por `f` como chave de ordenação:

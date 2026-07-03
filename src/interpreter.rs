@@ -840,7 +840,14 @@ impl Interpretador {
                     if let Valor::Lista(l) = &recv {
                         if matches!(
                             membro.as_str(),
-                            "mapeie" | "filtre" | "reduza" | "ordenePor"
+                            "mapeie"
+                                | "filtre"
+                                | "reduza"
+                                | "ordenePor"
+                                | "encontre"
+                                | "algum"
+                                | "todos"
+                                | "agrupe"
                         ) {
                             return self.metodo_lista_superior(l.clone(), membro, vals, span);
                         }
@@ -1161,6 +1168,54 @@ impl Interpretador {
                 let ordenada: Vec<Valor> = pares.into_iter().map(|(_, it)| it).collect();
                 *lista.borrow_mut() = ordenada;
                 Ok(Valor::Nulo)
+            }
+            "encontre" => {
+                // Devolve o primeiro item para o qual f(item) é verdadeiro, ou nulo.
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                for item in itens {
+                    if self
+                        .chamar(f.clone(), vec![item.clone()], span)?
+                        .eh_verdadeiro()
+                    {
+                        return Ok(item);
+                    }
+                }
+                Ok(Valor::Nulo)
+            }
+            "algum" => {
+                // Verdadeiro se f(item) for verdadeiro para ao menos um item.
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                for item in itens {
+                    if self.chamar(f.clone(), vec![item], span)?.eh_verdadeiro() {
+                        return Ok(Valor::Logico(true));
+                    }
+                }
+                Ok(Valor::Logico(false))
+            }
+            "todos" => {
+                // Verdadeiro se f(item) for verdadeiro para todos os itens.
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                for item in itens {
+                    if !self.chamar(f.clone(), vec![item], span)?.eh_verdadeiro() {
+                        return Ok(Valor::Logico(false));
+                    }
+                }
+                Ok(Valor::Logico(true))
+            }
+            "agrupe" => {
+                // Agrupa os itens num dicionário cuja chave é f(item) como texto.
+                let f = self.arg_funcao(nome, &args, 0, 1, span)?;
+                let mut grupos: HashMap<String, Valor> = HashMap::new();
+                for item in itens {
+                    let chave = self.chamar(f.clone(), vec![item.clone()], span)?.para_texto();
+                    match grupos.entry(chave).or_insert_with(|| {
+                        Valor::Lista(Rc::new(RefCell::new(Vec::new())))
+                    }) {
+                        Valor::Lista(l) => l.borrow_mut().push(item),
+                        _ => unreachable!(),
+                    }
+                }
+                Ok(Valor::Dicionario(Rc::new(RefCell::new(grupos))))
             }
             _ => unreachable!(),
         }

@@ -17,6 +17,12 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- Novos **métodos de lista de alta ordem**: `encontre(f)` (primeiro elemento que
+  satisfaz `f`), `algum(f)` (algum satisfaz), `todos(f)` (todos satisfazem) e
+  `agrupe(f)` (agrupa num dicionário pela chave devolvida por `f`).
+- Novos **métodos de lista**: `achate()` (achata um nível de sublistas),
+  `combine(outra)` (zíper, formando pares `[a, b]`) e `enumere()` (pares
+  `[indice, valor]`).
 - `ROADMAP.md` com as direções futuras do projeto (extraído da §14 da
   especificação e reescrito em tom de direções, não de fases internas).
 - Extensão de VS Code 1.0.0: **snippets** para as construções da linguagem,

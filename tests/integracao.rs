@@ -445,6 +445,43 @@ fn metodos_lista_ordem_superior() {
 }
 
 #[test]
+fn metodos_lista_alta_ordem_novos() {
+    let (out, err, ok) = rodar(
+        r#"
+        var nums = [1, 2, 3, 4, 5]
+        escreva(nums.encontre(funcao(n) { retorne n > 3 }))
+        escreva(nums.encontre(funcao(n) { retorne n > 9 }))
+        escreva(nums.algum(funcao(n) { retorne n > 4 }))
+        escreva(nums.todos(funcao(n) { retorne n > 0 }))
+        escreva(nums.todos(funcao(n) { retorne n > 2 }))
+        escreva([3, 1, 3, 2, 1].agrupe(funcao(n) { retorne n }))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "4\nnulo\nverdadeiro\nverdadeiro\nfalso\n{\"1\": [1, 1], \"2\": [2], \"3\": [3, 3]}\n"
+    );
+}
+
+#[test]
+fn metodos_lista_achate_combine_enumere() {
+    let (out, err, ok) = rodar(
+        r#"
+        escreva([[1, 2], [3], [4, 5]].achate())
+        escreva([1, 2, 3].combine(["a", "b", "c"]))
+        escreva([1, 2, 3].combine(["a"]))
+        escreva(["x", "y", "z"].enumere())
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "[1, 2, 3, 4, 5]\n[[1, a], [2, b], [3, c]]\n[[1, a]]\n[[0, x], [1, y], [2, z]]\n"
+    );
+}
+
+#[test]
 fn json_ida_e_volta() {
     let (out, err, ok) = rodar(
         r#"
