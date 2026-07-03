@@ -7,8 +7,8 @@ Obrigado pelo interesse em contribuir com o kaju! Este guia explica como prepara
 Para trabalhar no interpretador você precisa do [Rust](https://www.rust-lang.org/pt-BR) (edição 2024).
 
 ```bash
-git clone <url-do-repositorio> kaju
-cd kaju
+git clone https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git
+cd KaJu-Lang
 cargo build            # compila
 cargo test             # roda a suíte de testes
 cargo run -- programa.kaju   # roda um arquivo durante o desenvolvimento

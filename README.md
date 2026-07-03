@@ -1,6 +1,6 @@
 # kaju
 
-[![CI](https://github.com/USUARIO/kaju/actions/workflows/ci.yml/badge.svg)](https://github.com/USUARIO/kaju/actions/workflows/ci.yml)
+[![CI](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml/badge.svg)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml)
 
 Linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca padrão **totalmente em português**. O interpretador é escrito em **Rust**. Arquivos usam a extensão `.kaju` ou `.kj`.
 
@@ -33,8 +33,8 @@ O `kaju` é um executável nativo autossuficiente: depois de instalado, **usar**
 Em todos os casos, comece clonando o repositório:
 
 ```bash
-git clone https://github.com/USUARIO/kaju.git
-cd kaju
+git clone https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git
+cd KaJu-Lang
 ```
 
 ### Linux e macOS

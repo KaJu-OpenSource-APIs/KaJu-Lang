@@ -3,8 +3,8 @@
 O `kaju` é um **executável nativo autossuficiente**: uma vez instalado, *usar* o kaju **não exige ter o Rust instalado**. Por enquanto — enquanto não há binários prontos publicados — a instalação é feita compilando a partir do código-fonte, o que precisa do [Rust](https://www.rust-lang.org/pt-BR). Em todos os casos, comece clonando o repositório:
 
 ```bash
-git clone https://github.com/USUARIO/kaju.git
-cd kaju
+git clone https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git
+cd KaJu-Lang
 ```
 
 ## Linux e macOS
