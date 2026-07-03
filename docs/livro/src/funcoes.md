@@ -115,6 +115,17 @@ funcao registrar(nivel, ...mensagens) {
 registrar("info", "iniciado", "carregado", "pronto")
 ```
 
+O caminho inverso do variádico é o **espalhamento**: use `...` na chamada para passar os elementos de uma lista como argumentos separados:
+
+```kaju
+funcao soma3(x, y, z) { retorne x + y + z }
+var valores = [1, 2, 3]
+escreva(soma3(...valores))    // soma3(1, 2, 3) -> 6
+escreva(maximo(...valores))   // espalha numa função variádica
+```
+
+O mesmo `...` espalha listas dentro de outras listas e mescla dicionários — veja [Coleções](./colecoes.md).
+
 ## Funções são valores
 
 Em kaju, uma função é um valor como qualquer outro: você pode guardá-la em uma variável, passá-la como argumento e devolvê-la de outra função. Isso é o que chamamos de funções de **primeira classe**.

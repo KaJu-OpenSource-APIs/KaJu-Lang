@@ -1,6 +1,6 @@
 //! Analisador sintático: transforma tokens em uma AST por descida recursiva.
 
-use crate::ast::{Cmd, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Parametro};
+use crate::ast::{Cmd, EntradaDic, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Parametro};
 use crate::erros::Diagnostico;
 use crate::lexer::Lexer;
 use crate::token::{Pedaco, Span, TipoToken, Token};
@@ -1175,7 +1175,15 @@ impl Parser {
                             "coloque todos os argumentos posicionais antes dos nomeados",
                         ));
                     }
-                    posicionais.push(self.expressao()?);
+                    // Espalhamento de argumentos: `f(...lista)`.
+                    if self.verificar(&TipoToken::Reticencias) {
+                        let tres = self.avancar();
+                        let e = self.expressao()?;
+                        let sp = unir_span(&tres.span, &e.span());
+                        posicionais.push(Expr::Espalhar(Box::new(e), sp));
+                    } else {
+                        posicionais.push(self.expressao()?);
+                    }
                 }
                 if !self.casar(&TipoToken::Virgula) {
                     break;
@@ -1414,7 +1422,14 @@ impl Parser {
                 let mut itens = Vec::new();
                 if !self.verificar(&TipoToken::ColcheteDir) {
                     loop {
-                        itens.push(self.expressao()?);
+                        if self.verificar(&TipoToken::Reticencias) {
+                            let tres = self.avancar();
+                            let e = self.expressao()?;
+                            let sp = unir_span(&tres.span, &e.span());
+                            itens.push(Expr::Espalhar(Box::new(e), sp));
+                        } else {
+                            itens.push(self.expressao()?);
+                        }
                         if !self.casar(&TipoToken::Virgula) {
                             break;
                         }
@@ -1431,23 +1446,29 @@ impl Parser {
             }
             TipoToken::ChaveEsq => {
                 self.avancar();
-                let mut pares: Vec<(String, Expr)> = Vec::new();
+                let mut pares: Vec<EntradaDic> = Vec::new();
                 if !self.verificar(&TipoToken::ChaveDir) {
                     loop {
-                        let chave = self.consumir(
-                            &TipoToken::Texto(String::new()),
-                            "K010",
-                            "esperava uma chave de texto no dicionário".into(),
-                            "a chave deve ser um texto entre aspas".into(),
-                        )?;
-                        self.consumir(
-                            &TipoToken::DoisPontos,
-                            "K010",
-                            "esperava ':' entre a chave e o valor".into(),
-                            "separe chave e valor com ':'".into(),
-                        )?;
-                        let valor = self.expressao()?;
-                        pares.push((chave.lexema.clone(), valor));
+                        if self.verificar(&TipoToken::Reticencias) {
+                            self.avancar();
+                            let e = self.expressao()?;
+                            pares.push(EntradaDic::Espalhar(e));
+                        } else {
+                            let chave = self.consumir(
+                                &TipoToken::Texto(String::new()),
+                                "K010",
+                                "esperava uma chave de texto no dicionário".into(),
+                                "a chave deve ser um texto entre aspas".into(),
+                            )?;
+                            self.consumir(
+                                &TipoToken::DoisPontos,
+                                "K010",
+                                "esperava ':' entre a chave e o valor".into(),
+                                "separe chave e valor com ':'".into(),
+                            )?;
+                            let valor = self.expressao()?;
+                            pares.push(EntradaDic::Par(chave.lexema.clone(), valor));
+                        }
                         if !self.casar(&TipoToken::Virgula) {
                             break;
                         }

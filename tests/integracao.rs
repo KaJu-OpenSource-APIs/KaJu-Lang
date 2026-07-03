@@ -482,6 +482,38 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn espalhamento() {
+    let (out, err, ok) = rodar(
+        r#"
+        var a = [1, 2, 3]
+        var b = [4, 5]
+        escreva([...a, ...b])
+        escreva([0, ...a, 99])
+        funcao soma3(x, y, z) { retorne x + y + z }
+        escreva(soma3(...a))
+        escreva(maximo(...b))
+        funcao junta(inicio, ...resto) { retorne inicio + tamanho(resto) }
+        escreva(junta(...[10, 1, 2, 3]))
+        var dados = {"nome": "Ana", "idade": 30}
+        var extra = {"idade": 31, "cidade": "Recife"}
+        escreva({...dados, ...extra})
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "[1, 2, 3, 4, 5]\n[0, 1, 2, 3, 99]\n6\n5\n13\n{\"cidade\": Recife, \"idade\": 31, \"nome\": Ana}\n"
+    );
+}
+
+#[test]
+fn erro_espalhamento_de_nao_colecao() {
+    let (_, err, ok) = rodar("escreva([...10])");
+    assert!(!ok);
+    assert!(err.contains("erro[K227]"), "stderr: {err}");
+}
+
+#[test]
 fn operador_pipe() {
     let (out, err, ok) = rodar(
         r#"

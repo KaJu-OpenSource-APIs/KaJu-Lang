@@ -107,7 +107,7 @@ lance      importe     como
 |>                        (encadeamento / pipe)
 ( ) { } [ ]              (agrupamento/blocos/coleções)
 ,  :  .                   (separadores/acesso)
-...                       (parâmetro variádico)
+...                       (parâmetro variádico e espalhamento)
 $"..."                    (prefixo de texto interpolado, com {} internos)
 ```
 
@@ -379,6 +379,20 @@ conectar("exemplo.com", tls: verdadeiro)   // porta usa o padrão
 ```
 - Passar um nome que não é parâmetro da função gera `K224`; o parâmetro variádico não pode ser passado por nome.
 - Preencher o mesmo parâmetro por posição e por nome (ou repetir o nome) gera `K225`.
+
+### 6.3 Espalhamento (`...`)
+O operador `...` (o mesmo símbolo do parâmetro variádico) **espalha** uma coleção:
+- em uma **chamada**, `f(...lista)` passa cada elemento da lista como um argumento posicional (combina com o variádico do outro lado);
+- em um **literal de lista**, `[...a, ...b]` concatena os elementos;
+- em um **literal de dicionário**, `{...a, ...b}` mescla os pares (chaves posteriores vencem).
+
+Em listas e argumentos, `...` espera uma `lista`; em dicionários, um `dicionario` — caso contrário, `K227`.
+```kaju
+funcao soma3(x, y, z) { retorne x + y + z }
+soma3(...[1, 2, 3])              // 6
+var todos = [...listaA, ...listaB]
+var config = {...padrao, "modo": "escuro"}
+```
 
 ---
 
@@ -657,13 +671,13 @@ nota: a divisão por zero não é definida em kaju.
 ```
 
 ### 11.3 Categorias e códigos
-Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **53 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
+Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **54 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
 
 - **Núcleo — análise e semântica (`K0xx`, K001–K023).** É a faixa mais antiga e mistura:
   - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla, `K023` argumento posicional depois de nomeado);
   - **execução** que nasceu junto do núcleo — `K001` variável não definida, `K012` operação entre tipos incompatíveis (também usada por bits/deslocamento), `K020` divisão por zero.
 - **Léxico (`K1xx`, K101–K104).** Caractere inesperado, texto sem fechar aspas, número mal formado, escape/interpolação inválidos.
-- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K224`/`K225` argumentos nomeados inválidos (parâmetro inexistente / informado duas vezes), `K226` argumentos nomeados onde não são aceitos, `K231` afirmação falhou (`afirme`), entre outros.
+- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método usado sem `()` (falta chamar), `K212` método inexistente, `K213` membro inexistente (campo/método de objeto ou membro estático de classe), `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K224`/`K225` argumentos nomeados inválidos (parâmetro inexistente / informado duas vezes), `K226` argumentos nomeados onde não são aceitos, `K227` espalhamento (`...`) de um valor que não é a coleção esperada, `K231` afirmação falhou (`afirme`), entre outros.
 
 > Cada código tem uma página longa consultável com `kaju explique <codigo>` (ex.: `kaju explique K016`), à la `rustc --explain`. Ao relatar um erro, o interpretador ainda sugere `dica: rode 'kaju explique Kxxx'`.
 
@@ -745,15 +759,17 @@ unario        = ( "nao" | "-" | "~" ) unario | chamada ;
 chamada       = primario { "(" [ args ] ")" | indexa_ou_fatia | ( "." | "?." ) IDENT } ;
 indexa_ou_fatia = "[" ( expressao [ ":" [ expressao ] ] | ":" [ expressao ] ) "]" ;
 args          = argumento { "," argumento } ;   (* nomeados só depois dos posicionais *)
-argumento     = [ IDENT ":" ] expressao ;       (* 'IDENT :' marca um argumento nomeado *)
+argumento     = [ IDENT ":" ] expressao | "..." expressao ;  (* nomeado, posicional ou espalhado *)
 
 primario      = NUMERO | TEXTO | TEXTO_INTERP
               | "verdadeiro" | "falso" | "nulo"
               | "isto" | "base" | novo
               | IDENT | "(" expressao ")" | lista | dicionario | funcao_anon ;
 novo          = "novo" IDENT { "." IDENT } "(" [ args ] ")" ;  (* nome simples ou qualificado por módulo *)
-lista         = "[" [ expressao { "," expressao } ] "]" ;
-dicionario    = "{" [ TEXTO ":" expressao { "," TEXTO ":" expressao } ] "}" ;
+lista         = "[" [ elem_lista { "," elem_lista } ] "]" ;
+elem_lista    = expressao | "..." expressao ;              (* item ou espalhamento *)
+dicionario    = "{" [ entrada_dic { "," entrada_dic } ] "}" ;
+entrada_dic   = TEXTO ":" expressao | "..." expressao ;    (* par ou espalhamento *)
 funcao_anon   = "funcao" "(" [ params ] ")" bloco ;
 
 (* TEXTO_INTERP: $"...{expressao}..." — cada trecho {expressao} é analisado como

@@ -730,18 +730,55 @@ impl Interpretador {
             Expr::Lista(itens, _) => {
                 let mut vs = Vec::with_capacity(itens.len());
                 for it in itens {
-                    vs.push(self.avaliar(it, amb)?);
+                    // `...lista` espalha os elementos aqui.
+                    if let Expr::Espalhar(inner, sp) = it {
+                        let v = self.avaliar(inner, amb)?;
+                        match v {
+                            Valor::Lista(l) => vs.extend(l.borrow().iter().cloned()),
+                            outro => return Err(self.erro_espalhar(&outro, "lista", sp)),
+                        }
+                    } else {
+                        vs.push(self.avaliar(it, amb)?);
+                    }
                 }
                 Ok(Valor::Lista(Rc::new(RefCell::new(vs))))
             }
-            Expr::Dicionario(pares, _) => {
-                let mut mapa = HashMap::with_capacity(pares.len());
-                for (chave, vexpr) in pares {
-                    let v = self.avaliar(vexpr, amb)?;
-                    mapa.insert(chave.clone(), v);
+            Expr::Dicionario(entradas, _) => {
+                let mut mapa = HashMap::with_capacity(entradas.len());
+                for entrada in entradas {
+                    match entrada {
+                        crate::ast::EntradaDic::Par(chave, vexpr) => {
+                            let v = self.avaliar(vexpr, amb)?;
+                            mapa.insert(chave.clone(), v);
+                        }
+                        // `...dicionario` mescla as chaves (as posteriores vencem).
+                        crate::ast::EntradaDic::Espalhar(vexpr) => {
+                            let v = self.avaliar(vexpr, amb)?;
+                            match v {
+                                Valor::Dicionario(d) => {
+                                    for (k, val) in d.borrow().iter() {
+                                        mapa.insert(k.clone(), val.clone());
+                                    }
+                                }
+                                outro => {
+                                    return Err(self.erro_espalhar(
+                                        &outro,
+                                        "dicionario",
+                                        &vexpr.span(),
+                                    ));
+                                }
+                            }
+                        }
+                    }
                 }
                 Ok(Valor::Dicionario(Rc::new(RefCell::new(mapa))))
             }
+            Expr::Espalhar(_, span) => Err(Diagnostico::novo(
+                "K227",
+                "'...' (espalhamento) só pode ser usado em listas, dicionários ou argumentos",
+                span.clone(),
+            )
+            .com_rotulo("espalhamento fora de lugar")),
             Expr::Indice { alvo, indice, span } => {
                 let base = self.avaliar(alvo, amb)?;
                 let idx = self.avaliar(indice, amb)?;
@@ -871,10 +908,7 @@ impl Interpretador {
                 {
                     // base.metodo(...) — chamada à superclasse
                     if let Expr::Base(_) = receptor.as_ref() {
-                        let mut vals = Vec::with_capacity(args.len());
-                        for a in args {
-                            vals.push(self.avaliar(a, amb)?);
-                        }
+                        let vals = self.avaliar_args(args, amb)?;
                         let nom = self.avaliar_nomeados(nomeados, amb)?;
                         return self.chamar_base(membro, vals, &nom, amb, span);
                     }
@@ -884,19 +918,13 @@ impl Interpretador {
                     if *opcional && matches!(recv, Valor::Nulo) {
                         return Ok(Valor::Nulo);
                     }
-                    let mut vals = Vec::with_capacity(args.len());
-                    for a in args {
-                        vals.push(self.avaliar(a, amb)?);
-                    }
+                    let vals = self.avaliar_args(args, amb)?;
                     let nom = self.avaliar_nomeados(nomeados, amb)?;
                     return self.despachar_metodo(recv, membro, vals, nom, span);
                 }
                 // Chamada normal de função
                 let f = self.avaliar(alvo, amb)?;
-                let mut vals = Vec::with_capacity(args.len());
-                for a in args {
-                    vals.push(self.avaliar(a, amb)?);
-                }
+                let vals = self.avaliar_args(args, amb)?;
                 let nom = self.avaliar_nomeados(nomeados, amb)?;
                 self.chamar_com_nomeados(f, vals, nom, span)
             }
@@ -1188,6 +1216,41 @@ impl Interpretador {
             );
         }
         Ok(())
+    }
+
+    /// Diagnóstico para um `...` aplicado a um valor que não é a coleção esperada.
+    fn erro_espalhar(&self, v: &Valor, esperado: &str, span: &Span) -> Diagnostico {
+        Diagnostico::novo(
+            "K227",
+            format!(
+                "'...' espera um(a) '{}', mas recebeu um '{}'",
+                esperado,
+                v.tipo_nome()
+            ),
+            span.clone(),
+        )
+        .com_rotulo("não é possível espalhar este valor")
+    }
+
+    /// Avalia uma lista de argumentos, expandindo os espalhamentos `...lista`.
+    fn avaliar_args(
+        &mut self,
+        args: &[Expr],
+        amb: &Rc<RefCell<Ambiente>>,
+    ) -> Result<Vec<Valor>, Diagnostico> {
+        let mut vals = Vec::with_capacity(args.len());
+        for a in args {
+            if let Expr::Espalhar(inner, sp) = a {
+                let v = self.avaliar(inner, amb)?;
+                match v {
+                    Valor::Lista(l) => vals.extend(l.borrow().iter().cloned()),
+                    outro => return Err(self.erro_espalhar(&outro, "lista", sp)),
+                }
+            } else {
+                vals.push(self.avaliar(a, amb)?);
+            }
+        }
+        Ok(vals)
     }
 
     /// Avalia as expressões dos argumentos nomeados no ambiente da chamada.
@@ -1498,10 +1561,7 @@ impl Interpretador {
         }));
         let valor_obj = Valor::Objeto(obj);
 
-        let mut vals = Vec::with_capacity(args_expr.len());
-        for a in args_expr {
-            vals.push(self.avaliar(a, amb)?);
-        }
+        let vals = self.avaliar_args(args_expr, amb)?;
         let mut nomeados = Vec::with_capacity(nomeados_expr.len());
         for (nome, e) in nomeados_expr {
             nomeados.push((nome.clone(), self.avaliar(e, amb)?));
@@ -1551,10 +1611,7 @@ impl Interpretador {
                 } => (alvo, args, nomeados),
                 outro => (outro, &[], &[]),
             };
-        let mut args_vals = Vec::with_capacity(args_expr.len());
-        for a in args_expr {
-            args_vals.push(self.avaliar(a, amb)?);
-        }
+        let args_vals = self.avaliar_args(args_expr, amb)?;
         let nom = self.avaliar_nomeados(nomeados_expr, amb)?;
 
         // Alvo é um nome simples: pode ser função em escopo ou nome de método.

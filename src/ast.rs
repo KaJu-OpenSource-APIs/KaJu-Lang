@@ -42,6 +42,14 @@ pub enum OpUnaria {
     NaoBit,   // ~
 }
 
+/// Uma entrada de um literal de dicionário: um par `"chave": valor` ou um
+/// espalhamento `...outroDicionario`.
+#[derive(Clone, Debug)]
+pub enum EntradaDic {
+    Par(String, Expr),
+    Espalhar(Expr),
+}
+
 /// Expressões: produzem um valor.
 #[derive(Clone, Debug)]
 pub enum Expr {
@@ -53,7 +61,10 @@ pub enum Expr {
     Isto(Span),
     Base(Span),
     Lista(Vec<Expr>, Span),
-    Dicionario(Vec<(String, Expr)>, Span),
+    Dicionario(Vec<EntradaDic>, Span),
+    /// Espalhamento `...expr` — só válido dentro de literais de lista/dicionário
+    /// e de listas de argumentos. Expande a coleção da direita no lugar.
+    Espalhar(Box<Expr>, Span),
     Variavel(String, Span),
     Indice {
         alvo: Box<Expr>,
@@ -161,6 +172,7 @@ impl Expr {
             | Expr::Base(s)
             | Expr::Lista(_, s)
             | Expr::Dicionario(_, s)
+            | Expr::Espalhar(_, s)
             | Expr::Variavel(_, s)
             | Expr::Indice { span: s, .. }
             | Expr::Fatia { span: s, .. }

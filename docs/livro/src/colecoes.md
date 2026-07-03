@@ -132,6 +132,23 @@ para cada chave em pessoa {
 }
 ```
 
+## Espalhamento com `...`
+
+O operador `...` **espalha** os elementos de uma coleção dentro de outra. Em listas, ele insere os itens de outra lista; em dicionários, mescla os pares (as chaves que aparecem depois vencem):
+
+```kaju
+var a = [1, 2, 3]
+var b = [4, 5]
+escreva([...a, ...b])          // [1, 2, 3, 4, 5]
+escreva([0, ...a, 99])         // [0, 1, 2, 3, 99]
+
+var padrao = {"cor": "azul", "tamanho": "M"}
+var escolha = {"tamanho": "G"}
+escreva({...padrao, ...escolha})  // {"cor": azul, "tamanho": G}
+```
+
+O mesmo `...` também espalha uma lista como argumentos de uma função — veja [Funções](./funcoes.md).
+
 ## Comparando coleções
 
 O operador `==` compara listas e dicionários pelo **conteúdo**, não pela identidade: duas coleções são iguais quando têm os mesmos elementos (nas mesmas posições, no caso das listas) ou os mesmos pares chave-valor. A comparação é recursiva, então funciona também com coleções aninhadas:

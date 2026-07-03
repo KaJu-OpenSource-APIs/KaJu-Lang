@@ -17,6 +17,9 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Espalhamento `...`**: espalha uma lista em literais (`[...a, ...b]`) e em
+  chamadas (`maximo(...nums)`), e mescla dicionários (`{...a, ...b}`, chaves
+  posteriores vencem). Erro K227 quando o valor não é a coleção esperada.
 - **Operador de encadeamento `|>`** (pipe): `x |> f(a)` passa `x` como primeiro
   argumento (`f(x, a)`). Entende funções livres e métodos — se o nome à direita
   não for uma função em escopo, vira chamada de método (`x |> maiusculas` ≡

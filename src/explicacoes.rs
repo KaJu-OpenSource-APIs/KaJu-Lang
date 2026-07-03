@@ -858,6 +858,25 @@ Correto:
     [1, 2, 3].mapeie(dobro)"
         }
 
+        "K227" => {
+            "\
+K227 — espalhamento inválido
+
+O operador '...' (espalhamento) expande uma coleção dentro de um literal ou de
+uma lista de argumentos. Em listas e argumentos ele espera uma 'lista'; em
+literais de dicionário, um 'dicionario'.
+
+Errado:
+    var xs = [...10]
+    maximo(...\"texto\")
+
+Correto:
+    var xs = [...[1, 2], 3]
+    var ys = [...listaA, ...listaB]
+    maximo(...numeros)
+    var d = {...base, \"nova\": 1}"
+        }
+
         "K230" => {
             "\
 K230 — erro lançado e não capturado
@@ -911,7 +930,7 @@ pub fn codigos_conhecidos() -> &'static [&'static str] {
         "K012", "K013", "K014", "K015", "K016", "K017", "K018", "K019", "K020", "K021", "K022",
         "K023", "K101", "K102", "K103", "K104", "K201", "K202", "K203", "K204", "K205", "K206",
         "K207", "K208", "K209", "K210", "K211", "K212", "K213", "K214", "K215", "K216", "K217",
-        "K218", "K220", "K221", "K222", "K224", "K225", "K226", "K230", "K231",
+        "K218", "K220", "K221", "K222", "K224", "K225", "K226", "K227", "K230", "K231",
     ]
 }
 
