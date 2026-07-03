@@ -17,6 +17,10 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- Operador **`??` (coalescência de nulo)**: `a ?? b` devolve `a` se não for nulo,
+  senão `b`. Reage apenas a `nulo` (`0`, `""` e `falso` passam intactos).
+- Operador **`?.` (acesso opcional)**: `a?.membro` e `a?.metodo(...)` resultam em
+  `nulo` quando `a` é nulo, sem erro — encadeável (`a?.b?.c`).
 - Novos **métodos de lista de alta ordem**: `encontre(f)` (primeiro elemento que
   satisfaz `f`), `algum(f)` (algum satisfaz), `todos(f)` (todos satisfazem) e
   `agrupe(f)` (agrupa num dicionário pela chave devolvida por `f`).

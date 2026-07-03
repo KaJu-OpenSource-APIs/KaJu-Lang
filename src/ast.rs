@@ -29,6 +29,9 @@ pub enum OpBinaria {
 pub enum OpLogica {
     E,
     Ou,
+    /// `??` — coalescência de nulo: devolve o operando da esquerda se ele não
+    /// for nulo; caso contrário, avalia e devolve o da direita.
+    CoalesceNulo,
 }
 
 /// Operadores unários.
@@ -60,6 +63,9 @@ pub enum Expr {
     Acesso {
         alvo: Box<Expr>,
         membro: String,
+        /// Acesso opcional (`?.`): se `alvo` for nulo, o resultado é nulo em vez
+        /// de erro (encadeamento seguro de nulos).
+        opcional: bool,
         span: Span,
     },
     AtribIndice {

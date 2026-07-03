@@ -88,6 +88,33 @@ var rotulo = idade >= 18 ? "adulto" : "menor"
 escreva(rotulo)
 ```
 
+## Lidando com nulos: `??` e `?.`
+
+Dois operadores tornam o trabalho com valores que podem ser `nulo` mais curto e seguro.
+
+O operador `??` (**coalescência de nulo**) devolve o lado esquerdo quando ele não é `nulo`; caso contrário, avalia e devolve o direito. Diferente de `ou`, ele só reage a `nulo` — valores como `0`, `""` ou `falso` passam intactos:
+
+```kaju
+var nome = nulo
+escreva(nome ?? "convidado")   // convidado
+escreva(0 ?? 99)               // 0  (zero não é nulo)
+```
+
+O operador `?.` (**acesso opcional**) acessa um campo ou chama um método só se o lado esquerdo não for `nulo`. Se for `nulo`, o resultado é `nulo` — sem erro:
+
+```kaju
+escreva(usuario?.endereco?.cidade)   // nulo se qualquer elo for nulo
+escreva(texto?.maiusculas())         // nulo se 'texto' for nulo
+```
+
+Cada `?.` protege o seu próprio lado esquerdo, então encadear é natural: se um elo intermediário for `nulo`, os `?.` seguintes propagam o `nulo` adiante. Os dois combinam muito bem para fornecer um padrão:
+
+```kaju
+var cidade = usuario?.endereco?.cidade ?? "desconhecida"
+```
+
+> Se você usar `.` (sem `?`) sobre um valor nulo, isso continua sendo um erro — o `?.` é a forma explícita de dizer "aceite nulo aqui".
+
 ## Operadores de bits
 
 Sobre inteiros, o kaju oferece operações bit a bit: `&` (e), `|` (ou), `^` (ou-exclusivo), `~` (não) e os deslocamentos `<<` e `>>`.

@@ -115,7 +115,9 @@ pub enum TipoToken {
     DoisPontos,
     Ponto,
     Reticencias,  // ...
-    Interrogacao, // ?
+    Interrogacao,       // ?
+    InterrogacaoPonto,  // ?.  (acesso opcional)
+    InterrogacaoDupla,  // ??  (coalescência de nulo)
 
     FimDeArquivo,
 }

@@ -2,6 +2,12 @@
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não lançado]
+
+### Adicionado
+
+- Realce dos operadores `??` (coalescência de nulo) e `?.` (acesso opcional).
+
 ## [1.0.0]
 
 ### Adicionado

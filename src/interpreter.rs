@@ -785,6 +785,14 @@ impl Interpretador {
                             Ok(Valor::Logico(b.eh_verdadeiro()))
                         }
                     }
+                    // `??` preserva o valor (não coage para lógico) e só olha para nulo.
+                    OpLogica::CoalesceNulo => {
+                        if matches!(a, Valor::Nulo) {
+                            self.avaliar(dir, amb)
+                        } else {
+                            Ok(a)
+                        }
+                    }
                 }
             }
             Expr::Ternario {
@@ -823,18 +831,28 @@ impl Interpretador {
                 if let Expr::Acesso {
                     alvo: receptor,
                     membro,
+                    opcional,
                     ..
                 } = alvo.as_ref()
                 {
+                    // base.metodo(...) — chamada à superclasse
+                    if let Expr::Base(_) = receptor.as_ref() {
+                        let mut vals = Vec::with_capacity(args.len());
+                        for a in args {
+                            vals.push(self.avaliar(a, amb)?);
+                        }
+                        return self.chamar_base(membro, vals, amb, span);
+                    }
+                    let recv = self.avaliar(receptor, amb)?;
+                    // Acesso opcional `?.`: se o receptor for nulo, a chamada
+                    // inteira resulta em nulo, sem avaliar os argumentos.
+                    if *opcional && matches!(recv, Valor::Nulo) {
+                        return Ok(Valor::Nulo);
+                    }
                     let mut vals = Vec::with_capacity(args.len());
                     for a in args {
                         vals.push(self.avaliar(a, amb)?);
                     }
-                    // base.metodo(...) — chamada à superclasse
-                    if let Expr::Base(_) = receptor.as_ref() {
-                        return self.chamar_base(membro, vals, amb, span);
-                    }
-                    let recv = self.avaliar(receptor, amb)?;
                     // Métodos de ordem superior de lista precisam chamar funções kaju,
                     // então são tratados aqui (onde há acesso ao interpretador).
                     if let Valor::Lista(l) = &recv {
@@ -883,8 +901,17 @@ impl Interpretador {
                 }
                 self.chamar(f, vals, span)
             }
-            Expr::Acesso { alvo, membro, span } => {
+            Expr::Acesso {
+                alvo,
+                membro,
+                opcional,
+                span,
+            } => {
                 let base = self.avaliar(alvo, amb)?;
+                // Acesso opcional `?.`: nulo?.membro é nulo, sem erro.
+                if *opcional && matches!(base, Valor::Nulo) {
+                    return Ok(Valor::Nulo);
+                }
                 match base {
                     // Classe.campoEstatico
                     Valor::Classe(c) => {

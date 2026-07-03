@@ -856,7 +856,9 @@ impl Parser {
                 indice,
                 valor: Box::new(valor),
             }),
-            Expr::Acesso { alvo, membro, span } => Ok(Expr::AtribCampo {
+            Expr::Acesso {
+                alvo, membro, span, ..
+            } => Ok(Expr::AtribCampo {
                 span: unir_span(&span, &valor.span()),
                 alvo,
                 membro,
@@ -873,7 +875,7 @@ impl Parser {
 
     /// Expressão condicional: `condicao ? entao : senao`.
     fn ternario(&mut self) -> Result<Expr, Diagnostico> {
-        let condicao = self.ou_logico()?;
+        let condicao = self.coalescencia()?;
         if self.casar(&TipoToken::Interrogacao) {
             let entao = self.ternario()?;
             self.consumir(
@@ -892,6 +894,23 @@ impl Parser {
             });
         }
         Ok(condicao)
+    }
+
+    // Coalescência de nulo `??` — precedência menor que `ou`/`e`, maior que o ternário.
+    fn coalescencia(&mut self) -> Result<Expr, Diagnostico> {
+        let mut esq = self.ou_logico()?;
+        while self.verificar(&TipoToken::InterrogacaoDupla) {
+            self.avancar();
+            let dir = self.ou_logico()?;
+            let span = unir_span(&esq.span(), &dir.span());
+            esq = Expr::Logica {
+                op: OpLogica::CoalesceNulo,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
+        }
+        Ok(esq)
     }
 
     fn ou_logico(&mut self) -> Result<Expr, Diagnostico> {
@@ -1145,7 +1164,10 @@ impl Parser {
                     indice: Box::new(indice),
                     span,
                 };
-            } else if self.verificar(&TipoToken::Ponto) {
+            } else if self.verificar(&TipoToken::Ponto)
+                || self.verificar(&TipoToken::InterrogacaoPonto)
+            {
+                let opcional = self.verificar(&TipoToken::InterrogacaoPonto);
                 self.avancar();
                 // O membro é um identificador; 'construtor' é permitido (para base.construtor()).
                 let membro = if self.verificar(&TipoToken::Construtor) {
@@ -1162,6 +1184,7 @@ impl Parser {
                 expr = Expr::Acesso {
                     alvo: Box::new(expr),
                     membro: membro.lexema.clone(),
+                    opcional,
                     span,
                 };
             } else {
@@ -1263,6 +1286,7 @@ impl Parser {
                     classe = Expr::Acesso {
                         alvo: Box::new(classe),
                         membro: membro.lexema.clone(),
+                        opcional: false,
                         span,
                     };
                 }

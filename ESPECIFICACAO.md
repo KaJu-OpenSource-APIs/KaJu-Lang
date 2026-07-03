@@ -102,6 +102,8 @@ lance      importe     como
 =                         (atribuição)
 += -= *= /= %=            (atribuição composta)
 ? :                       (operador condicional / ternário)
+??                        (coalescência de nulo)
+?.                        (acesso opcional / encadeamento seguro)
 ( ) { } [ ]              (agrupamento/blocos/coleções)
 ,  :  .                   (separadores/acesso)
 ...                       (parâmetro variádico)
@@ -195,17 +197,25 @@ contador += 1      // contador = contador + 1
 var rotulo = idade >= 18 ? "adulto" : "menor"
 ```
 
-### 4.7 Interpolação de texto
+### 4.7 Operadores de nulo (`??` e `?.`)
+`a ?? b` (**coalescência de nulo**) devolve `a` se `a` não for `nulo`; caso contrário, avalia e devolve `b`. Reage **apenas** a `nulo` (ao contrário de `ou`): `0`, `""` e `falso` passam intactos.
+
+`a?.membro` e `a?.metodo(...)` (**acesso opcional**) só acessam o membro/chamam o método se `a` não for `nulo`; se for, o resultado é `nulo`, sem erro e sem avaliar os argumentos da chamada. Cada `?.` protege o seu próprio operando à esquerda, de modo que o encadeamento (`a?.b?.c`) propaga o `nulo`. O acesso não opcional (`.`) sobre `nulo` continua sendo erro.
+```kaju
+var cidade = usuario?.endereco?.cidade ?? "desconhecida"
+```
+
+### 4.8 Interpolação de texto
 Um literal `$"..."` avalia cada `{expressao}` interna e concatena tudo como texto (equivale a somar as partes com `+`, sempre em contexto de texto):
 ```kaju
 var nome = "Ana"
 escreva($"Olá, {nome}! Daqui a um ano você terá {idade + 1}.")
 ```
 
-### 4.8 Precedência (da maior para a menor)
+### 4.9 Precedência (da maior para a menor)
 Segue exatamente a cadeia do analisador sintático:
 
-1. `()` agrupamento, chamada `f(...)`, indexação `a[i]`, acesso `.`
+1. `()` agrupamento, chamada `f(...)`, indexação `a[i]`, acesso `.` e `?.`
 2. `nao`, `-` unário, `~` (não bit a bit)
 3. `*` `/` `%`
 4. `+` `-`
@@ -217,8 +227,9 @@ Segue exatamente a cadeia do analisador sintático:
 10. `|` (ou bit a bit)
 11. `e`
 12. `ou`
-13. `? :` (ternário)
-14. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
+13. `??` (coalescência de nulo)
+14. `? :` (ternário)
+15. `=` `+=` `-=` `*=` `/=` `%=` (atribuição, associativa à direita)
 
 ---
 
@@ -684,10 +695,11 @@ atrib_multi   = IDENT { "," IDENT } "=" valores ;   (* ex.: a, b = b, a *)
 
 bloco         = "{" { declaracao } "}" ;
 
-(* Precedência crescente, do topo (menor) para a base (maior) — ver §4.8 *)
+(* Precedência crescente, do topo (menor) para a base (maior) — ver §4.9 *)
 expressao     = atribuicao ;
 atribuicao    = ternario [ ( "=" | "+=" | "-=" | "*=" | "/=" | "%=" ) atribuicao ] ;
-ternario      = ou_logico [ "?" ternario ":" ternario ] ;
+ternario      = coalescencia [ "?" ternario ":" ternario ] ;
+coalescencia  = ou_logico { "??" ou_logico } ;
 ou_logico     = e_logico { "ou" e_logico } ;
 e_logico      = ou_bit { "e" ou_bit } ;
 ou_bit        = xor_bit { "|" xor_bit } ;
@@ -699,7 +711,7 @@ deslocamento  = soma { ( "<<" | ">>" ) soma } ;
 soma          = produto { ( "+" | "-" ) produto } ;
 produto       = unario { ( "*" | "/" | "%" ) unario } ;
 unario        = ( "nao" | "-" | "~" ) unario | chamada ;
-chamada       = primario { "(" [ args ] ")" | "[" expressao "]" | "." IDENT } ;
+chamada       = primario { "(" [ args ] ")" | "[" expressao "]" | ( "." | "?." ) IDENT } ;
 args          = expressao { "," expressao } ;
 
 primario      = NUMERO | TEXTO | TEXTO_INTERP

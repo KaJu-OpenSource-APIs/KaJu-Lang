@@ -1046,3 +1046,29 @@ fn erro_estouro_de_inteiro() {
     assert!(!ok);
     assert!(err.contains("erro[K222]"), "stderr: {err}");
 }
+
+#[test]
+fn acesso_opcional_e_coalescencia() {
+    let (out, err, ok) = rodar(
+        r#"
+        classe End { construtor(c) { isto.cidade = c } }
+        classe Usuario { construtor(ende) { isto.end = ende } }
+        var u1 = novo Usuario(novo End("Recife"))
+        var u2 = novo Usuario(nulo)
+        escreva(u1?.end?.cidade)
+        escreva(u2?.end?.cidade)
+        escreva(nulo?.qualquer)
+        escreva(nulo?.maiusculas())
+        escreva("oi"?.maiusculas())
+        escreva(nulo ?? "padrao")
+        escreva("Ana" ?? "padrao")
+        escreva(0 ?? 99)
+        escreva(u2?.end?.cidade ?? "sem cidade")
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "Recife\nnulo\nnulo\nnulo\nOI\npadrao\nAna\n0\nsem cidade\n"
+    );
+}
