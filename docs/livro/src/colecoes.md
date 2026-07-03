@@ -89,6 +89,16 @@ para cada chave em pessoa {
 }
 ```
 
+## Comparando coleções
+
+O operador `==` compara listas e dicionários pelo **conteúdo**, não pela identidade: duas coleções são iguais quando têm os mesmos elementos (nas mesmas posições, no caso das listas) ou os mesmos pares chave-valor. A comparação é recursiva, então funciona também com coleções aninhadas:
+
+```kaju
+escreva([1, 2] == [1, 2])                  // verdadeiro
+escreva({"a": 1} == {"a": 1})              // verdadeiro
+escreva([1, [2, 3]] == [1, [2, 3]])        // verdadeiro
+```
+
 ## A função intervalo
 
 Muitas vezes você precisa de uma lista de inteiros em sequência. A função `intervalo(inicio, fim)` gera essa lista, do `inicio` até logo **antes** de `fim`:

@@ -65,6 +65,20 @@ para i de 1 ate 5 {
 }
 ```
 
+Por padrão a variável avança de 1 em 1. Para mudar esse ritmo, acrescente `passo` seguido do incremento. Um passo negativo faz uma **contagem regressiva** — nesse caso o `de` é maior que o `ate`:
+
+```kaju
+para i de 0 ate 10 passo 2 {
+    escreva(i)      // 0, 2, 4, 6, 8, 10
+}
+
+para i de 10 ate 1 passo -1 {
+    escreva(i)      // 10, 9, 8, ..., 1
+}
+```
+
+O passo não pode ser zero — um laço que nunca avança nunca terminaria, então o kaju o rejeita com o erro K205.
+
 ## Repetição: para cada (iteração)
 
 Para percorrer os elementos de uma lista, use `para cada VAR em COLECAO`. A variável recebe, a cada volta, um elemento da coleção:

@@ -90,6 +90,48 @@ escreva(bicho.nome)   // Thor
 
 O mesmo vale ao atribuir um objeto a outra variável: as duas passam a apontar para o mesmo objeto.
 
+## Como o objeto vira texto: paraTexto
+
+Por padrão, ao imprimir um objeto o kaju mostra algo como `<objeto Ponto>` — informativo, mas pouco amigável. Se a classe define um método chamado `paraTexto` (sem argumentos, devolvendo um texto), o kaju passa a usá-lo sempre que precisa converter o objeto em texto: em `escreva`, na concatenação com `+`, na interpolação `$"..."` e até quando o objeto aparece dentro de uma lista ou dicionário impressos.
+
+```kaju
+classe Ponto {
+    construtor(x, y) {
+        isto.x = x
+        isto.y = y
+    }
+
+    metodo paraTexto() {
+        retorne $"({isto.x}, {isto.y})"
+    }
+}
+
+var p = novo Ponto(1, 2)
+escreva(p)                 // (1, 2)
+escreva("posição: " + p)   // posição: (1, 2)
+```
+
+## Comparando objetos: igual
+
+O operador `==` entre dois objetos normalmente pergunta se são **o mesmo objeto** (a mesma instância na memória), não se têm os mesmos dados. Para comparar por conteúdo, defina um método `igual(outro)` que receba o outro objeto e devolva verdadeiro ou falso. A partir daí, `==` (e `!=`) entre objetos daquela classe passam a chamar esse método:
+
+```kaju
+classe Ponto {
+    construtor(x, y) {
+        isto.x = x
+        isto.y = y
+    }
+
+    metodo igual(outro) {
+        retorne isto.x == outro.x e isto.y == outro.y
+    }
+}
+
+var a = novo Ponto(1, 2)
+var b = novo Ponto(1, 2)
+escreva(a == b)   // verdadeiro (mesmos dados, ainda que sejam objetos distintos)
+```
+
 ## Membros estáticos
 
 Os campos e métodos vistos até aqui pertencem a cada objeto. Um membro **estático**, marcado com `estatico`, pertence à classe como um todo — existe uma única cópia, compartilhada por todas as instâncias. Você o acessa pelo nome da classe, e não por um objeto.

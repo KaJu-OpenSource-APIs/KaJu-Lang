@@ -105,6 +105,24 @@ escreva(leiaArquivo("notas.txt"))
 
 Uma leitura pode falhar (arquivo inexistente, sem permissão). Envolva a chamada em `tente`/`capture` quando quiser tratar isso sem parar o programa — veja [Erros e exceções](./erros.md).
 
+## Verificação e testes
+
+| Função | O que faz |
+|--------|-----------|
+| `afirme(cond)` | Não faz nada se `cond` for verdadeira; se for falsa, falha com o erro `K231`. |
+| `afirme(cond, msg)` | Igual, mas anexa `msg` à mensagem da falha. |
+
+`afirme` é a base para escrever testes na própria linguagem kaju: você afirma o que espera e, se a expectativa não se cumprir, o programa aponta a falha.
+
+```kaju
+funcao dobro(x) { retorne x * 2 }
+
+afirme(dobro(3) == 6)
+afirme(dobro(0) == 0, "dobro de 0 deveria ser 0")
+```
+
+Como qualquer erro, uma afirmação falha pode ser capturada com `tente`/`capture` — veja [Erros e exceções](./erros.md).
+
 ## JSON
 
 | Função | O que faz |

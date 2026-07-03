@@ -114,6 +114,35 @@ tente {
 
 O objeto lançado chega intacto ao `capture`, com todos os campos que você definiu. Assim quem trata o erro pode decidir o que fazer com base em dados concretos, não apenas em uma mensagem.
 
+## Afirmando expectativas com afirme
+
+Quando você quer garantir que uma condição é verdadeira num certo ponto do programa, use `afirme`. Se a condição for verdadeira, ele não faz nada; se for falsa, interrompe com o erro **K231** ("afirmação falhou"). Você pode anexar uma mensagem explicando o que se esperava:
+
+```kaju
+afirme(saldo >= 0)
+afirme(tamanho(lista) > 0, "a lista não pode estar vazia")
+```
+
+`afirme` é a ferramenta natural para escrever **testes** em kaju: cada teste afirma um resultado esperado, e a suíte só passa se nenhuma afirmação falhar.
+
+```kaju
+funcao soma(a, b) { retorne a + b }
+
+afirme(soma(2, 3) == 5)
+afirme(soma(-1, 1) == 0, "soma com negativo falhou")
+escreva("todos os testes passaram")
+```
+
+Por ser um erro como os demais, uma afirmação falha também pode ser capturada com `tente`/`capture` — útil, por exemplo, para um executor de testes que reporta cada falha e segue adiante:
+
+```kaju
+tente {
+    afirme(2 + 2 == 5, "matemática quebrou")
+} capture (erro) {
+    escreva("teste falhou:", erro.mensagem)   // teste falhou: afirmação falhou: matemática quebrou
+}
+```
+
 ## Quando ninguém captura
 
 Um `lance` que não é envolvido por nenhum `tente` sobe até o topo do programa e vira o erro **K230**, exibido no mesmo formato detalhado dos demais diagnósticos. Isso é útil durante o desenvolvimento: um erro esquecido aparece com clareza, em vez de passar despercebido.

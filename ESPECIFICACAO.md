@@ -72,18 +72,18 @@ Começam por letra (incluindo acentuadas) ou `_`, seguidos de letras, dígitos o
 Válidos: `nome`, `total_geral`, `número`, `_temp`. Diferenciam maiúsculas de minúsculas.
 
 ### 2.3 Palavras-chave reservadas
-São 37 palavras reservadas:
+São 39 palavras reservadas:
 ```
 var        constante   funcao      retorne
 se         senao       senaose     escolha
 caso       padrao      enquanto    para
 cada       em          de          ate
-pare       continue    e           ou
-nao        verdadeiro  falso       nulo
-classe     herda       metodo      construtor
-novo       isto        base        estatico
-tente      capture     finalmente  lance
-importe    como
+passo      pare        continue    e
+ou         nao         verdadeiro  falso
+nulo       classe      herda       metodo
+construtor novo        isto        base
+estatico   tente       capture     finalmente
+lance      importe     como
 ```
 
 ### 2.4 Literais
@@ -136,7 +136,7 @@ $"..."                    (prefixo de texto interpolado, com {} internos)
 - Comparações são matemáticas: `5 == 5.0` → `verdadeiro`.
 - Ao imprimir, decimais mostram o ponto (`5.0`) para se distinguirem de inteiros (`5`).
 - `piso`, `teto`, `arredonde` retornam inteiro; `raiz` e `aleatorio` retornam decimal; `potencia` retorna inteiro quando base e expoente são inteiros (expoente ≥ 0), senão decimal; `absoluto` preserva o tipo.
-- Em caso de estouro de i64, a operação promove automaticamente para decimal.
+- Em caso de estouro de i64 em `+ - *` entre inteiros (resultado fora do alcance de -9223372036854775808 a 9223372036854775807), a operação falha com o erro `K222`, em vez de virar decimal silenciosamente.
 
 > Divisão inteira não usa `//` (que é comentário); use `piso(a / b)`.
 
@@ -159,6 +159,8 @@ Se nenhum lado é `texto`, o `+` é soma numérica. Os demais operadores aritmé
 
 ### 4.2 Comparação
 `==` `!=` `<` `>` `<=` `>=` — retornam `logico`.
+
+**Igualdade de coleções e objetos.** `==` e `!=` entre **listas** e entre **dicionários** comparam por **conteúdo** (igualdade estrutural, recursiva): `[1, 2] == [1, 2]` é `verdadeiro` e `{"a": 1} == {"a": 1}` é `verdadeiro`, ainda que sejam coleções distintas na memória. Já os **objetos** são comparados por **identidade** (mesma instância) por padrão — a menos que a classe defina o método especial `igual(outro)` (ver §7.5), caso em que `==` delega a ele.
 
 ### 4.3 Lógicos (em português)
 `e` (E lógico), `ou` (OU lógico), `nao` (negação). Com **curto-circuito**.
@@ -262,6 +264,14 @@ para i de 1 ate 5 {
     escreva(i)          // 1,2,3,4,5
 }
 
+// passo opcional (padrão 1); pode ser negativo para contagem regressiva
+para i de 0 ate 10 passo 2 {
+    escreva(i)          // 0,2,4,6,8,10
+}
+para i de 10 ate 1 passo -1 {
+    escreva(i)          // 10,9,8,...,1
+}
+
 // para cada (for-each) sobre lista ou dicionário
 para cada item em [10, 20, 30] {
     escreva(item)
@@ -284,6 +294,8 @@ escolha dia {
 // operador condicional (ternário)
 var rotulo = idade >= 18 ? "adulto" : "menor"
 ```
+
+No `para` numérico, `passo` define o incremento a cada volta: é opcional (padrão `1`) e pode ser negativo para contar de trás para frente (`para i de 10 ate 1 passo -1`). O passo **zero** é erro `K205`, pois o laço nunca terminaria.
 
 ---
 
@@ -401,6 +413,31 @@ escreva(Contador.total)   // 1
 - `Classe.campo` lê (ou, do lado esquerdo de `=`, escreve) um campo estático.
 - `Classe.metodo(...)` invoca um método estático; acessar um método estático sem `()` é erro (`K211`). Membro estático inexistente é `K213`.
 
+### 7.5 Métodos especiais (`paraTexto` e `igual`)
+Uma classe pode definir métodos com nomes convencionados que o interpretador chama automaticamente em certos contextos:
+
+- **`paraTexto()`** — sem argumentos, deve retornar `texto`. Define como o objeto é convertido para texto: passa a valer em `escreva(obj)`, na concatenação (`"x: " + obj`), na interpolação (`$"{obj}"`) e na impressão do objeto dentro de listas e dicionários. Sem `paraTexto`, o objeto aparece como `<objeto NomeDaClasse>`.
+- **`igual(outro)`** — recebe outro valor e deve retornar `logico`. Quando definido, o operador `==` (e `!=`) entre objetos daquela classe chama esse método em vez de comparar por identidade (ver §4.2).
+
+```kaju
+classe Ponto {
+    construtor(x, y) {
+        isto.x = x
+        isto.y = y
+    }
+    metodo paraTexto() {
+        retorne $"({isto.x}, {isto.y})"
+    }
+    metodo igual(outro) {
+        retorne isto.x == outro.x e isto.y == outro.y
+    }
+}
+
+var p = novo Ponto(1, 2)
+escreva(p)                         // (1, 2)
+escreva(novo Ponto(1, 2) == p)     // verdadeiro
+```
+
 ---
 
 ## 8. Exceções (tente/capture)
@@ -480,6 +517,7 @@ var p = novo geo.Ponto(1, 2)  // instancia uma classe qualificada pelo módulo
 | `paraTexto(x)` | Converte para `texto` |
 | `paraNumero(x)` | Converte `texto`/`logico` para `numero` |
 | `paraInteiro(x)` | Converte para inteiro (trunca decimais) |
+| `afirme(cond)` / `afirme(cond, msg)` | Falha com erro `K231` se `cond` for falsa; útil para testes |
 | `intervalo(inicio, fim)` | Lista de inteiros `[inicio, fim)` |
 | `agora()` | Segundos inteiros desde 1970 (tempo Unix) |
 | `relogio()` | Milissegundos desde 1970 (para medir durações) |
@@ -579,13 +617,13 @@ nota: a divisão por zero não é definida em kaju.
 ```
 
 ### 11.3 Categorias e códigos
-Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **47 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
+Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **49 códigos** hoje; cada um tem uma página de explicação (`kaju explique Kxxx`), então esta seção descreve as faixas em vez de listar todos.
 
 - **Núcleo — análise e semântica (`K0xx`, K001–K022).** É a faixa mais antiga e mistura:
   - **sintaxe** — construção mal formada (ex.: `K005` `se`/bloco sem `{`, `K004` parênteses/argumentos, `K010` dicionário, `K013` classe, `K014` `novo`, `K015` `tente/capture`, `K019` ternário sem `:`, `K021` `escolha`, `K022` atribuição múltipla);
   - **execução** que nasceu junto do núcleo — `K001` variável não definida, `K012` operação entre tipos incompatíveis (também usada por bits/deslocamento), `K020` divisão por zero.
 - **Léxico (`K1xx`, K101–K104).** Caractere inesperado, texto sem fechar aspas, número mal formado, escape/interpolação inválidos.
-- **Execução (`K2xx`, K201–K230).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K206` índice fora da lista, `K211` método estático sem `()`, `K212` método inexistente, `K213` membro estático inexistente, entre outros.
+- **Execução (`K2xx`, K201–K231).** Erros em tempo de execução: `K201` número de argumentos, `K203` tipo de argumento de método, `K205` limites/passo inválidos do laço `para` (inclusive passo zero), `K206` índice fora da lista, `K211` método estático sem `()`, `K212` método inexistente, `K213` membro estático inexistente, `K222` estouro de inteiro (soma/subtração/multiplicação cujo resultado passa do alcance de i64, entre -9223372036854775808 e 9223372036854775807, em vez de virar decimal silenciosamente), `K231` afirmação falhou (`afirme`), entre outros.
 
 > Cada código tem uma página longa consultável com `kaju explique <codigo>` (ex.: `kaju explique K016`), à la `rustc --explain`. Ao relatar um erro, o interpretador ainda sugere `dica: rode 'kaju explique Kxxx'`.
 
@@ -637,7 +675,7 @@ cmd_escolha   = "escolha" expressao "{"
                 { "caso" expressao { "," expressao } bloco }
                 [ "padrao" bloco ] "}" ;
 cmd_enquanto  = "enquanto" expressao bloco ;
-cmd_para_num  = "para" IDENT "de" expressao "ate" expressao bloco ;
+cmd_para_num  = "para" IDENT "de" expressao "ate" expressao [ "passo" expressao ] bloco ;
 cmd_para_cada = "para" "cada" IDENT "em" expressao bloco ;
 cmd_retorne   = "retorne" [ expressao ] ;
 cmd_tente     = "tente" bloco "capture" "(" IDENT ")" bloco
