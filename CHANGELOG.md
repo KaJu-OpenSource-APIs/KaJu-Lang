@@ -7,6 +7,8 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+## [1.0.0] - 2026-07-03
+
 ### Adicionado
 
 - **`kaju teste`**: executor de testes na própria linguagem — roda as funções
