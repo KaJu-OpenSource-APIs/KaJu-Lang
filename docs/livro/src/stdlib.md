@@ -133,7 +133,7 @@ Como qualquer erro, uma afirmação falha pode ser capturada com `tente`/`captur
 ```kaju
 var pessoa = {"nome": "Ana", "idade": 30}
 var texto = paraJSON(pessoa)
-escreva(texto)                  // {"nome":"Ana","idade":30}
+escreva(texto)                  // {"idade":30,"nome":"Ana"}  (chaves em ordem alfabética)
 
 var lida = deJSON(texto)
 escreva(lida.obtem("nome", "?"))   // Ana

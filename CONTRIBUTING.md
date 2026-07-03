@@ -39,6 +39,8 @@ Os testes de integração ficam em `tests/integracao.rs` e rodam programas `.kaj
 cargo test
 ```
 
+Também é possível escrever testes na própria linguagem kaju (com `afirme`) e rodá-los com `kaju teste testes/` — veja a pasta [`testes/`](testes/) e o capítulo "Testando" do Livro.
+
 ## Escopo da linguagem
 
 O kaju busca paridade com linguagens como Java e Python **no nível da linguagem nativa** (não em bibliotecas ou ecossistema). Propostas de sintaxe e semântica devem ser refletidas na [`ESPECIFICACAO.md`](ESPECIFICACAO.md), que é a fonte de verdade.

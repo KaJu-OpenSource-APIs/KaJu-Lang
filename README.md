@@ -82,6 +82,7 @@ kaju programa.kaju          # executa um arquivo (.kaju ou .kj)
 kaju                        # abre o REPL interativo
 kaju explique K016          # explica um código de erro em detalhe
 kaju teste testes/          # roda as funções 'teste*' de um arquivo ou pasta
+kaju --versao               # mostra a versão instalada
 kaju --ajuda                # lista os comandos disponíveis
 ```
 

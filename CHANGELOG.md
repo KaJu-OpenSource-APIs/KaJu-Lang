@@ -15,6 +15,18 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 - Seção de instalação reordenada (binário pronto primeiro, sem clonar; o `git clone`
   passa a aparecer só na parte de compilar da fonte).
 
+### Corrigido (documentação)
+
+- `tipos.md` dizia que estouro de inteiro "promove para decimal"; na verdade dá o
+  erro K222. Texto corrigido.
+- `stdlib.md`: saída de exemplo do `paraJSON` estava com as chaves fora da ordem
+  (a saída real é ordenada alfabeticamente).
+- `erros.md`: descrição das faixas de código de erro estava rígida demais e se
+  contradizia (K020/K001 são de execução mas ficam em K0xx).
+- README: `kaju --versao` faltava na lista de comandos da seção "Uso".
+- Especificação: descrições de `K211`/`K213` estavam restritas ao caso "estático";
+  agora refletem o uso geral.
+
 ## [1.0.0] - 2026-07-03
 
 ### Adicionado

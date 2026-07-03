@@ -23,7 +23,7 @@ As partes são sempre as mesmas:
 - o **trecho** mostra a linha envolvida, com `^^^^` marcando o intervalo exato;
 - as linhas `nota:` e `ajuda:` explicam o porquê e sugerem uma correção.
 
-Os códigos são organizados por categoria: os léxicos começam em `K1xx`, os de sintaxe em `K0xx` e os de execução em `K2xx`.
+Os códigos são agrupados em faixas: `K0xx` (análise e semântica), `K1xx` (léxico) e `K2xx` (execução). A fronteira não é rígida — alguns erros que só aparecem ao rodar, como divisão por zero (`K020`) e estouro de inteiro (`K222`), ficam na faixa `K0xx`/`K2xx` conforme a natureza. Todos têm explicação em `kaju explique <codigo>`.
 
 ## Consultando um código de erro
 
