@@ -68,14 +68,24 @@ Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adi
 
 ### Binário pronto (sem Rust)
 
-A cada versão publicada, binários pré-compilados para Linux, Windows e macOS ficam disponíveis na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases). Baixe o pacote do seu sistema, extraia e coloque o `kaju` num diretório do seu `PATH`:
+A cada versão publicada, binários pré-compilados para Linux, Windows e macOS ficam disponíveis na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases).
+
+**Linux x86_64 (servidor/VPS, via linha de comando):**
 
 ```bash
-chmod +x kaju
-mv kaju ~/.local/bin/            # sem sudo (garanta que ~/.local/bin está no PATH)
-# ou, para todos os usuários:
-sudo mv kaju /usr/local/bin/
+curl -L -o kaju.tar.gz https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases/latest/download/kaju-linux-x86_64.tar.gz
+tar -xzf kaju.tar.gz
+sudo install -m 755 kaju /usr/local/bin/kaju    # instala no PATH (com root)
+kaju --versao
 ```
+
+Sem `sudo`? Instale só para o seu usuário: `mkdir -p ~/.local/bin && mv kaju ~/.local/bin/` (garanta que `~/.local/bin` está no `PATH`).
+
+**macOS:** baixe `kaju-macos-arm64.tar.gz` (Apple Silicon) ou `kaju-macos-x86_64.tar.gz` (Intel), extraia e mova o `kaju` para o `PATH` como acima. Como o binário não é assinado, na primeira execução pode ser preciso liberá-lo: `xattr -d com.apple.quarantine kaju`.
+
+**Windows:** baixe `kaju-windows-x86_64.zip`, extraia o `kaju.exe` para uma pasta e adicione essa pasta ao `PATH` (Configurações → variáveis de ambiente).
+
+> Descompactar apenas coloca o binário na pasta atual; o que o torna disponível em qualquer lugar é **movê-lo para um diretório do `PATH`**.
 
 ## Uso
 

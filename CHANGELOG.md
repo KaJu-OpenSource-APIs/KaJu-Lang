@@ -10,6 +10,8 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 ### Documentação
 
 - README: seção "Destaques" cita os testes embutidos (`afirme` e `kaju teste`).
+- Instalação por linha de comando (download do binário via `curl`) no README e no
+  Livro, útil para servidores/VPS.
 
 ## [1.0.0] - 2026-07-03
 

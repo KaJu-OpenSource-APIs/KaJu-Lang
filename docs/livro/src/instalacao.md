@@ -33,12 +33,21 @@ cargo install --path .
 
 Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adiciona ao `PATH`. Depois, `kaju` funciona em qualquer terminal. (O `install.sh` também roda no Windows via WSL ou Git Bash.)
 
-## Já tenho o binário (sem Rust)
+## Binário pronto (sem Rust)
 
-Se você já tem um binário `kaju` pronto — o `target/release/kaju` gerado por `cargo build --release`, ou um distribuído por alguém —, basta colocá-lo num diretório do seu `PATH`:
+A cada versão, binários pré-compilados ficam na [página de Releases](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases). Num servidor ou VPS Linux (x86_64), dá para baixar e instalar direto pela linha de comando:
 
 ```bash
-cp target/release/kaju ~/.local/bin/kaju
+curl -L -o kaju.tar.gz https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases/latest/download/kaju-linux-x86_64.tar.gz
+tar -xzf kaju.tar.gz
+sudo install -m 755 kaju /usr/local/bin/kaju
+kaju --versao
+```
+
+Se você já tem um binário `kaju` em mãos — extraído de um Release, gerado por `cargo build --release`, ou passado por alguém —, o que o torna disponível em qualquer lugar é **movê-lo para um diretório do `PATH`**:
+
+```bash
+cp kaju ~/.local/bin/kaju        # sem sudo (garanta que ~/.local/bin está no PATH)
 chmod +x ~/.local/bin/kaju
 ```
 
