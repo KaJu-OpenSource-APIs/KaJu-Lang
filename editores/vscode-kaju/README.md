@@ -36,7 +36,7 @@ Se tiver o `vsce` (`npm install -g @vscode/vsce`), dá para gerar um pacote inst
 ```bash
 cd editores/vscode-kaju
 vsce package
-code --install-extension kaju-1.0.0.vsix
+code --install-extension kaju-1.1.0.vsix
 ```
 
 ## Sobre o ícone no explorador de arquivos

@@ -5,7 +5,7 @@ Todas as mudanças notáveis neste projeto são documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/)
 e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
-## [Não lançado]
+## [1.1.0] - 2026-07-03
 
 ### Documentação
 

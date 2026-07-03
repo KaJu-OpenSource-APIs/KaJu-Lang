@@ -2,7 +2,7 @@
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [Não lançado]
+## [1.1.0]
 
 ### Adicionado
 
