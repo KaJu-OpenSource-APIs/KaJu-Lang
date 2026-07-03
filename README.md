@@ -26,27 +26,52 @@ para cada fruta em frutas {
 
 ## Instalação
 
-O `kaju` é um executável nativo autossuficiente. Para **usar** o kaju você só precisa do binário no `PATH` — **não precisa ter Rust instalado**. O Rust só é necessário para **compilar** o kaju a partir do código-fonte.
+O `kaju` é um executável nativo autossuficiente: depois de instalado, **usar** o kaju não exige ter Rust instalado. O Rust é necessário apenas para **compilar** o kaju a partir do código-fonte — que é como se instala hoje, enquanto não há binários prontos publicados.
 
-### Usar (sem Rust)
+Em todos os casos, comece clonando o repositório:
 
-Com o binário `kaju` em mãos:
+```bash
+git clone https://github.com/USUARIO/kaju.git
+cd kaju
+```
+
+### Linux e macOS
+
+**Opção A — script de instalação (recomendado).** Compila e instala o comando `kaju` em `~/.local/bin`:
+
+```bash
+./install.sh
+```
+
+Precisa do [Rust](https://www.rust-lang.org/pt-BR) instalado. Para instalar para todos os usuários (em `/usr/local/bin`), use `PREFIX=/usr/local ./install.sh`. Se o script avisar que a pasta não está no `PATH`, ele mostra a linha exata para adicionar ao seu `~/.bashrc` ou `~/.zshrc`.
+
+**Opção B — via cargo.** Instala o comando `kaju` em `~/.cargo/bin` (que o `rustup` já coloca no `PATH`):
+
+```bash
+cargo install --path .
+```
+
+### Windows
+
+Instale o [Rust](https://www.rust-lang.org/pt-BR) com o `rustup` e, no PowerShell ou no Prompt de Comando, dentro da pasta do projeto:
+
+```powershell
+cargo install --path .
+```
+
+Isso gera `kaju.exe` em `%USERPROFILE%\.cargo\bin`, pasta que o `rustup` já adiciona ao `PATH`. Depois, `kaju` funciona em qualquer terminal.
+
+> Alternativa: `cargo build --release` gera o binário em `target\release\kaju.exe`, que você pode copiar para qualquer pasta do seu `PATH`. O `install.sh` também roda no Windows via **WSL** ou **Git Bash**.
+
+### Já tenho o binário (sem Rust)
+
+Se alguém te passou um binário `kaju` pronto (ou você o gerou com `cargo build --release`), basta colocá-lo no `PATH`:
 
 ```bash
 chmod +x kaju
-mv kaju ~/.local/bin/        # sem sudo (garanta que ~/.local/bin está no PATH)
+mv kaju ~/.local/bin/            # sem sudo (garanta que ~/.local/bin está no PATH)
 # ou, para todos os usuários:
 sudo mv kaju /usr/local/bin/
-```
-
-### Compilar a partir do código-fonte (precisa de [Rust](https://www.rust-lang.org/pt-BR))
-
-```bash
-# instala o comando 'kaju' no PATH (~/.cargo/bin)
-cargo install --path .
-
-# ou apenas gera o binário standalone (em target/release/kaju) para distribuir
-cargo build --release
 ```
 
 ## Uso
