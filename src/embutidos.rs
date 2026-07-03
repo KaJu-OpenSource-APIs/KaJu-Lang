@@ -162,7 +162,10 @@ fn ler_linha() -> Result<String, String> {
 
 fn leia(args: Vec<Valor>) -> Result<Valor, String> {
     if !args.is_empty() {
-        return Err(format!("'leia' não espera argumentos, mas recebeu {}", args.len()));
+        return Err(format!(
+            "'leia' não espera argumentos, mas recebeu {}",
+            args.len()
+        ));
     }
     Ok(Valor::Texto(ler_linha()?))
 }
@@ -192,7 +195,7 @@ fn leia_arquivo(args: Vec<Valor>) -> Result<Valor, String> {
             return Err(format!(
                 "'leiaArquivo' espera um 'texto' com o caminho, mas recebeu um '{}'",
                 outro.tipo_nome()
-            ))
+            ));
         }
     };
     std::fs::read_to_string(&caminho)
@@ -213,7 +216,7 @@ fn escreva_arquivo(args: Vec<Valor>) -> Result<Valor, String> {
             return Err(format!(
                 "'escrevaArquivo' espera um 'texto' no caminho, mas recebeu um '{}'",
                 outro.tipo_nome()
-            ))
+            ));
         }
     };
     let conteudo = args[1].para_texto();
@@ -269,7 +272,10 @@ fn arredonde(args: Vec<Valor>) -> Result<Valor, String> {
 
 fn potencia(args: Vec<Valor>) -> Result<Valor, String> {
     if args.len() != 2 {
-        return Err(format!("'potencia' espera 2 argumentos, mas recebeu {}", args.len()));
+        return Err(format!(
+            "'potencia' espera 2 argumentos, mas recebeu {}",
+            args.len()
+        ));
     }
     // inteiro^inteiro(>=0) -> inteiro (decimal em caso de estouro); senão decimal.
     if let (Valor::Inteiro(base), Valor::Inteiro(exp)) = (&args[0], &args[1]) {
@@ -288,7 +294,10 @@ fn potencia(args: Vec<Valor>) -> Result<Valor, String> {
 
 fn aleatorio(args: Vec<Valor>) -> Result<Valor, String> {
     if !args.is_empty() {
-        return Err(format!("'aleatorio' não espera argumentos, mas recebeu {}", args.len()));
+        return Err(format!(
+            "'aleatorio' não espera argumentos, mas recebeu {}",
+            args.len()
+        ));
     }
     Ok(Valor::Decimal(proximo_aleatorio()))
 }
@@ -296,7 +305,10 @@ fn aleatorio(args: Vec<Valor>) -> Result<Valor, String> {
 /// intervalo(inicio, fim) -> lista de inteiros [inicio, fim).
 fn intervalo(args: Vec<Valor>) -> Result<Valor, String> {
     if args.len() != 2 {
-        return Err(format!("'intervalo' espera 2 argumentos (inicio, fim), mas recebeu {}", args.len()));
+        return Err(format!(
+            "'intervalo' espera 2 argumentos (inicio, fim), mas recebeu {}",
+            args.len()
+        ));
     }
     let inicio = como_inteiro("intervalo", &args[0])?;
     let fim = como_inteiro("intervalo", &args[1])?;
@@ -307,7 +319,10 @@ fn intervalo(args: Vec<Valor>) -> Result<Valor, String> {
 /// agora() -> segundos inteiros desde 1970 (tempo Unix).
 fn agora(args: Vec<Valor>) -> Result<Valor, String> {
     if !args.is_empty() {
-        return Err(format!("'agora' não espera argumentos, mas recebeu {}", args.len()));
+        return Err(format!(
+            "'agora' não espera argumentos, mas recebeu {}",
+            args.len()
+        ));
     }
     let segundos = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -319,7 +334,10 @@ fn agora(args: Vec<Valor>) -> Result<Valor, String> {
 /// arredondePara(numero, casas) -> decimal arredondado a N casas decimais.
 fn arredonde_para(args: Vec<Valor>) -> Result<Valor, String> {
     if args.len() != 2 {
-        return Err(format!("'arredondePara' espera 2 argumentos (numero, casas), mas recebeu {}", args.len()));
+        return Err(format!(
+            "'arredondePara' espera 2 argumentos (numero, casas), mas recebeu {}",
+            args.len()
+        ));
     }
     let n = como_numero("arredondePara", &args[0])?;
     let casas = como_inteiro("arredondePara", &args[1])?;
@@ -333,7 +351,10 @@ fn arredonde_para(args: Vec<Valor>) -> Result<Valor, String> {
 /// relogio() -> milissegundos desde 1970 (útil para medir durações).
 fn relogio(args: Vec<Valor>) -> Result<Valor, String> {
     if !args.is_empty() {
-        return Err(format!("'relogio' não espera argumentos, mas recebeu {}", args.len()));
+        return Err(format!(
+            "'relogio' não espera argumentos, mas recebeu {}",
+            args.len()
+        ));
     }
     let ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -404,7 +425,7 @@ fn valor_para_json(v: &Valor) -> Result<serde_json::Value, String> {
             return Err(format!(
                 "não é possível converter '{}' para JSON",
                 outro.tipo_nome()
-            ))
+            ));
         }
     })
 }
@@ -416,7 +437,7 @@ fn de_json(args: Vec<Valor>) -> Result<Valor, String> {
             return Err(format!(
                 "'deJSON' espera um 'texto', mas recebeu um '{}'",
                 outro.tipo_nome()
-            ))
+            ));
         }
     };
     let v: serde_json::Value =
@@ -434,9 +455,9 @@ fn json_para_valor(v: serde_json::Value) -> Valor {
             None => Valor::Decimal(n.as_f64().unwrap_or(0.0)),
         },
         Value::String(s) => Valor::Texto(s),
-        Value::Array(a) => {
-            Valor::Lista(Rc::new(RefCell::new(a.into_iter().map(json_para_valor).collect())))
-        }
+        Value::Array(a) => Valor::Lista(Rc::new(RefCell::new(
+            a.into_iter().map(json_para_valor).collect(),
+        ))),
         Value::Object(o) => {
             let mut m = HashMap::new();
             for (k, val) in o {
@@ -450,7 +471,10 @@ fn json_para_valor(v: serde_json::Value) -> Valor {
 /// formateDecimal(numero, casas) -> texto com exatamente N casas decimais.
 fn formate_decimal(args: Vec<Valor>) -> Result<Valor, String> {
     if args.len() != 2 {
-        return Err(format!("'formateDecimal' espera 2 argumentos (numero, casas), mas recebeu {}", args.len()));
+        return Err(format!(
+            "'formateDecimal' espera 2 argumentos (numero, casas), mas recebeu {}",
+            args.len()
+        ));
     }
     let n = como_numero("formateDecimal", &args[0])?;
     let casas = como_inteiro("formateDecimal", &args[1])?;
@@ -486,7 +510,11 @@ fn extremo(nome: &str, args: &[Valor], escolher_maior: bool) -> Result<Valor, St
     let mut melhor_f = como_numero(nome, &args[0])?;
     for v in &args[1..] {
         let f = como_numero(nome, v)?;
-        let troca = if escolher_maior { f > melhor_f } else { f < melhor_f };
+        let troca = if escolher_maior {
+            f > melhor_f
+        } else {
+            f < melhor_f
+        };
         if troca {
             melhor = v.clone();
             melhor_f = f;

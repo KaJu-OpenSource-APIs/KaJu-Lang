@@ -154,8 +154,7 @@ impl Valor {
             Valor::Logico(b) => if *b { "verdadeiro" } else { "falso" }.to_string(),
             Valor::Nulo => "nulo".to_string(),
             Valor::Lista(itens) => {
-                let partes: Vec<String> =
-                    itens.borrow().iter().map(|v| v.para_texto()).collect();
+                let partes: Vec<String> = itens.borrow().iter().map(|v| v.para_texto()).collect();
                 format!("[{}]", partes.join(", "))
             }
             Valor::Dicionario(mapa) => {

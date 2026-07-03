@@ -1,7 +1,7 @@
 //! Ambiente de execução: escopos aninhados com suporte a closures.
 
-use std::collections::HashMap;
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::valor::Valor;

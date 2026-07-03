@@ -8,7 +8,8 @@
 /// Devolve a explicação detalhada de um código de erro, se houver.
 pub fn explicar(codigo: &str) -> Option<&'static str> {
     let texto = match codigo {
-        "K001" => "\
+        "K001" => {
+            "\
 K001 — variável não definida
 
 Você usou um nome que não foi declarado (nem com 'var'/'constante', nem
@@ -25,9 +26,11 @@ Correto:
 Quando o kaju encontra um nome parecido com um existente, ele sugere:
 \"você quis dizer 'idade'?\".
 
-Veja também: K002, K213.",
+Veja também: K002, K213."
+        }
 
-        "K002" => "\
+        "K002" => {
+            "\
 K002 — nome de variável esperado
 
 Depois de 'var' ou 'constante' vem o nome da variável.
@@ -38,9 +41,11 @@ Errado:
 Correto:
     var x = 10
 
-Veja também: K003.",
+Veja também: K003."
+        }
 
-        "K003" => "\
+        "K003" => {
+            "\
 K003 — esperava '=' na declaração
 
 Toda variável recebe um valor inicial com '='. Não existe declaração sem valor.
@@ -51,9 +56,11 @@ Errado:
 Correto:
     var x = 10
 
-Veja também: K002.",
+Veja também: K002."
+        }
 
-        "K004" => "\
+        "K004" => {
+            "\
 K004 — parênteses ou parâmetros
 
 Falta '(', ')' ou o nome de um parâmetro numa função, chamada ou indexação.
@@ -64,9 +71,11 @@ Errado:
 Correto:
     funcao f(a) { }
 
-Veja também: K201.",
+Veja também: K201."
+        }
 
-        "K005" => "\
+        "K005" => {
+            "\
 K005 — esperava '{' ou '}'
 
 Blocos em kaju usam chaves. Um 'se', 'enquanto', 'para', 'funcao', 'classe'
@@ -79,9 +88,11 @@ Errado:
 Correto:
     se idade >= 18 {
         escreva(\"maior\")
-    }",
+    }"
+        }
 
-        "K006" => "\
+        "K006" => {
+            "\
 K006 — laço 'para' mal formado
 
 As duas formas válidas são a contagem numérica e a iteração sobre coleções.
@@ -93,9 +104,11 @@ Correto:
     para i de 1 ate 10 { ... }
     para cada item em lista { ... }
 
-Veja também: K205.",
+Veja também: K205."
+        }
 
-        "K007" => "\
+        "K007" => {
+            "\
 K007 — atribuição inválida
 
 Só dá para atribuir a uma variável, a um índice ('a[i] = x') ou a um campo
@@ -108,9 +121,11 @@ Correto:
     var a = 3
     a = x
 
-Veja também: K009, K217.",
+Veja também: K009, K217."
+        }
 
-        "K008" => "\
+        "K008" => {
+            "\
 K008 — esperava uma expressão
 
 O interpretador esperava um valor (número, texto, nome, chamada...) e
@@ -123,9 +138,11 @@ Errado:
 
 Correto:
     escreva(2 + 3)
-    var x = 10",
+    var x = 10"
+        }
 
-        "K009" => "\
+        "K009" => {
+            "\
 K009 — reatribuição de constante
 
 Valores declarados com 'constante' não podem ser alterados depois.
@@ -138,9 +155,11 @@ Correto:
     var raio = 3.14
     raio = 4          // 'var' permite alterar
 
-Veja também: K007.",
+Veja também: K007."
+        }
 
-        "K010" => "\
+        "K010" => {
+            "\
 K010 — dicionário mal formado
 
 As chaves de um dicionário são textos, separadas do valor por ':'.
@@ -151,9 +170,11 @@ Errado:
 Correto:
     {\"nome\": \"Ana\"}
 
-Veja também: K210.",
+Veja também: K210."
+        }
 
-        "K011" => "\
+        "K011" => {
+            "\
 K011 — nome esperado após '.'
 
 Depois de '.' vem o nome de um campo ou método.
@@ -164,9 +185,11 @@ Errado:
 Correto:
     obj.nome
 
-Veja também: K212, K213.",
+Veja também: K212, K213."
+        }
 
-        "K012" => "\
+        "K012" => {
+            "\
 K012 — operação entre tipos incompatíveis
 
 Operadores aritméticos ('-', '*', '/', '%') exigem números dos dois lados.
@@ -179,9 +202,11 @@ Correto:
     \"abc\" + paraTexto(1)   // junta textos -> \"abc1\"
     10 - 1                    // aritmética entre números
 
-Veja também: K203.",
+Veja também: K203."
+        }
 
-        "K013" => "\
+        "K013" => {
+            "\
 K013 — corpo de classe mal formado
 
 Dentro de 'classe' só cabem 'construtor', 'metodo' e membros 'estatico'.
@@ -197,9 +222,11 @@ Correto:
         metodo falar() { escreva(isto.nome) }
     }
 
-Veja também: K214.",
+Veja também: K214."
+        }
 
-        "K014" => "\
+        "K014" => {
+            "\
 K014 — uso de 'novo' mal formado
 
 'novo' cria uma instância: 'novo NomeDaClasse(argumentos)'.
@@ -210,9 +237,11 @@ Errado:
 Correto:
     novo Gato(\"Félix\")
 
-Veja também: K218.",
+Veja também: K218."
+        }
 
-        "K015" => "\
+        "K015" => {
+            "\
 K015 — 'tente' mal formado
 
 Um 'tente' precisa de um 'capture (erro) { ... }'; 'finalmente' é opcional.
@@ -223,9 +252,11 @@ Errado:
 Correto:
     tente { ... } capture (erro) { ... } finalmente { ... }
 
-Veja também: K230.",
+Veja também: K230."
+        }
 
-        "K016" => "\
+        "K016" => {
+            "\
 K016 — comando de fluxo fora de contexto
 
 'pare' e 'continue' só fazem sentido dentro de um laço ('enquanto'/'para'),
@@ -239,9 +270,11 @@ Errado:
 Correto:
     funcao f() {
         retorne 5
-    }",
+    }"
+        }
 
-        "K017" => "\
+        "K017" => {
+            "\
 K017 — 'importe' mal formado
 
 O caminho é um texto entre aspas; o apelido (opcional) vem após 'como'.
@@ -253,9 +286,11 @@ Correto:
     importe \"utilidades.kaju\"
     importe \"mat.kaju\" como mat
 
-Veja também: K220.",
+Veja também: K220."
+        }
 
-        "K018" => "\
+        "K018" => {
+            "\
 K018 — erro na interpolação de texto
 
 A expressão dentro de {chaves} num texto $\"...\" é inválida. Verifique-a; para
@@ -268,9 +303,11 @@ Correto:
     escreva($\"total: {a + b}\")
     escreva($\"use {{chaves}} assim\")   // -> use {chaves} assim
 
-Veja também: K104.",
+Veja também: K104."
+        }
 
-        "K019" => "\
+        "K019" => {
+            "\
 K019 — operador condicional sem ':'
 
 A forma é 'condicao ? valorSeVerdadeiro : valorSeFalso'.
@@ -279,9 +316,11 @@ Errado:
     x > 0 ? \"pos\"
 
 Correto:
-    x > 0 ? \"pos\" : \"neg\"",
+    x > 0 ? \"pos\" : \"neg\""
+        }
 
-        "K020" => "\
+        "K020" => {
+            "\
 K020 — divisão por zero
 
 Dividir (ou tirar o resto) por zero não é definido.
@@ -294,9 +333,11 @@ Correto:
         escreva(10 / divisor)
     } senao {
         escreva(\"não dá pra dividir por zero\")
-    }",
+    }"
+        }
 
-        "K021" => "\
+        "K021" => {
+            "\
 K021 — 'escolha' mal formado
 
 Dentro de 'escolha' só cabem 'caso' (com um ou mais valores) e um 'padrao'.
@@ -311,9 +352,11 @@ Correto:
         caso 1 { ... }
         caso 2, 3 { ... }
         padrao { ... }
-    }",
+    }"
+        }
 
-        "K022" => "\
+        "K022" => {
+            "\
 K022 — desempacotamento incompatível
 
 O número de nomes precisa bater com o de valores (ou com o tamanho da lista),
@@ -324,9 +367,11 @@ Errado:
 
 Correto:
     var a, b = [1, 2]
-    var a, b, c = 1, 2, 3",
+    var a, b, c = 1, 2, 3"
+        }
 
-        "K101" => "\
+        "K101" => {
+            "\
 K101 — caractere inesperado
 
 Apareceu um símbolo que não faz parte do kaju. Confira erros de digitação.
@@ -338,9 +383,11 @@ Errado:
 
 Correto:
     se a != b { ... }
-    se nao a { ... }",
+    se nao a { ... }"
+        }
 
-        "K102" => "\
+        "K102" => {
+            "\
 K102 — comentário de bloco não fechado
 
 Um comentário '/*' precisa terminar com '*/'.
@@ -351,9 +398,11 @@ Errado:
 Correto:
     /* isto é um comentário */
 
-Veja também: K103.",
+Veja também: K103."
+        }
 
-        "K103" => "\
+        "K103" => {
+            "\
 K103 — texto não fechado
 
 Um texto \"...\" precisa fechar as aspas na mesma linha.
@@ -364,9 +413,11 @@ Errado:
 Correto:
     escreva(\"olá\")
 
-Veja também: K104.",
+Veja também: K104."
+        }
 
-        "K104" => "\
+        "K104" => {
+            "\
 K104 — texto interpolado não fechado
 
 Um texto $\"...\" (ou uma chave '{' dentro dele) não foi fechado na mesma linha.
@@ -377,9 +428,11 @@ Errado:
 Correto:
     escreva($\"olá {nome}\")
 
-Veja também: K018, K103.",
+Veja também: K018, K103."
+        }
 
-        "K201" => "\
+        "K201" => {
+            "\
 K201 — número de argumentos incorreto
 
 Você chamou uma função (ou método/construtor) com uma quantidade de
@@ -392,9 +445,11 @@ Errado:
 Correto:
     soma(1, 2)
 
-Veja também: K204.",
+Veja também: K204."
+        }
 
-        "K202" => "\
+        "K202" => {
+            "\
 K202 — valor não iterável em 'para cada'
 
 'para cada' percorre listas e dicionários.
@@ -405,9 +460,11 @@ Errado:
 Correto:
     para cada x em [1, 2, 3] { ... }
 
-Veja também: K205.",
+Veja também: K205."
+        }
 
-        "K203" => "\
+        "K203" => {
+            "\
 K203 — erro numa função embutida
 
 Uma função da biblioteca padrão recebeu algo inesperado (tipo ou quantidade de
@@ -421,9 +478,11 @@ Correto:
     raiz(9)
     \"ana\".maiusculas()
 
-Veja também: K012, K201.",
+Veja também: K012, K201."
+        }
 
-        "K204" => "\
+        "K204" => {
+            "\
 K204 — tentativa de chamar algo que não é função
 
 Você usou '( )' de chamada em um valor que não é uma função.
@@ -436,9 +495,11 @@ Correto:
     var dobro = funcao(n) { retorne n * 2 }
     dobro(10)
 
-Veja também: K201, K211.",
+Veja também: K201, K211."
+        }
 
-        "K205" => "\
+        "K205" => {
+            "\
 K205 — laço 'para' precisa de números
 
 Os limites de 'para i de A ate B' devem ser números. O passo (em
@@ -453,9 +514,11 @@ Correto:
     para i de 1 ate 10 { ... }
     para i de 10 ate 1 passo -1 { ... }   // contagem regressiva
 
-Veja também: K006, K202.",
+Veja também: K006, K202."
+        }
 
-        "K206" => "\
+        "K206" => {
+            "\
 K206 — índice fora da lista/texto
 
 Você acessou uma posição que não existe. Os índices começam em 0 e vão até
@@ -468,9 +531,11 @@ Errado:
 Correto:
     escreva(l[0], l[tamanho(l) - 1])
 
-Veja também: K207, K209.",
+Veja também: K207, K209."
+        }
 
-        "K207" => "\
+        "K207" => {
+            "\
 K207 — índice inválido
 
 Índices de lista e texto devem ser inteiros não negativos (0, 1, 2, ...).
@@ -483,9 +548,11 @@ Correto:
     lista[0]
     lista[tamanho(lista) - 1]
 
-Veja também: K206, K209.",
+Veja também: K206, K209."
+        }
 
-        "K208" => "\
+        "K208" => {
+            "\
 K208 — chave inexistente no dicionário
 
 Você leu uma chave que não está no dicionário. Para evitar o erro, verifique
@@ -499,9 +566,11 @@ Correto:
     escreva(d.obtem(\"b\", 0))       // 0 se não existir
     se d.tem(\"b\") { escreva(d[\"b\"]) }
 
-Veja também: K210.",
+Veja também: K210."
+        }
 
-        "K209" => "\
+        "K209" => {
+            "\
 K209 — valor não indexável
 
 Apenas listas, textos e dicionários aceitam indexação com [].
@@ -513,9 +582,11 @@ Correto:
     [10, 20, 30][0]
     \"abc\"[0]
 
-Veja também: K206, K210.",
+Veja também: K206, K210."
+        }
 
-        "K210" => "\
+        "K210" => {
+            "\
 K210 — chave de dicionário deve ser texto
 
 As chaves de um dicionário são textos.
@@ -527,9 +598,11 @@ Errado:
 Correto:
     escreva(d[\"3\"])
 
-Veja também: K010, K208.",
+Veja também: K010, K208."
+        }
 
-        "K211" => "\
+        "K211" => {
+            "\
 K211 — método usado sem chamá-lo
 
 Métodos precisam ser chamados com parênteses. Sem '( )', você está apenas
@@ -541,9 +614,11 @@ Errado:
 Correto:
     escreva(lista.tamanho())
 
-Veja também: K204, K212.",
+Veja também: K204, K212."
+        }
 
-        "K212" => "\
+        "K212" => {
+            "\
 K212 — método inexistente
 
 O tipo (ou a classe do objeto) não tem um método com esse nome. Confira a
@@ -556,9 +631,11 @@ Errado:
 Correto:
     [1, 2].inverta()
 
-Veja também: K211, K213.",
+Veja também: K211, K213."
+        }
 
-        "K213" => "\
+        "K213" => {
+            "\
 K213 — membro inexistente no objeto
 
 O objeto não tem esse campo nem método. Confira o nome e a classe do objeto.
@@ -572,9 +649,11 @@ Errado:
 Correto:
     escreva(g.nome)
 
-Veja também: K212, K214.",
+Veja também: K212, K214."
+        }
 
-        "K214" => "\
+        "K214" => {
+            "\
 K214 — 'isto' fora de um método
 
 'isto' referencia a instância atual e só existe dentro de um 'metodo' ou
@@ -589,9 +668,11 @@ Correto:
         metodo falar() { escreva(isto.nome) }
     }
 
-Veja também: K213, K215.",
+Veja também: K213, K215."
+        }
 
-        "K215" => "\
+        "K215" => {
+            "\
 K215 — uso inválido de 'base'
 
 'base' só pode ser usado dentro de um método, para chamar a superclasse
@@ -608,9 +689,11 @@ Correto:
         metodo falar() { base.falar() }
     }
 
-Veja também: K214, K216.",
+Veja também: K214, K216."
+        }
 
-        "K216" => "\
+        "K216" => {
+            "\
 K216 — superclasse inválida
 
 O nome após 'herda' precisa ser uma classe já definida.
@@ -622,9 +705,11 @@ Correto:
     classe Animal { ... }
     classe Gato herda Animal { ... }
 
-Veja também: K215, K218.",
+Veja também: K215, K218."
+        }
 
-        "K217" => "\
+        "K217" => {
+            "\
 K217 — atribuição de campo em não-objeto
 
 Só objetos (e classes, para campos estáticos) têm campos atribuíveis com '.'.
@@ -638,9 +723,11 @@ Correto:
     var p = novo Ponto()
     p.campo = 1
 
-Veja também: K007, K213.",
+Veja também: K007, K213."
+        }
 
-        "K218" => "\
+        "K218" => {
+            "\
 K218 — 'novo' usado com algo que não é classe
 
 O operador 'novo' cria uma instância e precisa de um nome de classe.
@@ -653,9 +740,11 @@ Correto:
     classe Ponto { construtor(a) { isto.a = a } }
     novo Ponto(1)
 
-Veja também: K014, K216.",
+Veja também: K014, K216."
+        }
 
-        "K220" => "\
+        "K220" => {
+            "\
 K220 — arquivo de módulo não encontrado
 
 Um 'importe' aponta para um arquivo que não existe. O caminho é relativo ao
@@ -667,9 +756,11 @@ Errado:
 Correto:
     importe \"utilidades.kaju\"   // arquivo ao lado deste
 
-Veja também: K017, K221.",
+Veja também: K017, K221."
+        }
 
-        "K221" => "\
+        "K221" => {
+            "\
 K221 — erro dentro de um módulo importado
 
 O 'importe' encontrou o arquivo, mas ocorreu um erro ao executá-lo. A nota do
@@ -683,9 +774,11 @@ Correto:
     // corrija o erro dentro de util.kaju e importe de novo
     importe \"util.kaju\"
 
-Veja também: K220.",
+Veja também: K220."
+        }
 
-        "K222" => "\
+        "K222" => {
+            "\
 K222 — estouro de inteiro
 
 Uma operação com inteiros (soma, subtração ou multiplicação) produziu um valor
@@ -700,9 +793,11 @@ Como evitar:
     // trabalhe com decimais quando esperar números muito grandes
     var x = 9223372036854775807.0 + 1.0
 
-Veja também: K020.",
+Veja também: K020."
+        }
 
-        "K230" => "\
+        "K230" => {
+            "\
 K230 — erro lançado e não capturado
 
 Um 'lance' chegou ao topo do programa sem ser tratado. Envolva o código que
@@ -718,9 +813,11 @@ Correto:
         escreva(\"tratei:\", erro.mensagem)
     }
 
-Veja também: K015.",
+Veja também: K015."
+        }
 
-        "K231" => "\
+        "K231" => {
+            "\
 K231 — afirmação falhou
 
 A função 'afirme(condicao)' verifica que a condição é verdadeira; se for falsa,
@@ -737,7 +834,8 @@ Correto:
 
 Como um erro de runtime, pode ser capturado com 'tente ... capture'.
 
-Veja também: K230.",
+Veja também: K230."
+        }
 
         _ => return None,
     };
@@ -747,12 +845,11 @@ Veja também: K230.",
 /// Lista os códigos que têm explicação detalhada.
 pub fn codigos_conhecidos() -> &'static [&'static str] {
     &[
-        "K001", "K002", "K003", "K004", "K005", "K006", "K007", "K008", "K009",
-        "K010", "K011", "K012", "K013", "K014", "K015", "K016", "K017", "K018",
-        "K019", "K020", "K021", "K022", "K101", "K102", "K103", "K104", "K201",
-        "K202", "K203", "K204", "K205", "K206", "K207", "K208", "K209", "K210",
-        "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218", "K220",
-        "K221", "K222", "K230", "K231",
+        "K001", "K002", "K003", "K004", "K005", "K006", "K007", "K008", "K009", "K010", "K011",
+        "K012", "K013", "K014", "K015", "K016", "K017", "K018", "K019", "K020", "K021", "K022",
+        "K101", "K102", "K103", "K104", "K201", "K202", "K203", "K204", "K205", "K206", "K207",
+        "K208", "K209", "K210", "K211", "K212", "K213", "K214", "K215", "K216", "K217", "K218",
+        "K220", "K221", "K222", "K230", "K231",
     ]
 }
 

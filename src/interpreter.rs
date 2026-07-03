@@ -8,7 +8,7 @@ use std::rc::Rc;
 use crate::ambiente::{Ambiente, ResultadoAtrib};
 use crate::ast::{Cmd, Expr, OpBinaria, OpLogica, OpUnaria};
 use crate::embutidos;
-use crate::erros::{sugerir_nome, Diagnostico};
+use crate::erros::{Diagnostico, sugerir_nome};
 use crate::lexer::Lexer;
 use crate::metodos;
 use crate::parser::Parser;
@@ -128,7 +128,12 @@ impl Interpretador {
     }
 
     /// Embrulha um erro ocorrido dentro de um módulo, apontando para o `importe`.
-    fn envolver_erro_modulo(&self, caminho: &str, interno: &Diagnostico, span: &Span) -> Diagnostico {
+    fn envolver_erro_modulo(
+        &self,
+        caminho: &str,
+        interno: &Diagnostico,
+        span: &Span,
+    ) -> Diagnostico {
         Diagnostico::novo(
             "K221",
             format!("erro ao importar \"{}\"", caminho),
@@ -247,7 +252,7 @@ impl Interpretador {
                                 format!("'{}' não é uma classe", nome_sup),
                                 span.clone(),
                             )
-                            .com_rotulo("só é possível herdar de uma classe"))
+                            .com_rotulo("só é possível herdar de uma classe"));
                         }
                         None => {
                             return Err(Diagnostico::novo(
@@ -255,7 +260,7 @@ impl Interpretador {
                                 format!("a superclasse '{}' não foi definida", nome_sup),
                                 span.clone(),
                             )
-                            .com_rotulo("esta classe não existe"))
+                            .com_rotulo("esta classe não existe"));
                         }
                     },
                     None => None,
@@ -294,7 +299,8 @@ impl Interpretador {
                     campos_estaticos: RefCell::new(campos),
                     superclasse: super_rc,
                 });
-                amb.borrow_mut().definir(nome.clone(), Valor::Classe(classe), false);
+                amb.borrow_mut()
+                    .definir(nome.clone(), Valor::Classe(classe), false);
                 Ok(Fluxo::Segue)
             }
             Cmd::DeclVarMulti {
@@ -309,7 +315,11 @@ impl Interpretador {
                 }
                 Ok(Fluxo::Segue)
             }
-            Cmd::AtribMulti { nomes, valores, span } => {
+            Cmd::AtribMulti {
+                nomes,
+                valores,
+                span,
+            } => {
                 // avalia TODOS os valores antes de atribuir (permite troca: a, b = b, a)
                 let vals = self.valores_multiplos(valores, amb, nomes.len())?;
                 for (nome, v) in nomes.iter().zip(vals) {
@@ -321,7 +331,7 @@ impl Interpretador {
                                 format!("não é possível reatribuir a constante '{}'", nome),
                                 span.clone(),
                             )
-                            .com_rotulo("esta é uma constante"))
+                            .com_rotulo("esta é uma constante"));
                         }
                         ResultadoAtrib::NaoExiste => {
                             return Err(Diagnostico::novo(
@@ -329,7 +339,7 @@ impl Interpretador {
                                 format!("a variável '{}' não foi definida", nome),
                                 span.clone(),
                             )
-                            .com_ajuda(format!("use 'var {} = ...' para criá-la", nome)))
+                            .com_ajuda(format!("use 'var {} = ...' para criá-la", nome)));
                         }
                     }
                 }
@@ -382,10 +392,15 @@ impl Interpretador {
                 // A variável do laço é inteira quando todos os limites e o passo são inteiros.
                 let inteiros = matches!(de_v, Valor::Inteiro(_))
                     && matches!(ate_v, Valor::Inteiro(_))
-                    && passo_v.as_ref().is_none_or(|p| matches!(p, Valor::Inteiro(_)));
+                    && passo_v
+                        .as_ref()
+                        .is_none_or(|p| matches!(p, Valor::Inteiro(_)));
                 let inicio = de_v.como_f64().unwrap();
                 let fim = ate_v.como_f64().unwrap();
-                let incremento = passo_v.as_ref().map(|p| p.como_f64().unwrap()).unwrap_or(1.0);
+                let incremento = passo_v
+                    .as_ref()
+                    .map(|p| p.como_f64().unwrap())
+                    .unwrap_or(1.0);
                 if incremento == 0.0 {
                     return Err(Diagnostico::novo(
                         "K205",
@@ -597,7 +612,11 @@ impl Interpretador {
                 }
                 outro => Err(Diagnostico::novo(
                     "K022",
-                    format!("não é possível desempacotar um '{}' (esperava uma lista de {})", outro.tipo_nome(), n),
+                    format!(
+                        "não é possível desempacotar um '{}' (esperava uma lista de {})",
+                        outro.tipo_nome(),
+                        n
+                    ),
                     span,
                 )
                 .com_rotulo("isto não é uma lista")),
@@ -607,7 +626,10 @@ impl Interpretador {
                 return Err(Diagnostico::novo(
                     "K022",
                     format!("são {} nomes mas {} valores", n, valores.len()),
-                    valores.first().map(|e| e.span()).unwrap_or_else(|| Span::novo(1, 1, 1)),
+                    valores
+                        .first()
+                        .map(|e| e.span())
+                        .unwrap_or_else(|| Span::novo(1, 1, 1)),
                 )
                 .com_rotulo("as quantidades precisam bater"));
             }
@@ -632,7 +654,11 @@ impl Interpretador {
         } else {
             Err(Diagnostico::novo(
                 "K205",
-                format!("{} precisa ser um 'numero', mas é um '{}'", contexto, v.tipo_nome()),
+                format!(
+                    "{} precisa ser um 'numero', mas é um '{}'",
+                    contexto,
+                    v.tipo_nome()
+                ),
                 expr.span(),
             )
             .com_rotulo("esperava um 'numero' aqui"))
@@ -751,11 +777,12 @@ impl Interpretador {
                     )
                     .com_rotulo("esta é uma constante")
                     .com_ajuda("declare com 'var' em vez de 'constante' se precisar alterá-la")),
-                    ResultadoAtrib::NaoExiste => Err(self.erro_var_indefinida(nome, span, amb)
-                        .com_ajuda(format!(
+                    ResultadoAtrib::NaoExiste => {
+                        Err(self.erro_var_indefinida(nome, span, amb).com_ajuda(format!(
                             "para criar uma variável nova, use 'var {} = ...'",
                             nome
-                        ))),
+                        )))
+                    }
                 }
             }
             Expr::Chamada { alvo, args, span } => {
@@ -778,7 +805,10 @@ impl Interpretador {
                     // Métodos de ordem superior de lista precisam chamar funções kaju,
                     // então são tratados aqui (onde há acesso ao interpretador).
                     if let Valor::Lista(l) = &recv {
-                        if matches!(membro.as_str(), "mapeie" | "filtre" | "reduza" | "ordenePor") {
+                        if matches!(
+                            membro.as_str(),
+                            "mapeie" | "filtre" | "reduza" | "ordenePor"
+                        ) {
                             return self.metodo_lista_superior(l.clone(), membro, vals, span);
                         }
                     }
@@ -789,7 +819,10 @@ impl Interpretador {
                             Some(f) => self.chamar(Valor::Funcao(f), vals, span),
                             None => Err(Diagnostico::novo(
                                 "K212",
-                                format!("a classe '{}' não tem o método estático '{}'", c.nome, membro),
+                                format!(
+                                    "a classe '{}' não tem o método estático '{}'",
+                                    c.nome, membro
+                                ),
                                 span.clone(),
                             )
                             .com_rotulo("método estático inexistente")),
@@ -828,7 +861,10 @@ impl Interpretador {
                         }
                         Err(Diagnostico::novo(
                             "K213",
-                            format!("a classe '{}' não tem o membro estático '{}'", c.nome, membro),
+                            format!(
+                                "a classe '{}' não tem o membro estático '{}'",
+                                c.nome, membro
+                            ),
                             span.clone(),
                         )
                         .com_rotulo("membro estático inexistente"))
@@ -860,7 +896,10 @@ impl Interpretador {
                     }
                     _ => Err(Diagnostico::novo(
                         "K211",
-                        format!("'{}' só pode ser usado como método, chamando-o com ()", membro),
+                        format!(
+                            "'{}' só pode ser usado como método, chamando-o com ()",
+                            membro
+                        ),
                         span.clone(),
                     )
                     .com_rotulo("falta chamar o método")
@@ -882,12 +921,17 @@ impl Interpretador {
                     }
                     // Classe.campoEstatico = valor
                     Valor::Classe(c) => {
-                        c.campos_estaticos.borrow_mut().insert(membro.clone(), v.clone());
+                        c.campos_estaticos
+                            .borrow_mut()
+                            .insert(membro.clone(), v.clone());
                         Ok(v)
                     }
                     outro => Err(Diagnostico::novo(
                         "K217",
-                        format!("não é possível atribuir um campo em '{}'", outro.tipo_nome()),
+                        format!(
+                            "não é possível atribuir um campo em '{}'",
+                            outro.tipo_nome()
+                        ),
                         span.clone(),
                     )
                     .com_rotulo("só objetos têm campos")),
@@ -915,15 +959,35 @@ impl Interpretador {
     ) -> Result<(), Diagnostico> {
         let tem_var = params.last().map(|p| p.variadico).unwrap_or(false);
         let fixos = params.len() - if tem_var { 1 } else { 0 };
-        let obrig = params.iter().take(fixos).filter(|p| p.padrao.is_none()).count();
+        let obrig = params
+            .iter()
+            .take(fixos)
+            .filter(|p| p.padrao.is_none())
+            .count();
 
         if args.len() < obrig || (!tem_var && args.len() > fixos) {
             let msg = if tem_var {
-                format!("'{}' espera pelo menos {} argumento(s), mas recebeu {}", nome_fn, obrig, args.len())
+                format!(
+                    "'{}' espera pelo menos {} argumento(s), mas recebeu {}",
+                    nome_fn,
+                    obrig,
+                    args.len()
+                )
             } else if obrig == fixos {
-                format!("'{}' espera {} argumento(s), mas recebeu {}", nome_fn, fixos, args.len())
+                format!(
+                    "'{}' espera {} argumento(s), mas recebeu {}",
+                    nome_fn,
+                    fixos,
+                    args.len()
+                )
             } else {
-                format!("'{}' espera de {} a {} argumento(s), mas recebeu {}", nome_fn, obrig, fixos, args.len())
+                format!(
+                    "'{}' espera de {} a {} argumento(s), mas recebeu {}",
+                    nome_fn,
+                    obrig,
+                    fixos,
+                    args.len()
+                )
             };
             return Err(Diagnostico::novo("K201", msg, span.clone())
                 .com_rotulo("número de argumentos incorreto"));
@@ -942,9 +1006,11 @@ impl Interpretador {
         }
         if tem_var {
             let resto: Vec<Valor> = it.collect();
-            escopo
-                .borrow_mut()
-                .definir(params[fixos].nome.clone(), Valor::Lista(Rc::new(RefCell::new(resto))), false);
+            escopo.borrow_mut().definir(
+                params[fixos].nome.clone(),
+                Valor::Lista(Rc::new(RefCell::new(resto))),
+                false,
+            );
         }
         Ok(())
     }
@@ -999,7 +1065,10 @@ impl Interpretador {
             }),
             outro => Err(Diagnostico::novo(
                 "K204",
-                format!("não é possível chamar um '{}' como função", outro.tipo_nome()),
+                format!(
+                    "não é possível chamar um '{}' como função",
+                    outro.tipo_nome()
+                ),
                 span.clone(),
             )
             .com_rotulo("isto não é uma função")),
@@ -1028,7 +1097,10 @@ impl Interpretador {
                 let f = self.arg_funcao(nome, &args, 0, 1, span)?;
                 let mut saida = Vec::new();
                 for item in itens {
-                    if self.chamar(f.clone(), vec![item.clone()], span)?.eh_verdadeiro() {
+                    if self
+                        .chamar(f.clone(), vec![item.clone()], span)?
+                        .eh_verdadeiro()
+                    {
                         saida.push(item);
                     }
                 }
@@ -1207,7 +1279,10 @@ impl Interpretador {
         }
         Err(Diagnostico::novo(
             "K212",
-            format!("o objeto da classe '{}' não tem o método '{}'", classe.nome, nome),
+            format!(
+                "o objeto da classe '{}' não tem o método '{}'",
+                classe.nome, nome
+            ),
             span.clone(),
         )
         .com_rotulo("método inexistente"))
@@ -1237,7 +1312,10 @@ impl Interpretador {
         let sup = classe_atual.superclasse.clone().ok_or_else(|| {
             Diagnostico::novo(
                 "K215",
-                format!("a classe '{}' não tem superclasse para usar 'base'", classe_atual.nome),
+                format!(
+                    "a classe '{}' não tem superclasse para usar 'base'",
+                    classe_atual.nome
+                ),
                 span.clone(),
             )
             .com_rotulo("esta classe não herda de ninguém")
@@ -1271,7 +1349,10 @@ impl Interpretador {
         args: Vec<Valor>,
         span: &Span,
     ) -> Result<Valor, Diagnostico> {
-        let nome = metodo.nome.clone().unwrap_or_else(|| "o método".to_string());
+        let nome = metodo
+            .nome
+            .clone()
+            .unwrap_or_else(|| "o método".to_string());
         let escopo = Ambiente::com_pai(metodo.closure.clone());
         {
             let mut e = escopo.borrow_mut();
@@ -1285,12 +1366,7 @@ impl Interpretador {
         }
     }
 
-    fn aplicar_unaria(
-        &self,
-        op: &OpUnaria,
-        v: Valor,
-        span: &Span,
-    ) -> Result<Valor, Diagnostico> {
+    fn aplicar_unaria(&self, op: &OpUnaria, v: Valor, span: &Span) -> Result<Valor, Diagnostico> {
         match op {
             OpUnaria::Negacao => Ok(Valor::Logico(!v.eh_verdadeiro())),
             OpUnaria::Negativo => match v {
@@ -1307,7 +1383,10 @@ impl Interpretador {
                 Valor::Inteiro(i) => Ok(Valor::Inteiro(!i)),
                 outro => Err(Diagnostico::novo(
                     "K012",
-                    format!("'~' (bits) só funciona em inteiros, mas recebeu '{}'", outro.tipo_nome()),
+                    format!(
+                        "'~' (bits) só funciona em inteiros, mas recebeu '{}'",
+                        outro.tipo_nome()
+                    ),
                     span.clone(),
                 )
                 .com_rotulo("esperava um inteiro aqui")),
@@ -1434,7 +1513,13 @@ impl Interpretador {
         }
     }
 
-    fn deslocar(&self, a: &Valor, b: &Valor, span: &Span, esquerda: bool) -> Result<Valor, Diagnostico> {
+    fn deslocar(
+        &self,
+        a: &Valor,
+        b: &Valor,
+        span: &Span,
+        esquerda: bool,
+    ) -> Result<Valor, Diagnostico> {
         match (a, b) {
             (Valor::Inteiro(x), Valor::Inteiro(y)) => {
                 if *y < 0 {
@@ -1446,7 +1531,11 @@ impl Interpretador {
                     .com_rotulo("quantidade negativa"));
                 }
                 let n = (*y as u32) & 63;
-                let r = if esquerda { x.wrapping_shl(n) } else { x.wrapping_shr(n) };
+                let r = if esquerda {
+                    x.wrapping_shl(n)
+                } else {
+                    x.wrapping_shr(n)
+                };
                 Ok(Valor::Inteiro(r))
             }
             _ => Err(Diagnostico::novo(
@@ -1569,11 +1658,7 @@ impl Interpretador {
                 lista.get(i).cloned().ok_or_else(|| {
                     Diagnostico::novo(
                         "K206",
-                        format!(
-                            "índice {} fora da lista (tamanho {})",
-                            i,
-                            lista.len()
-                        ),
+                        format!("índice {} fora da lista (tamanho {})", i, lista.len()),
                         span.clone(),
                     )
                     .com_rotulo("este índice não existe")
@@ -1581,14 +1666,17 @@ impl Interpretador {
             }
             Valor::Texto(t) => {
                 let i = self.indice_lista(&idx, span)?;
-                t.chars().nth(i).map(|c| Valor::Texto(c.to_string())).ok_or_else(|| {
-                    Diagnostico::novo(
-                        "K206",
-                        format!("índice {} fora do texto", i),
-                        span.clone(),
-                    )
-                    .com_rotulo("este índice não existe")
-                })
+                t.chars()
+                    .nth(i)
+                    .map(|c| Valor::Texto(c.to_string()))
+                    .ok_or_else(|| {
+                        Diagnostico::novo(
+                            "K206",
+                            format!("índice {} fora do texto", i),
+                            span.clone(),
+                        )
+                        .com_rotulo("este índice não existe")
+                    })
             }
             Valor::Dicionario(d) => {
                 let chave = self.chave_dic(&idx, span)?;
@@ -1639,7 +1727,10 @@ impl Interpretador {
             }
             outro => Err(Diagnostico::novo(
                 "K209",
-                format!("não é possível atribuir a um índice de '{}'", outro.tipo_nome()),
+                format!(
+                    "não é possível atribuir a um índice de '{}'",
+                    outro.tipo_nome()
+                ),
                 span.clone(),
             )
             .com_rotulo("apenas listas e dicionários aceitam atribuição por []")),
@@ -1663,7 +1754,10 @@ impl Interpretador {
             Valor::Inteiro(_) | Valor::Decimal(_) => Err(invalido()),
             outro => Err(Diagnostico::novo(
                 "K207",
-                format!("o índice deve ser um 'numero', mas é um '{}'", outro.tipo_nome()),
+                format!(
+                    "o índice deve ser um 'numero', mas é um '{}'",
+                    outro.tipo_nome()
+                ),
                 span.clone(),
             )
             .com_rotulo("esperava um 'numero' aqui")),
@@ -1676,7 +1770,10 @@ impl Interpretador {
             Valor::Texto(t) => Ok(t.clone()),
             outro => Err(Diagnostico::novo(
                 "K210",
-                format!("a chave de um dicionário deve ser um 'texto', mas é um '{}'", outro.tipo_nome()),
+                format!(
+                    "a chave de um dicionário deve ser um 'texto', mas é um '{}'",
+                    outro.tipo_nome()
+                ),
                 span.clone(),
             )
             .com_rotulo("esperava um 'texto' aqui")),

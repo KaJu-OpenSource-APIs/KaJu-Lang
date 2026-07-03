@@ -93,8 +93,7 @@ impl Parser {
         if self.verificar(tipo) {
             Ok(self.avancar())
         } else {
-            Err(Diagnostico::novo(codigo, mensagem, self.atual().span.clone())
-                .com_rotulo(rotulo))
+            Err(Diagnostico::novo(codigo, mensagem, self.atual().span.clone()).com_rotulo(rotulo))
         }
     }
 
@@ -362,7 +361,7 @@ impl Parser {
                         self.atual().span.clone(),
                     )
                     .com_rotulo("não esperava isto aqui")
-                    .com_ajuda("declare um método com 'metodo nome(...) { ... }'"))
+                    .com_ajuda("declare um método com 'metodo nome(...) { ... }'"));
                 }
             }
         }
@@ -557,7 +556,8 @@ impl Parser {
                             let n = self.consumir(
                                 &TipoToken::Identificador(String::new()),
                                 "K022",
-                                "na atribuição múltipla, os alvos devem ser nomes de variáveis".into(),
+                                "na atribuição múltipla, os alvos devem ser nomes de variáveis"
+                                    .into(),
                                 "esperava um nome aqui".into(),
                             )?;
                             nomes.push(n.lexema.clone());
@@ -933,7 +933,12 @@ impl Parser {
             self.avancar();
             let dir = self.xor_bit()?;
             let span = unir_span(&esq.span(), &dir.span());
-            esq = Expr::Binaria { op: OpBinaria::OuBit, esq: Box::new(esq), dir: Box::new(dir), span };
+            esq = Expr::Binaria {
+                op: OpBinaria::OuBit,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
         }
         Ok(esq)
     }
@@ -944,7 +949,12 @@ impl Parser {
             self.avancar();
             let dir = self.e_bit()?;
             let span = unir_span(&esq.span(), &dir.span());
-            esq = Expr::Binaria { op: OpBinaria::XorBit, esq: Box::new(esq), dir: Box::new(dir), span };
+            esq = Expr::Binaria {
+                op: OpBinaria::XorBit,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
         }
         Ok(esq)
     }
@@ -955,7 +965,12 @@ impl Parser {
             self.avancar();
             let dir = self.igualdade()?;
             let span = unir_span(&esq.span(), &dir.span());
-            esq = Expr::Binaria { op: OpBinaria::EBit, esq: Box::new(esq), dir: Box::new(dir), span };
+            esq = Expr::Binaria {
+                op: OpBinaria::EBit,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
         }
         Ok(esq)
     }
@@ -1015,7 +1030,12 @@ impl Parser {
             self.avancar();
             let dir = self.soma()?;
             let span = unir_span(&esq.span(), &dir.span());
-            esq = Expr::Binaria { op, esq: Box::new(esq), dir: Box::new(dir), span };
+            esq = Expr::Binaria {
+                op,
+                esq: Box::new(esq),
+                dir: Box::new(dir),
+                span,
+            };
         }
         Ok(esq)
     }

@@ -11,7 +11,11 @@ pub struct Span {
 
 impl Span {
     pub fn novo(linha: usize, coluna: usize, comprimento: usize) -> Self {
-        Span { linha, coluna, comprimento }
+        Span {
+            linha,
+            coluna,
+            comprimento,
+        }
     }
 }
 
@@ -110,8 +114,8 @@ pub enum TipoToken {
     Virgula,
     DoisPontos,
     Ponto,
-    Reticencias,   // ...
-    Interrogacao,  // ?
+    Reticencias,  // ...
+    Interrogacao, // ?
 
     FimDeArquivo,
 }

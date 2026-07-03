@@ -167,7 +167,10 @@ fn somar_lista(l: &ListaRef) -> Result<Valor, ErroMetodo> {
             match v.como_f64() {
                 Some(n) => total += n,
                 None => {
-                    return Err(("K203", "'soma' só funciona com listas de números".to_string()))
+                    return Err((
+                        "K203",
+                        "'soma' só funciona com listas de números".to_string(),
+                    ));
                 }
             }
         }
@@ -314,7 +317,10 @@ fn metodo_dic(d: &DicRef, nome: &str, args: Vec<Valor>) -> Result<Valor, ErroMet
             // obtem(chave, padrao) -> valor da chave, ou padrao se ausente
             checar_aridade(nome, &args, 2)?;
             let chave = arg_texto(nome, &args, 0)?;
-            Ok(d.borrow().get(&chave).cloned().unwrap_or_else(|| args[1].clone()))
+            Ok(d.borrow()
+                .get(&chave)
+                .cloned()
+                .unwrap_or_else(|| args[1].clone()))
         }
         "remova" => {
             checar_aridade(nome, &args, 1)?;

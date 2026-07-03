@@ -77,14 +77,20 @@ fn rodar_projeto(arquivos: &[(&str, &str)], principal: &str) -> (String, String,
 #[test]
 fn comando_explique() {
     let bin = env!("CARGO_BIN_EXE_kaju");
-    let saida = Command::new(bin).args(["explique", "K016"]).output().unwrap();
+    let saida = Command::new(bin)
+        .args(["explique", "K016"])
+        .output()
+        .unwrap();
     assert!(saida.status.success());
     let texto = String::from_utf8_lossy(&saida.stdout);
     assert!(texto.contains("K016"), "stdout: {texto}");
     assert!(texto.contains("fluxo"), "stdout: {texto}");
 
     // forma curta e maiúscula/minúscula
-    let s2 = Command::new(bin).args(["explique", "k020"]).output().unwrap();
+    let s2 = Command::new(bin)
+        .args(["explique", "k020"])
+        .output()
+        .unwrap();
     assert!(String::from_utf8_lossy(&s2.stdout).contains("divisão por zero"));
 }
 
@@ -829,8 +835,10 @@ fn erro_indice_fora_da_lista() {
 
 #[test]
 fn erro_chave_inexistente() {
-    let (_, err, ok) = rodar(r#"var d = {"a": 1}
-escreva(d["b"])"#);
+    let (_, err, ok) = rodar(
+        r#"var d = {"a": 1}
+escreva(d["b"])"#,
+    );
     assert!(!ok);
     assert!(err.contains("erro[K208]"), "stderr: {err}");
 }
@@ -882,9 +890,8 @@ escreva("tudo certo")"#,
 
 #[test]
 fn afirme_e_capturavel() {
-    let (out, err, ok) = rodar(
-        r#"tente { afirme(falso) } capture (erro) { escreva("peguei", erro.codigo) }"#,
-    );
+    let (out, err, ok) =
+        rodar(r#"tente { afirme(falso) } capture (erro) { escreva("peguei", erro.codigo) }"#);
     assert!(ok, "stderr: {err}");
     assert_eq!(out, "peguei K231\n");
 }
@@ -917,7 +924,10 @@ escreva($"valor {p}")
 escreva([p, p])"#,
     );
     assert!(ok, "stderr: {err}");
-    assert_eq!(out, "(3, 4)\nponto: (3, 4)\nvalor (3, 4)\n[(3, 4), (3, 4)]\n");
+    assert_eq!(
+        out,
+        "(3, 4)\nponto: (3, 4)\nvalor (3, 4)\n[(3, 4), (3, 4)]\n"
+    );
 }
 
 #[test]

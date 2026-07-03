@@ -1,7 +1,7 @@
 //! Analisador léxico: transforma o código-fonte em uma sequência de tokens.
 
 use crate::erros::Diagnostico;
-use crate::token::{palavra_chave, Span, TipoToken, Token};
+use crate::token::{Span, TipoToken, Token, palavra_chave};
 
 pub struct Lexer {
     fonte: Vec<char>,
@@ -306,9 +306,13 @@ impl Lexer {
         let mut lit = String::new();
 
         let nao_fechado = |l: usize, c: usize| {
-            Diagnostico::novo("K104", "texto interpolado não foi fechado", Span::novo(l, c, 2))
-                .com_rotulo("começa aqui e nunca fecha")
-                .com_ajuda("feche com \" na mesma linha")
+            Diagnostico::novo(
+                "K104",
+                "texto interpolado não foi fechado",
+                Span::novo(l, c, 2),
+            )
+            .com_rotulo("começa aqui e nunca fecha")
+            .com_ajuda("feche com \" na mesma linha")
         };
 
         loop {
@@ -414,7 +418,11 @@ impl Lexer {
         }
         let comprimento = self.coluna.saturating_sub(coluna).max(2);
         let span = Span::novo(linha, coluna, comprimento);
-        Ok(Token::novo(TipoToken::TextoInterp(pedacos), String::new(), span))
+        Ok(Token::novo(
+            TipoToken::TextoInterp(pedacos),
+            String::new(),
+            span,
+        ))
     }
 
     fn ler_identificador(&mut self, linha: usize, coluna: usize) -> Token {
@@ -424,8 +432,8 @@ impl Lexer {
         }
         let lexema: String = self.fonte[inicio..self.pos].iter().collect();
         let span = Span::novo(linha, coluna, lexema.chars().count());
-        let tipo = palavra_chave(&lexema)
-            .unwrap_or_else(|| TipoToken::Identificador(lexema.clone()));
+        let tipo =
+            palavra_chave(&lexema).unwrap_or_else(|| TipoToken::Identificador(lexema.clone()));
         Token::novo(tipo, lexema, span)
     }
 }

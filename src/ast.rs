@@ -34,9 +34,9 @@ pub enum OpLogica {
 /// Operadores unários.
 #[derive(Clone, Debug, PartialEq)]
 pub enum OpUnaria {
-    Negacao,   // nao
-    Negativo,  // -
-    NaoBit,    // ~
+    Negacao,  // nao
+    Negativo, // -
+    NaoBit,   // ~
 }
 
 /// Expressões: produzem um valor.
