@@ -33,7 +33,7 @@ jobs:
             alvo: x86_64-apple-darwin
             arquivo: kaju-macos-x86_64.tar.gz
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -63,7 +63,7 @@ jobs:
           Compress-Archive -Path dist/* -DestinationPath "${{ matrix.arquivo }}"
 
       - name: Publicar no Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.arquivo }}
           generate_release_notes: true
