@@ -7,6 +7,42 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Adicionado
+
+- **`kaju teste`**: executor de testes na própria linguagem — roda as funções
+  globais `teste*` de um arquivo ou pasta e reporta ✓/✗ com resumo e código de
+  saída.
+- **`afirme(condicao[, mensagem])`**: função embutida que falha (erro K231) se a
+  condição for falsa; base para escrever testes.
+- **Método especial `paraTexto()`**: uma classe pode definir como suas instâncias
+  viram texto (usado por `escreva`, `+`, interpolação e coleções).
+- **Método especial `igual(outro)`**: uma classe pode definir a igualdade de suas
+  instâncias para o operador `==`.
+- **Laço `para ... passo P`**: incremento arbitrário, incluindo contagem
+  regressiva com passo negativo. Nova palavra reservada `passo`.
+- **`novo m.Classe(...)`**: instanciar uma classe de um módulo importado com
+  `importe ... como m`.
+- **`kaju --versao`**: mostra a versão instalada.
+- **Integração contínua** (GitHub Actions): build e testes em Linux, Windows e
+  macOS, além de `cargo fmt` e `cargo clippy`.
+- **Release automatizado**: ao publicar uma tag `v*`, binários pré-compilados
+  para Linux, Windows e macOS são anexados ao GitHub Release.
+- Script `install.sh` para Linux e macOS.
+
+### Alterado
+
+- **Igualdade estrutural**: `==` entre listas e entre dicionários agora compara
+  por conteúdo, não por referência.
+- **Estouro de inteiro** em `+`, `-` e `*` vira o erro K222 em vez de virar
+  decimal silenciosamente, evitando perda de precisão sem aviso.
+- **Códigos de erro de métodos** corrigidos: aridade usa K201, tipo de argumento
+  usa K203 e método inexistente usa K212 (antes tudo virava K212).
+
+### Documentação
+
+- Especificação sincronizada com a implementação; novo capítulo "Testando" no
+  Livro; instruções de instalação para Linux, Windows e macOS.
+
 ## [0.1.0] - 2026-07-02
 
 Primeira versão do kaju: uma linguagem interpretada, de uso geral, com sintaxe e

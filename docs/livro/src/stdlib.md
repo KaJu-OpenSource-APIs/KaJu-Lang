@@ -141,4 +141,4 @@ escreva(lida.obtem("nome", "?"))   // Ana
 
 ---
 
-A seguir: [Suporte a editor](./editor.md).
+A seguir: [Testando](./testando.md).

@@ -12,4 +12,5 @@
 - [Erros e exceções](./erros.md)
 - [Módulos](./modulos.md)
 - [Biblioteca padrão](./stdlib.md)
+- [Testando](./testando.md)
 - [Suporte a editor](./editor.md)
