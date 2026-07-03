@@ -878,6 +878,36 @@ fn erro_constante_reatribuida() {
 }
 
 #[test]
+fn comando_teste_roda_funcoes_teste() {
+    let dir = std::env::temp_dir().join("kaju_runner_teste_integracao");
+    std::fs::create_dir_all(&dir).unwrap();
+    let arq = dir.join("exemplo_teste.kaju");
+    std::fs::write(
+        &arq,
+        "funcao teste_ok() { afirme(1 + 1 == 2) }\n\
+         funcao teste_falha() { afirme(falso, \"ops\") }\n\
+         funcao auxiliar() { retorne 1 }\n",
+    )
+    .unwrap();
+
+    let bin = env!("CARGO_BIN_EXE_kaju");
+    let saida = std::process::Command::new(bin)
+        .arg("teste")
+        .arg(&arq)
+        .output()
+        .unwrap();
+    let out = String::from_utf8_lossy(&saida.stdout);
+
+    // um passou, um falhou -> saída de falha
+    assert!(!saida.status.success(), "deveria falhar; stdout: {out}");
+    assert!(out.contains("teste_ok"), "stdout: {out}");
+    assert!(out.contains("teste_falha"), "stdout: {out}");
+    assert!(out.contains("1 passaram, 1 falharam"), "stdout: {out}");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn afirme_passa_e_falha() {
     let (out, err, ok) = rodar(
         r#"afirme(2 + 2 == 4)

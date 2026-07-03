@@ -1,0 +1,26 @@
+// Exemplo de testes em kaju.
+//
+// Rode com:  kaju teste testes/
+//
+// O comando 'kaju teste' executa o arquivo e depois chama toda função global
+// cujo nome começa com 'teste'. Cada função afirma o que espera com 'afirme';
+// se uma afirmação falhar, aquele teste é marcado como falho.
+
+funcao soma(a, b) {
+    retorne a + b
+}
+
+funcao teste_soma_simples() {
+    afirme(soma(2, 3) == 5)
+    afirme(soma(-1, 1) == 0, "soma com negativo")
+}
+
+funcao teste_listas_iguais() {
+    afirme([1, 2, 3] == [1, 2, 3])
+    afirme([1, 2] != [2, 1])
+}
+
+funcao teste_texto() {
+    afirme("kaju".maiusculas() == "KAJU")
+    afirme("  oi  ".apara() == "oi")
+}

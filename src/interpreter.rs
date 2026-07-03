@@ -23,6 +23,13 @@ enum Fluxo {
     Continue,
 }
 
+/// Resultado de um único teste rodado por `kaju teste`.
+pub struct ResultadoTeste {
+    pub nome: String,
+    /// `None` se o teste passou; `Some(diag)` com o erro se falhou.
+    pub erro: Option<Diagnostico>,
+}
+
 pub struct Interpretador {
     global: Rc<RefCell<Ambiente>>,
     /// Classe embutida usada para embrulhar erros capturados por `tente`.
@@ -190,6 +197,32 @@ impl Interpretador {
             self.executar(cmd, &amb)?;
         }
         Ok(None)
+    }
+
+    /// Executa o programa e, em seguida, roda todas as funções globais sem
+    /// parâmetros cujo nome começa com `teste`. Devolve o resultado de cada uma
+    /// (erro `None` = passou). Um erro no nível de topo aborta e é propagado.
+    pub fn rodar_testes(&mut self, programa: &[Cmd]) -> Result<Vec<ResultadoTeste>, Diagnostico> {
+        self.executar_programa(programa)?;
+
+        let mut testes: Vec<(String, Valor)> = self
+            .global
+            .borrow()
+            .exportar()
+            .into_iter()
+            .filter(|(nome, v)| {
+                nome.starts_with("teste") && matches!(v, Valor::Funcao(f) if f.params.is_empty())
+            })
+            .collect();
+        testes.sort_by(|a, b| a.0.cmp(&b.0));
+
+        let span = Span::novo(0, 0, 0);
+        let mut resultados = Vec::with_capacity(testes.len());
+        for (nome, f) in testes {
+            let erro = self.chamar(f, vec![], &span).err();
+            resultados.push(ResultadoTeste { nome, erro });
+        }
+        Ok(resultados)
     }
 
     fn executar_bloco(
