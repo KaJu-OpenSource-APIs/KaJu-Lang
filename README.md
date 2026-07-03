@@ -1,5 +1,7 @@
 # kaju
 
+[![CI](https://github.com/USUARIO/kaju/actions/workflows/ci.yml/badge.svg)](https://github.com/USUARIO/kaju/actions/workflows/ci.yml)
+
 Linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca padrão **totalmente em português**. O interpretador é escrito em **Rust**. Arquivos usam a extensão `.kaju` ou `.kj`.
 
 ```kaju
