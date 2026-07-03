@@ -1,0 +1,162 @@
+{
+  "Função": {
+    "prefix": "funcao",
+    "body": ["funcao ${1:nome}(${2:parametros}) {", "\t$0", "}"],
+    "description": "Declaração de função"
+  },
+  "Função anônima": {
+    "prefix": "funcaoanon",
+    "body": ["funcao(${1:parametros}) { retorne $0 }"],
+    "description": "Função anônima (para .mapeie, .filtre, etc.)"
+  },
+  "Variável": {
+    "prefix": "var",
+    "body": ["var ${1:nome} = ${0:valor}"],
+    "description": "Declara uma variável mutável"
+  },
+  "Constante": {
+    "prefix": "constante",
+    "body": ["constante ${1:NOME} = ${0:valor}"],
+    "description": "Declara uma constante"
+  },
+  "Se": {
+    "prefix": "se",
+    "body": ["se ${1:condicao} {", "\t$0", "}"],
+    "description": "Condicional"
+  },
+  "Se / senão": {
+    "prefix": "sesenao",
+    "body": ["se ${1:condicao} {", "\t$2", "} senao {", "\t$0", "}"],
+    "description": "Condicional com senão"
+  },
+  "Senão se": {
+    "prefix": "senaose",
+    "body": ["senaose ${1:condicao} {", "\t$0", "}"],
+    "description": "Ramo senão se"
+  },
+  "Enquanto": {
+    "prefix": "enquanto",
+    "body": ["enquanto ${1:condicao} {", "\t$0", "}"],
+    "description": "Laço enquanto"
+  },
+  "Para (contagem)": {
+    "prefix": "parade",
+    "body": ["para ${1:i} de ${2:1} ate ${3:10} {", "\t$0", "}"],
+    "description": "Laço para de A ate B"
+  },
+  "Para cada": {
+    "prefix": "paracada",
+    "body": ["para cada ${1:item} em ${2:colecao} {", "\t$0", "}"],
+    "description": "Itera sobre uma lista ou dicionário"
+  },
+  "Escolha": {
+    "prefix": "escolha",
+    "body": [
+      "escolha ${1:valor} {",
+      "\tcaso ${2:opcao} {",
+      "\t\t$3",
+      "\t}",
+      "\tpadrao {",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Escolha (switch) com caso e padrao"
+  },
+  "Classe": {
+    "prefix": "classe",
+    "body": [
+      "classe ${1:Nome} {",
+      "\tconstrutor(${2:parametros}) {",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Classe com construtor"
+  },
+  "Classe (herança)": {
+    "prefix": "classeherda",
+    "body": [
+      "classe ${1:Nome} herda ${2:Base} {",
+      "\tconstrutor(${3:parametros}) {",
+      "\t\tbase.construtor($4)",
+      "\t\t$0",
+      "\t}",
+      "}"
+    ],
+    "description": "Classe que herda de outra"
+  },
+  "Construtor": {
+    "prefix": "construtor",
+    "body": ["construtor(${1:parametros}) {", "\t$0", "}"],
+    "description": "Construtor de classe"
+  },
+  "Método": {
+    "prefix": "metodo",
+    "body": ["metodo ${1:nome}(${2:parametros}) {", "\t$0", "}"],
+    "description": "Método de classe"
+  },
+  "Método paraTexto": {
+    "prefix": "paratexto",
+    "body": ["metodo paraTexto() {", "\tretorne $0", "}"],
+    "description": "Define como o objeto vira texto"
+  },
+  "Método igual": {
+    "prefix": "igual",
+    "body": ["metodo igual(outro) {", "\tretorne $0", "}"],
+    "description": "Define a igualdade (==) do objeto"
+  },
+  "Tente / capture": {
+    "prefix": "tente",
+    "body": ["tente {", "\t$1", "} capture (${2:erro}) {", "\t$0", "}"],
+    "description": "Trata erros com tente/capture"
+  },
+  "Tente / capture / finalmente": {
+    "prefix": "tentefin",
+    "body": [
+      "tente {",
+      "\t$1",
+      "} capture (${2:erro}) {",
+      "\t$3",
+      "} finalmente {",
+      "\t$0",
+      "}"
+    ],
+    "description": "tente/capture/finalmente"
+  },
+  "Lance": {
+    "prefix": "lance",
+    "body": ["lance ${0:\"mensagem\"}"],
+    "description": "Lança um erro"
+  },
+  "Importe": {
+    "prefix": "importe",
+    "body": ["importe \"${0:arquivo.kaju}\""],
+    "description": "Importa um módulo"
+  },
+  "Importe como": {
+    "prefix": "importecomo",
+    "body": ["importe \"${1:arquivo.kaju}\" como ${0:apelido}"],
+    "description": "Importa um módulo sob um nome"
+  },
+  "Retorne": {
+    "prefix": "retorne",
+    "body": ["retorne $0"],
+    "description": "Retorna um valor da função"
+  },
+  "Escreva": {
+    "prefix": "escreva",
+    "body": ["escreva($0)"],
+    "description": "Imprime com quebra de linha"
+  },
+  "Afirme": {
+    "prefix": "afirme",
+    "body": ["afirme(${1:condicao})"],
+    "description": "Afirma que uma condição é verdadeira"
+  },
+  "Função de teste": {
+    "prefix": "teste",
+    "body": ["funcao teste_${1:nome}() {", "\tafirme($0)", "}"],
+    "description": "Função de teste para 'kaju teste'"
+  }
+}

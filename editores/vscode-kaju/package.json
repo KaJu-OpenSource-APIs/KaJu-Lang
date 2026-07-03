@@ -1,15 +1,32 @@
 {
   "name": "kaju",
   "displayName": "kaju",
-  "description": "Realce de sintaxe e suporte à linguagem kaju (interpretada, em português).",
-  "version": "0.1.0",
+  "description": "Suporte à linguagem kaju: realce de sintaxe, snippets e configuração de edição (linguagem interpretada, em português).",
+  "version": "1.0.0",
   "publisher": "julio-barbosa",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KaJu-OpenSource-APIs/KaJu-Lang.git",
+    "directory": "editores/vscode-kaju"
+  },
+  "homepage": "https://github.com/KaJu-OpenSource-APIs/KaJu-Lang",
+  "bugs": {
+    "url": "https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/issues"
+  },
+  "keywords": [
+    "kaju",
+    "português",
+    "portuguese",
+    "linguagem",
+    "interpretada"
+  ],
   "engines": {
     "vscode": "^1.70.0"
   },
   "categories": [
-    "Programming Languages"
+    "Programming Languages",
+    "Snippets"
   ],
   "icon": "icons/kaju.png",
   "contributes": {
@@ -36,6 +53,12 @@
         "language": "kaju",
         "scopeName": "source.kaju",
         "path": "./syntaxes/kaju.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "kaju",
+        "path": "./snippets/kaju.json"
       }
     ]
   }
