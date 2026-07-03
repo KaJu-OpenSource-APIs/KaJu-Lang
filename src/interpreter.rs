@@ -1113,9 +1113,8 @@ impl Interpretador {
         span: &Span,
     ) -> Result<(), Diagnostico> {
         if !nomeados.is_empty() {
-            return self.vincular_args_nomeados(
-                nome_fn, params, args, nomeados, escopo, env_padrao, span,
-            );
+            return self
+                .vincular_args_nomeados(nome_fn, params, args, nomeados, escopo, env_padrao, span);
         }
         let tem_var = params.last().map(|p| p.variadico).unwrap_or(false);
         let fixos = params.len() - if tem_var { 1 } else { 0 };
@@ -1505,10 +1504,13 @@ impl Interpretador {
                 let f = self.arg_funcao(nome, &args, 0, 1, span)?;
                 let mut grupos: HashMap<String, Valor> = HashMap::new();
                 for item in itens {
-                    let chave = self.chamar(f.clone(), vec![item.clone()], span)?.para_texto();
-                    match grupos.entry(chave).or_insert_with(|| {
-                        Valor::Lista(Rc::new(RefCell::new(Vec::new())))
-                    }) {
+                    let chave = self
+                        .chamar(f.clone(), vec![item.clone()], span)?
+                        .para_texto();
+                    match grupos
+                        .entry(chave)
+                        .or_insert_with(|| Valor::Lista(Rc::new(RefCell::new(Vec::new()))))
+                    {
                         Valor::Lista(l) => l.borrow_mut().push(item),
                         _ => unreachable!(),
                     }
@@ -1738,16 +1740,15 @@ impl Interpretador {
     ) -> Result<Valor, Diagnostico> {
         let v = self.avaliar(esq, amb)?;
         // Separa o alvo da chamada (e seus argumentos) da forma de `dir`.
-        let (alvo_expr, args_expr, nomeados_expr): (&Expr, &[Expr], &[(String, Expr)]) =
-            match dir {
-                Expr::Chamada {
-                    alvo,
-                    args,
-                    nomeados,
-                    ..
-                } => (alvo, args, nomeados),
-                outro => (outro, &[], &[]),
-            };
+        let (alvo_expr, args_expr, nomeados_expr): (&Expr, &[Expr], &[(String, Expr)]) = match dir {
+            Expr::Chamada {
+                alvo,
+                args,
+                nomeados,
+                ..
+            } => (alvo, args, nomeados),
+            outro => (outro, &[], &[]),
+        };
         let args_vals = self.avaliar_args(args_expr, amb)?;
         let nom = self.avaliar_nomeados(nomeados_expr, amb)?;
 
@@ -1842,7 +1843,9 @@ impl Interpretador {
                 Ok(true)
             }
             Padrao::Dicionario(campos) => {
-                let Valor::Dicionario(d) = v else { return Ok(false) };
+                let Valor::Dicionario(d) = v else {
+                    return Ok(false);
+                };
                 for (chave, pe) in campos {
                     let val = d.borrow().get(chave).cloned();
                     match val {
@@ -1874,7 +1877,13 @@ impl Interpretador {
         if let Valor::Lista(l) = &recv {
             if matches!(
                 membro,
-                "mapeie" | "filtre" | "reduza" | "ordenePor" | "encontre" | "algum" | "todos"
+                "mapeie"
+                    | "filtre"
+                    | "reduza"
+                    | "ordenePor"
+                    | "encontre"
+                    | "algum"
+                    | "todos"
                     | "agrupe"
             ) {
                 self.erro_se_nomeados(&nomeados, span)?;
@@ -2018,7 +2027,15 @@ impl Interpretador {
             e.definir("isto", isto, true);
             e.definir("@classe", Valor::Classe(classe), true);
         }
-        self.vincular_args(&nome, &metodo.params, args, nomeados, &escopo, &metodo.closure, span)?;
+        self.vincular_args(
+            &nome,
+            &metodo.params,
+            args,
+            nomeados,
+            &escopo,
+            &metodo.closure,
+            span,
+        )?;
         match self.executar_bloco(&metodo.corpo, &escopo)? {
             Fluxo::Retorna(v) => Ok(v),
             _ => Ok(Valor::Nulo),
@@ -2130,7 +2147,8 @@ impl Interpretador {
             let metodo = o.borrow().classe.buscar_metodo("igual");
             if let Some((m, classe)) = metodo {
                 if m.params.len() == 1 {
-                    let r = self.invocar_metodo(m, a.clone(), classe, vec![b.clone()], &[], span)?;
+                    let r =
+                        self.invocar_metodo(m, a.clone(), classe, vec![b.clone()], &[], span)?;
                     return Ok(r.eh_verdadeiro());
                 }
             }
@@ -2282,9 +2300,10 @@ impl Interpretador {
                 None => Ok(inteiro_de_big(fb(BigInt::from(*x), BigInt::from(*y)))),
             },
             // Qualquer combinação de inteiros (com ao menos um grande) usa BigInt.
-            _ if a.como_big().is_some() && b.como_big().is_some() => {
-                Ok(inteiro_de_big(fb(a.como_big().unwrap(), b.como_big().unwrap())))
-            }
+            _ if a.como_big().is_some() && b.como_big().is_some() => Ok(inteiro_de_big(fb(
+                a.como_big().unwrap(),
+                b.como_big().unwrap(),
+            ))),
             _ => match (a.como_f64(), b.como_f64()) {
                 (Some(x), Some(y)) => Ok(Valor::Decimal(ff(x, y))),
                 _ => Err(self.erro_tipos(simbolo, a, b, span)),

@@ -118,10 +118,10 @@ pub enum TipoToken {
     Virgula,
     DoisPontos,
     Ponto,
-    Reticencias,  // ...
-    Interrogacao,       // ?
-    InterrogacaoPonto,  // ?.  (acesso opcional)
-    InterrogacaoDupla,  // ??  (coalescência de nulo)
+    Reticencias,       // ...
+    Interrogacao,      // ?
+    InterrogacaoPonto, // ?.  (acesso opcional)
+    InterrogacaoDupla, // ??  (coalescência de nulo)
 
     FimDeArquivo,
 }

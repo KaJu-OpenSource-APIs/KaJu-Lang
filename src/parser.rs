@@ -1,8 +1,7 @@
 //! Analisador sintático: transforma tokens em uma AST por descida recursiva.
 
 use crate::ast::{
-    CasoEscolha, Cmd, EntradaDic, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Padrao,
-    Parametro,
+    CasoEscolha, Cmd, EntradaDic, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Padrao, Parametro,
 };
 use crate::erros::Diagnostico;
 use crate::lexer::Lexer;
@@ -1373,9 +1372,7 @@ impl Parser {
                             self.atual().span.clone(),
                         )
                         .com_rotulo("este argumento deveria vir antes dos nomeados")
-                        .com_ajuda(
-                            "coloque todos os argumentos posicionais antes dos nomeados",
-                        ));
+                        .com_ajuda("coloque todos os argumentos posicionais antes dos nomeados"));
                     }
                     // Espalhamento de argumentos: `f(...lista)`.
                     if self.verificar(&TipoToken::Reticencias) {

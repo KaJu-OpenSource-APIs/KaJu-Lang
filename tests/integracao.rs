@@ -642,10 +642,7 @@ fn operador_pipe() {
     "#,
     );
     assert!(ok, "stderr: {err}");
-    assert_eq!(
-        out,
-        "10\n20\n13\n4\nANA\nKAJU\n2-4\n[2, 4, 6]\n"
-    );
+    assert_eq!(out, "10\n20\n13\n4\nANA\nKAJU\n2-4\n[2, 4, 6]\n");
 }
 
 #[test]
@@ -687,7 +684,10 @@ fn erros_de_argumentos_nomeados() {
     for (fonte, cod) in casos {
         let (_, err, ok) = rodar(fonte);
         assert!(!ok, "deveria falhar: {fonte}");
-        assert!(err.contains(&format!("erro[{cod}]")), "esperava {cod}: {err}");
+        assert!(
+            err.contains(&format!("erro[{cod}]")),
+            "esperava {cod}: {err}"
+        );
     }
 }
 

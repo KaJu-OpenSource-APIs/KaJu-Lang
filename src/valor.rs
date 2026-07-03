@@ -255,10 +255,12 @@ impl Valor {
                     let (oa, ob) = (a.borrow(), b.borrow());
                     match &oa.classe.campos_registro {
                         Some(campos) if Rc::ptr_eq(&oa.classe, &ob.classe) => {
-                            campos.iter().all(|c| match (oa.campos.get(c), ob.campos.get(c)) {
-                                (Some(x), Some(y)) => x.igual(y),
-                                _ => false,
-                            })
+                            campos
+                                .iter()
+                                .all(|c| match (oa.campos.get(c), ob.campos.get(c)) {
+                                    (Some(x), Some(y)) => x.igual(y),
+                                    _ => false,
+                                })
                         }
                         _ => false,
                     }
