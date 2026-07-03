@@ -7,6 +7,10 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ## [Não lançado]
 
+### Documentação
+
+- README: seção "Destaques" cita os testes embutidos (`afirme` e `kaju teste`).
+
 ## [1.0.0] - 2026-07-03
 
 ### Adicionado

@@ -24,6 +24,7 @@ para cada fruta em frutas {
 - **Um tipo `numero`** que distingue internamente inteiro exato (i64) e decimal (f64), sem expor a diferença.
 - **Coleções ricas** — listas e dicionários com métodos encadeáveis (`.mapeie`, `.filtre`, `.ordene`, `.reduza`…).
 - **Funções de primeira classe** — closures, parâmetros padrão (`b = 10`) e variádicos (`...resto`).
+- **Testes embutidos** — `afirme(...)` e o comando `kaju teste` para rodar as funções `teste*` de um arquivo ou pasta.
 - **Erros ricos em português**: código do erro, trecho do código com `^^^^`, `nota:` e `ajuda:` com sugestões ("você quis dizer X?").
 
 ## Instalação
