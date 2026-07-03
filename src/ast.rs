@@ -257,6 +257,11 @@ pub enum Cmd {
         campos: Vec<String>,
         span: Span,
     },
+    DeclEnum {
+        nome: String,
+        variantes: Vec<String>,
+        span: Span,
+    },
     DeclVar {
         nome: String,
         valor: Expr,

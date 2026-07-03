@@ -181,4 +181,29 @@ Um `registro Nome(campos...)` cria uma classe com três coisas prontas:
 
 Todos os campos são obrigatórios na construção. Um registro guarda dados; quando você precisar de comportamento (métodos), use uma `classe`.
 
+## Enums: um conjunto fixo de valores
+
+Quando um valor só pode ser uma entre algumas opções nomeadas — uma cor, uma direção, um estado —, um **enum** deixa isso explícito e evita "strings mágicas":
+
+```kaju
+enum Cor { Vermelho, Verde, Azul }
+
+var favorita = Cor.Azul
+escreva(favorita)                  // Cor.Azul
+escreva(Cor.Azul == Cor.Azul)      // verdadeiro
+escreva(Cor.Azul == Cor.Verde)     // falso
+```
+
+Cada variante é acessada por `Enum.Variante` e é um valor único. Enums combinam muito bem com `escolha`, deixando claro que todos os casos foram tratados:
+
+```kaju
+escolha favorita {
+    caso Cor.Vermelho { escreva("quente") }
+    caso Cor.Azul { escreva("frio") }
+    padrao { escreva("neutro") }
+}
+```
+
+Comparado a usar textos como `"azul"`, o enum evita erros de digitação (um `Cor.Azlu` acusa erro na hora) e documenta quais valores existem.
+
 Com funções e objetos você já consegue estruturar programas completos. Quando algo dá errado durante a execução, é hora de tratar [erros e exceções](./erros.md).

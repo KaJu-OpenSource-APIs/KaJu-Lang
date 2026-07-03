@@ -59,6 +59,7 @@ impl Interpretador {
             campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
             campos_registro: None,
+            eh_enum: false,
         });
         let classe_modulo = Rc::new(ClasseKaju {
             nome: "Modulo".to_string(),
@@ -68,6 +69,7 @@ impl Interpretador {
             campos_estaticos: RefCell::new(HashMap::new()),
             superclasse: None,
             campos_registro: None,
+            eh_enum: false,
         });
         // Torna a classe Erro visível para o usuário também.
         global
@@ -334,6 +336,7 @@ impl Interpretador {
                     campos_estaticos: RefCell::new(campos),
                     superclasse: super_rc,
                     campos_registro: None,
+                    eh_enum: false,
                 });
                 amb.borrow_mut()
                     .definir(nome.clone(), Valor::Classe(classe), false);
@@ -348,7 +351,35 @@ impl Interpretador {
                     campos_estaticos: RefCell::new(HashMap::new()),
                     superclasse: None,
                     campos_registro: Some(campos.clone()),
+                    eh_enum: false,
                 });
+                amb.borrow_mut()
+                    .definir(nome.clone(), Valor::Classe(classe), false);
+                Ok(Fluxo::Segue)
+            }
+            Cmd::DeclEnum {
+                nome, variantes, ..
+            } => {
+                let classe = Rc::new(ClasseKaju {
+                    nome: nome.clone(),
+                    construtor: None,
+                    metodos: HashMap::new(),
+                    metodos_estaticos: HashMap::new(),
+                    campos_estaticos: RefCell::new(HashMap::new()),
+                    superclasse: None,
+                    campos_registro: None,
+                    eh_enum: true,
+                });
+                // Cada variante é um objeto-singleton guardado num campo estático.
+                for v in variantes {
+                    let mut campos = HashMap::new();
+                    campos.insert("nome".to_string(), Valor::Texto(v.clone()));
+                    let obj = Valor::Objeto(Rc::new(RefCell::new(Objeto {
+                        classe: classe.clone(),
+                        campos,
+                    })));
+                    classe.campos_estaticos.borrow_mut().insert(v.clone(), obj);
+                }
                 amb.borrow_mut()
                     .definir(nome.clone(), Valor::Classe(classe), false);
                 Ok(Fluxo::Segue)
@@ -2037,6 +2068,17 @@ impl Interpretador {
                             outro => self.exibir(&outro, span)?,
                         });
                     }
+                }
+                // Variante de enum: "Enum.Variante".
+                if o.borrow().classe.eh_enum {
+                    let nome_enum = o.borrow().classe.nome.clone();
+                    let variante = o
+                        .borrow()
+                        .campos
+                        .get("nome")
+                        .map(|v| v.para_texto())
+                        .unwrap_or_default();
+                    return Ok(format!("{}.{}", nome_enum, variante));
                 }
                 // Registro sem paraTexto próprio: "Nome(campo1, campo2, ...)".
                 let registro = o.borrow().classe.campos_registro.clone();

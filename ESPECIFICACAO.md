@@ -71,7 +71,7 @@ Começam por letra (incluindo acentuadas) ou `_`, seguidos de letras, dígitos o
 Válidos: `nome`, `total_geral`, `número`, `_temp`. Diferenciam maiúsculas de minúsculas.
 
 ### 2.3 Palavras-chave reservadas
-São 40 palavras reservadas:
+São 41 palavras reservadas:
 ```
 var        constante   funcao      retorne
 se         senao       senaose     escolha
@@ -79,10 +79,11 @@ caso       padrao      enquanto    para
 cada       em          de          ate
 passo      pare        continue    e
 ou         nao         verdadeiro  falso
-nulo       classe      registro    herda
-metodo     construtor  novo        isto
-base       estatico    tente       capture
-finalmente lance       importe     como
+nulo       classe      registro    enum
+herda      metodo      construtor  novo
+isto       base        estatico    tente
+capture    finalmente  lance       importe
+como
 ```
 
 ### 2.4 Literais
@@ -518,6 +519,26 @@ escreva(a.x)                    // 1
 
 Um registro não tem métodos próprios; para comportamento, use uma `classe`.
 
+### 7.7 Enums (`enum`)
+Um **enum** define um tipo com um conjunto fixo de valores nomeados: `enum Nome { Variante1, Variante2, ... }`. Cada variante é acessada como `Nome.Variante` e é um valor único e comparável.
+```kaju
+enum Cor { Vermelho, Verde, Azul }
+
+var c = Cor.Verde
+escreva(c)                    // Cor.Verde
+escreva(Cor.Verde == Cor.Verde)   // verdadeiro
+escreva(Cor.Verde == Cor.Azul)    // falso
+
+escolha c {
+    caso Cor.Vermelho { escreva("quente") }
+    caso Cor.Azul { escreva("frio") }
+    padrao { escreva("neutro") }
+}
+```
+- Cada `Nome.Variante` é um valor singleton: comparações usam identidade, então variantes distintas nunca são iguais.
+- Variantes casam em `escolha` por igualdade (`caso Cor.Vermelho`) e funcionam em coleções (`lista.contem(Cor.Azul)`).
+- É permitida uma vírgula final após a última variante.
+
 ---
 
 ## 8. Exceções (tente/capture)
@@ -722,7 +743,7 @@ Cada erro tem um código `Kxxx` organizado em três faixas. Ao todo há **54 có
 programa      = { declaracao } ;
 
 declaracao    = decl_var | decl_const | decl_funcao
-              | decl_classe | decl_registro | decl_importe | comando ;
+              | decl_classe | decl_registro | decl_enum | decl_importe | comando ;
 
 (* 'var'/'constante' aceitam desempacotamento: vários nomes, vários valores
    (ou uma única lista à direita) *)
@@ -736,6 +757,7 @@ params        = param { "," param } ;
 param         = [ "..." ] IDENT [ "=" expressao ] ;   (* variádico e/ou valor padrão *)
 
 decl_registro = "registro" IDENT "(" [ IDENT { "," IDENT } ] ")" ;
+decl_enum     = "enum" IDENT "{" [ IDENT { "," IDENT } [ "," ] ] "}" ;
 decl_classe   = "classe" IDENT [ "herda" IDENT ] "{" { membro } "}" ;
 membro        = construtor | metodo | membro_estatico ;
 construtor    = "construtor" "(" [ params ] ")" bloco ;

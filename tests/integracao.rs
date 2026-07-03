@@ -482,6 +482,35 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn enums() {
+    let (out, err, ok) = rodar(
+        r#"
+        enum Cor { Vermelho, Verde, Azul }
+        escreva(Cor.Verde)
+        escreva(Cor.Verde == Cor.Verde)
+        escreva(Cor.Verde == Cor.Azul)
+        funcao temperatura(c) {
+            escolha c {
+                caso Cor.Vermelho { retorne "quente" }
+                caso Cor.Azul { retorne "frio" }
+                padrao { retorne "neutro" }
+            }
+        }
+        escreva(temperatura(Cor.Vermelho))
+        escreva(temperatura(Cor.Verde))
+        enum Direcao { Norte, Sul, }
+        escreva(Direcao.Sul)
+        escreva([Cor.Vermelho, Cor.Azul].contem(Cor.Azul))
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "Cor.Verde\nverdadeiro\nfalso\nquente\nneutro\nDirecao.Sul\nverdadeiro\n"
+    );
+}
+
+#[test]
 fn registros() {
     let (out, err, ok) = rodar(
         r#"

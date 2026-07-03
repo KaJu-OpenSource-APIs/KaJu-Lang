@@ -149,6 +149,7 @@ impl Parser {
                     | TipoToken::Funcao
                     | TipoToken::Classe
                     | TipoToken::Registro
+                    | TipoToken::Enum
                     | TipoToken::Importe
                     | TipoToken::Se
                     | TipoToken::Enquanto
@@ -184,6 +185,7 @@ impl Parser {
             TipoToken::Importe => self.decl_importe(),
             TipoToken::Classe => self.decl_classe(),
             TipoToken::Registro => self.decl_registro(),
+            TipoToken::Enum => self.decl_enum(),
             TipoToken::Funcao => {
                 // pode ser declaração de função nomeada ou função anônima em expressão.
                 if let TipoToken::Identificador(_) = self.tokens[self.pos + 1].tipo {
@@ -338,6 +340,54 @@ impl Parser {
         Ok(Cmd::DeclRegistro {
             nome: nome_tok.lexema.clone(),
             campos,
+            span: unir_span(&inicio.span, &fim.span),
+        })
+    }
+
+    /// `enum Nome { Variante1, Variante2, ... }` — um tipo com um conjunto fixo
+    /// de valores nomeados, acessados como `Nome.Variante`.
+    fn decl_enum(&mut self) -> Result<Cmd, Diagnostico> {
+        let inicio = self.avancar(); // 'enum'
+        let nome_tok = self.consumir(
+            &TipoToken::Identificador(String::new()),
+            "K013",
+            "esperava o nome do enum".into(),
+            "dê um nome ao enum aqui".into(),
+        )?;
+        self.consumir(
+            &TipoToken::ChaveEsq,
+            "K013",
+            "esperava '{' com as variantes do enum".into(),
+            "liste as variantes entre chaves, ex.: enum Cor { Vermelho, Azul }".into(),
+        )?;
+        let mut variantes = Vec::new();
+        if !self.verificar(&TipoToken::ChaveDir) {
+            loop {
+                let v = self.consumir(
+                    &TipoToken::Identificador(String::new()),
+                    "K013",
+                    "esperava o nome de uma variante".into(),
+                    "escreva o nome da variante aqui".into(),
+                )?;
+                variantes.push(v.lexema.clone());
+                if !self.casar(&TipoToken::Virgula) {
+                    break;
+                }
+                // permite vírgula final antes de '}'
+                if self.verificar(&TipoToken::ChaveDir) {
+                    break;
+                }
+            }
+        }
+        let fim = self.consumir(
+            &TipoToken::ChaveDir,
+            "K013",
+            "esperava '}' para fechar o enum".into(),
+            "feche as variantes com '}'".into(),
+        )?;
+        Ok(Cmd::DeclEnum {
+            nome: nome_tok.lexema.clone(),
+            variantes,
             span: unir_span(&inicio.span, &fim.span),
         })
     }
@@ -729,6 +779,11 @@ impl Parser {
     /// literal (igualdade), `[...]` (lista) ou `{...}` (dicionário).
     fn analisar_padrao(&mut self) -> Result<Padrao, Diagnostico> {
         if matches!(self.atual().tipo, TipoToken::Identificador(_)) {
+            // `Enum.Variante` (identificador seguido de '.') é um literal a
+            // comparar, não uma vinculação.
+            if matches!(self.proximo(), TipoToken::Ponto) {
+                return Ok(Padrao::Literal(self.unario()?));
+            }
             let nome = self.avancar().lexema;
             return Ok(if nome == "_" {
                 Padrao::Curinga

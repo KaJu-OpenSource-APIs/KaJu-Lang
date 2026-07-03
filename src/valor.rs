@@ -36,6 +36,10 @@ pub struct ClasseKaju {
     /// (na ordem). Habilita construtor, igualdade estrutural e `paraTexto`
     /// automáticos. `None` para classes comuns.
     pub campos_registro: Option<Vec<String>>,
+    /// `true` se esta "classe" é na verdade um `enum`: suas variantes são
+    /// objetos-singleton guardados em campos estáticos, impressos como
+    /// `Enum.Variante`.
+    pub eh_enum: bool,
 }
 
 impl ClasseKaju {

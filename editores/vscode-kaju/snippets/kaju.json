@@ -68,6 +68,11 @@
     "body": ["registro ${1:Nome}(${2:campos})"],
     "description": "Registro (classe de dados) com igualdade e paraTexto automáticos"
   },
+  "Enum": {
+    "prefix": "enum",
+    "body": ["enum ${1:Nome} { ${2:Variante1}, ${3:Variante2} }"],
+    "description": "Enum com variantes nomeadas"
+  },
   "Classe": {
     "prefix": "classe",
     "body": [

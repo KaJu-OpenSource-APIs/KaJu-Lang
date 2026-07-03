@@ -17,6 +17,9 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Enums (`enum Nome { Variante1, Variante2 }`)**: tipos com um conjunto fixo de
+  valores nomeados, acessados como `Nome.Variante`, comparáveis e usáveis em
+  `escolha`/`caso`. Nova palavra reservada `enum`.
 - **Registros (`registro Nome(campos...)`)**: classes de dados com construtor,
   igualdade estrutural e `paraTexto` gerados automaticamente. Instanciáveis com
   ou sem `novo`, por posição ou nome. Nova palavra reservada `registro`.
