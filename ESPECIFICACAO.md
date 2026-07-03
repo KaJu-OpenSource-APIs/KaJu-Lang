@@ -322,11 +322,21 @@ escolha dia {
     padrao { escreva("inválido") }
 }
 
+// escolha com padrões, desestruturação e guardas
+escolha ponto {
+    caso [0, 0] { escreva("origem") }
+    caso [x, 0] { escreva("eixo X") }
+    caso {"tipo": "circulo", "raio": r} se r > 10 { escreva("círculo grande") }
+    padrao { escreva("outro") }
+}
+
 // operador condicional (ternário)
 var rotulo = idade >= 18 ? "adulto" : "menor"
 ```
 
 No `para` numérico, `passo` define o incremento a cada volta: é opcional (padrão `1`) e pode ser negativo para contar de trás para frente (`para i de 10 ate 1 passo -1`). O passo **zero** é erro `K205`, pois o laço nunca terminaria.
+
+Um `caso` aceita **padrões**, não só valores: um literal casa por igualdade; um nome casa com qualquer valor e o **vincula**; `_` é curinga; `[p, ...resto]` desestrutura listas; `{"chave": p}` desestrutura dicionários. Cada `caso` pode ter uma **guarda** `se condicao`, e o ramo só é escolhido quando o padrão casa **e** a guarda é verdadeira. Como um nome vincula (em vez de comparar), para comparar contra um valor calculado use um literal, uma guarda ou o `padrao`.
 
 ---
 
@@ -726,8 +736,12 @@ senao_parte   = "senaose" expressao bloco [ senao_parte ]      (* palavra única
               | "senao" "se" expressao bloco [ senao_parte ]   (* legado: duas palavras *)
               | "senao" bloco ;
 cmd_escolha   = "escolha" expressao "{"
-                { "caso" expressao { "," expressao } bloco }
+                { "caso" padrao { "," padrao } [ "se" expressao ] bloco }
                 [ "padrao" bloco ] "}" ;
+padrao        = IDENT                                  (* "_" = curinga; outro nome vincula *)
+              | unario                                 (* literal: comparação por igualdade *)
+              | "[" [ padrao { "," padrao } [ "," "..." IDENT ] ] "]"
+              | "{" [ TEXTO ":" padrao { "," TEXTO ":" padrao } ] "}" ;
 cmd_enquanto  = "enquanto" expressao bloco ;
 cmd_para_num  = "para" IDENT "de" expressao "ate" expressao [ "passo" expressao ] bloco ;
 cmd_para_cada = "para" "cada" IDENT "em" expressao bloco ;

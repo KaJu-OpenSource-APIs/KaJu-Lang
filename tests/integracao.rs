@@ -482,6 +482,55 @@ fn metodos_lista_achate_combine_enumere() {
 }
 
 #[test]
+fn pattern_matching_no_escolha() {
+    let (out, err, ok) = rodar(
+        r#"
+        funcao ponto(p) {
+            escolha p {
+                caso [0, 0] { retorne "origem" }
+                caso [x, 0] { retorne "eixoX:" + paraTexto(x) }
+                caso [x, y] { retorne "par:" + paraTexto(x) + "," + paraTexto(y) }
+                padrao { retorne "?" }
+            }
+        }
+        escreva(ponto([0, 0]))
+        escreva(ponto([5, 0]))
+        escreva(ponto([3, 4]))
+        escreva(ponto([1, 2, 3]))
+
+        funcao forma(f) {
+            escolha f {
+                caso {"tipo": "circulo", "raio": r} se r > 10 { retorne "grande" }
+                caso {"tipo": t} { retorne t }
+                padrao { retorne "?" }
+            }
+        }
+        escreva(forma({"tipo": "circulo", "raio": 20}))
+        escreva(forma({"tipo": "circulo", "raio": 3}))
+        escreva(forma({"tipo": "quadrado"}))
+
+        funcao sinal(n) {
+            escolha n {
+                caso x se x < 0 { retorne "neg" }
+                caso 0 { retorne "zero" }
+                caso _ { retorne "pos" }
+            }
+        }
+        escreva(sinal(-2), sinal(0), sinal(7))
+
+        escolha [1, 2, 3, 4] {
+            caso [cabeca, ...cauda] { escreva(cabeca, cauda) }
+        }
+    "#,
+    );
+    assert!(ok, "stderr: {err}");
+    assert_eq!(
+        out,
+        "origem\neixoX:5\npar:3,4\n?\ngrande\ncirculo\nquadrado\nneg zero pos\n1 [2, 3, 4]\n"
+    );
+}
+
+#[test]
 fn espalhamento() {
     let (out, err, ok) = rodar(
         r#"

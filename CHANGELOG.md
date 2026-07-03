@@ -17,6 +17,11 @@ e o projeto adere ao [Versionamento Semântico](https://semver.org/lang/pt-BR/).
 
 ### Adicionado
 
+- **Pattern matching no `escolha`**: cada `caso` aceita padrões além de valores —
+  literais (igualdade), nomes (vinculam), `_` (curinga), listas
+  (`caso [x, 0]`, com `...resto`) e dicionários (`caso {"tipo": t}`). Cada ramo
+  pode ter uma **guarda** `se condicao`. Retrocompatível: `caso 1` continua
+  comparando por igualdade.
 - **Espalhamento `...`**: espalha uma lista em literais (`[...a, ...b]`) e em
   chamadas (`maximo(...nums)`), e mescla dicionários (`{...a, ...b}`, chaves
   posteriores vencem). Erro K227 quando o valor não é a coleção esperada.

@@ -1,6 +1,9 @@
 //! Analisador sintático: transforma tokens em uma AST por descida recursiva.
 
-use crate::ast::{Cmd, EntradaDic, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Parametro};
+use crate::ast::{
+    CasoEscolha, Cmd, EntradaDic, Expr, MetodoDef, OpBinaria, OpLogica, OpUnaria, Padrao,
+    Parametro,
+};
 use crate::erros::Diagnostico;
 use crate::lexer::Lexer;
 use crate::token::{Pedaco, Span, TipoToken, Token};
@@ -620,16 +623,26 @@ impl Parser {
             "esperava '{' para abrir o corpo do 'escolha'".into(),
             "abra o corpo com '{'".into(),
         )?;
-        let mut casos: Vec<(Vec<Expr>, Vec<Cmd>)> = Vec::new();
+        let mut casos: Vec<CasoEscolha> = Vec::new();
         let mut padrao: Option<Vec<Cmd>> = None;
         while !self.verificar(&TipoToken::ChaveDir) && !self.fim() {
             if self.casar(&TipoToken::Caso) {
-                let mut valores = vec![self.expressao()?];
+                let mut padroes = vec![self.analisar_padrao()?];
                 while self.casar(&TipoToken::Virgula) {
-                    valores.push(self.expressao()?);
+                    padroes.push(self.analisar_padrao()?);
                 }
+                // guarda opcional: `caso p se condicao { ... }`
+                let guarda = if self.casar(&TipoToken::Se) {
+                    Some(self.expressao()?)
+                } else {
+                    None
+                };
                 let corpo = self.bloco()?;
-                casos.push((valores, corpo));
+                casos.push(CasoEscolha {
+                    padroes,
+                    guarda,
+                    corpo,
+                });
             } else if self.casar(&TipoToken::Padrao) {
                 if padrao.is_some() {
                     return Err(Diagnostico::novo(
@@ -661,6 +674,93 @@ impl Parser {
             casos,
             padrao,
         })
+    }
+
+    /// Analisa um padrão de `caso`: identificador (vincula), `_` (curinga),
+    /// literal (igualdade), `[...]` (lista) ou `{...}` (dicionário).
+    fn analisar_padrao(&mut self) -> Result<Padrao, Diagnostico> {
+        if matches!(self.atual().tipo, TipoToken::Identificador(_)) {
+            let nome = self.avancar().lexema;
+            return Ok(if nome == "_" {
+                Padrao::Curinga
+            } else {
+                Padrao::Ligar(nome)
+            });
+        }
+        if self.verificar(&TipoToken::ColcheteEsq) {
+            return self.padrao_lista();
+        }
+        if self.verificar(&TipoToken::ChaveEsq) {
+            return self.padrao_dicionario();
+        }
+        // Qualquer outra coisa é um literal comparado por igualdade (número,
+        // -número, texto, verdadeiro/falso/nulo, ...).
+        Ok(Padrao::Literal(self.unario()?))
+    }
+
+    fn padrao_lista(&mut self) -> Result<Padrao, Diagnostico> {
+        self.avancar(); // '['
+        let mut elementos = Vec::new();
+        let mut resto = None;
+        if !self.verificar(&TipoToken::ColcheteDir) {
+            loop {
+                if self.verificar(&TipoToken::Reticencias) {
+                    self.avancar();
+                    let nome = self.consumir(
+                        &TipoToken::Identificador(String::new()),
+                        "K021",
+                        "esperava um nome depois de '...' no padrão".into(),
+                        "use '...resto' ou '..._' para ignorar o restante".into(),
+                    )?;
+                    resto = Some(nome.lexema.clone());
+                    break; // o resto é sempre o último elemento
+                }
+                elementos.push(self.analisar_padrao()?);
+                if !self.casar(&TipoToken::Virgula) {
+                    break;
+                }
+            }
+        }
+        self.consumir(
+            &TipoToken::ColcheteDir,
+            "K021",
+            "esperava ']' para fechar o padrão de lista".into(),
+            "feche o padrão com ']'".into(),
+        )?;
+        Ok(Padrao::Lista { elementos, resto })
+    }
+
+    fn padrao_dicionario(&mut self) -> Result<Padrao, Diagnostico> {
+        self.avancar(); // '{'
+        let mut campos = Vec::new();
+        if !self.verificar(&TipoToken::ChaveDir) {
+            loop {
+                let chave = self.consumir(
+                    &TipoToken::Texto(String::new()),
+                    "K021",
+                    "esperava uma chave de texto no padrão de dicionário".into(),
+                    "a chave deve ser um texto entre aspas".into(),
+                )?;
+                self.consumir(
+                    &TipoToken::DoisPontos,
+                    "K021",
+                    "esperava ':' entre a chave e o padrão".into(),
+                    "separe chave e padrão com ':'".into(),
+                )?;
+                let p = self.analisar_padrao()?;
+                campos.push((chave.lexema.clone(), p));
+                if !self.casar(&TipoToken::Virgula) {
+                    break;
+                }
+            }
+        }
+        self.consumir(
+            &TipoToken::ChaveDir,
+            "K021",
+            "esperava '}' para fechar o padrão de dicionário".into(),
+            "feche o padrão com '}'".into(),
+        )?;
+        Ok(Padrao::Dicionario(campos))
     }
 
     fn cmd_enquanto(&mut self) -> Result<Cmd, Diagnostico> {

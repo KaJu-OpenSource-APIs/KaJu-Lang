@@ -41,6 +41,37 @@ escolha dia {
 
 `escolha` funciona tanto com números quanto com textos.
 
+### Padrões e desestruturação
+
+Um `caso` não precisa ser só um valor: ele pode ser um **padrão** que examina a forma do dado e ainda extrai partes dele. As regras são:
+
+- um **literal** (`1`, `"oi"`, `verdadeiro`) casa por igualdade;
+- um **nome** casa com qualquer valor e o **vincula** a esse nome dentro do bloco;
+- `_` casa com qualquer valor sem vincular nada;
+- `[p1, p2, ...resto]` casa uma **lista** com aqueles sub-padrões (e `...resto` recolhe o restante);
+- `{"chave": p, ...}` casa um **dicionário** que contenha aquelas chaves.
+
+```kaju
+escolha ponto {
+    caso [0, 0] { escreva("origem") }
+    caso [x, 0] { escreva("no eixo X, em " + paraTexto(x)) }
+    caso [x, y] { escreva("ponto " + paraTexto(x) + ", " + paraTexto(y)) }
+    padrao { escreva("não é um par") }
+}
+```
+
+Cada `caso` pode ainda ter uma **guarda** com `se`: o ramo só casa se, além do padrão, a condição for verdadeira.
+
+```kaju
+escolha forma {
+    caso {"tipo": "circulo", "raio": r} se r > 10 { escreva("círculo grande") }
+    caso {"tipo": t} { escreva("forma do tipo " + t) }
+    padrao { escreva("desconhecida") }
+}
+```
+
+> Como um nome sozinho **vincula** (em vez de comparar), use um literal, uma guarda (`caso x se x == LIMITE`) ou o bloco `padrao` quando quiser comparar contra um valor calculado.
+
 ## Repetição: enquanto
 
 O `enquanto` repete seu bloco enquanto a condição continuar verdadeira. Ele testa a condição antes de cada volta:

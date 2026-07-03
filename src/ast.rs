@@ -208,6 +208,35 @@ pub struct MetodoDef {
     pub corpo: Vec<Cmd>,
 }
 
+/// Um padrão de `caso` no `escolha`.
+#[derive(Clone, Debug)]
+pub enum Padrao {
+    /// `_` — casa com qualquer valor, sem vincular.
+    Curinga,
+    /// Um identificador — casa com qualquer valor e o vincula a esse nome.
+    Ligar(String),
+    /// Um literal (número, texto, lógico, nulo…) — casa por igualdade.
+    Literal(Expr),
+    /// `[p1, p2, ...resto]` — casa uma lista, vinculando sub-padrões.
+    /// `resto` guarda o nome que recebe o restante (ou "_" para ignorar); `None`
+    /// exige que o tamanho seja exato.
+    Lista {
+        elementos: Vec<Padrao>,
+        resto: Option<String>,
+    },
+    /// `{"chave": padrao, ...}` — casa um dicionário que contenha as chaves.
+    Dicionario(Vec<(String, Padrao)>),
+}
+
+/// Um ramo `caso` do `escolha`: um ou mais padrões, uma guarda opcional (`se`)
+/// e o corpo a executar quando algum padrão casa e a guarda é verdadeira.
+#[derive(Clone, Debug)]
+pub struct CasoEscolha {
+    pub padroes: Vec<Padrao>,
+    pub guarda: Option<Expr>,
+    pub corpo: Vec<Cmd>,
+}
+
 /// Comandos e declarações: executam ações.
 // Alguns `Span` ainda não são lidos; ficam reservados para diagnósticos futuros
 // de fluxo (ex.: 'pare' fora de laço, 'retorne' fora de função).
@@ -284,8 +313,7 @@ pub enum Cmd {
     Lance(Expr, Span),
     Escolha {
         valor: Expr,
-        // cada ramo: um ou mais valores de comparação + o corpo
-        casos: Vec<(Vec<Expr>, Vec<Cmd>)>,
+        casos: Vec<CasoEscolha>,
         padrao: Option<Vec<Cmd>>,
     },
     Importe {

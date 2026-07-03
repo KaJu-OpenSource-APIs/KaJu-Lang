@@ -6,7 +6,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 
 use crate::ambiente::{Ambiente, ResultadoAtrib};
-use crate::ast::{Cmd, Expr, OpBinaria, OpLogica, OpUnaria};
+use crate::ast::{Cmd, Expr, OpBinaria, OpLogica, OpUnaria, Padrao};
 use crate::embutidos;
 use crate::erros::{Diagnostico, sugerir_nome};
 use crate::lexer::Lexer;
@@ -544,17 +544,26 @@ impl Interpretador {
                 padrao,
             } => {
                 let v = self.avaliar(valor, amb)?;
-                for (valores, corpo) in casos {
-                    let mut casou = false;
-                    for ve in valores {
-                        if self.avaliar(ve, amb)?.igual(&v) {
-                            casou = true;
+                for caso in casos {
+                    // Tenta cada padrão do ramo; o primeiro que casar decide.
+                    for p in &caso.padroes {
+                        let mut ligacoes = Vec::new();
+                        if self.casar_padrao(p, &v, amb, &mut ligacoes)? {
+                            let filho = Ambiente::com_pai(amb.clone());
+                            for (nome, val) in ligacoes {
+                                filho.borrow_mut().definir(nome, val, false);
+                            }
+                            // Guarda opcional avaliada com as ligações do padrão.
+                            let passa = match &caso.guarda {
+                                Some(g) => self.avaliar(g, &filho)?.eh_verdadeiro(),
+                                None => true,
+                            };
+                            if passa {
+                                return self.executar_bloco(&caso.corpo, &filho);
+                            }
+                            // Padrão casou mas a guarda falhou: pula este ramo.
                             break;
                         }
-                    }
-                    if casou {
-                        let filho = Ambiente::com_pai(amb.clone());
-                        return self.executar_bloco(corpo, &filho);
                     }
                 }
                 match padrao {
@@ -1650,6 +1659,64 @@ impl Interpretador {
             outro => {
                 self.erro_se_nomeados(&nomeados, span)?;
                 self.chamar(outro, args, span)
+            }
+        }
+    }
+
+    /// Tenta casar um padrão de `escolha` contra o valor `v`. Em caso de sucesso,
+    /// acumula as ligações (nome -> valor) em `ligacoes` e devolve `true`.
+    fn casar_padrao(
+        &mut self,
+        padrao: &Padrao,
+        v: &Valor,
+        amb: &Rc<RefCell<Ambiente>>,
+        ligacoes: &mut Vec<(String, Valor)>,
+    ) -> Result<bool, Diagnostico> {
+        match padrao {
+            Padrao::Curinga => Ok(true),
+            Padrao::Ligar(nome) => {
+                ligacoes.push((nome.clone(), v.clone()));
+                Ok(true)
+            }
+            Padrao::Literal(e) => {
+                let lit = self.avaliar(e, amb)?;
+                Ok(lit.igual(v))
+            }
+            Padrao::Lista { elementos, resto } => {
+                let Valor::Lista(l) = v else { return Ok(false) };
+                let itens = l.borrow().clone();
+                match resto {
+                    None if itens.len() != elementos.len() => return Ok(false),
+                    Some(_) if itens.len() < elementos.len() => return Ok(false),
+                    _ => {}
+                }
+                for (pe, item) in elementos.iter().zip(itens.iter()) {
+                    if !self.casar_padrao(pe, item, amb, ligacoes)? {
+                        return Ok(false);
+                    }
+                }
+                if let Some(nome) = resto {
+                    if nome != "_" {
+                        let sobra: Vec<Valor> = itens[elementos.len()..].to_vec();
+                        ligacoes.push((nome.clone(), Valor::Lista(Rc::new(RefCell::new(sobra)))));
+                    }
+                }
+                Ok(true)
+            }
+            Padrao::Dicionario(campos) => {
+                let Valor::Dicionario(d) = v else { return Ok(false) };
+                for (chave, pe) in campos {
+                    let val = d.borrow().get(chave).cloned();
+                    match val {
+                        Some(val) => {
+                            if !self.casar_padrao(pe, &val, amb, ligacoes)? {
+                                return Ok(false);
+                            }
+                        }
+                        None => return Ok(false),
+                    }
+                }
+                Ok(true)
             }
         }
     }
