@@ -1,8 +1,25 @@
+<div align="center">
+
+<img src="editores/vscode-kaju/icons/kaju.png" alt="Logo do kaju" width="160">
+
 # kaju
 
-[![CI](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml/badge.svg)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml)
+Linguagem de programação de alto nível, interpretada e de uso geral, com sintaxe
+e biblioteca padrão <strong>totalmente em português</strong>. Interpretador
+escrito em Rust.
 
-Linguagem de programação de alto nível, **interpretada**, de **uso geral** e com sintaxe e biblioteca padrão **totalmente em português**. O interpretador é escrito em **Rust**. Arquivos usam a extensão `.kaju` ou `.kj`.
+[Aprenda com o Livro](docs/livro/src/introducao.md) &nbsp;•&nbsp; [Especificação da linguagem](ESPECIFICACAO.md) &nbsp;•&nbsp; [Baixar o kaju (Releases)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases)
+
+[![CI](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml/badge.svg)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/actions/workflows/ci.yml)
+[![Versão](https://img.shields.io/github/v/release/KaJu-OpenSource-APIs/KaJu-Lang?label=vers%C3%A3o&color=orange)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases)
+[![Downloads](https://img.shields.io/github/downloads/KaJu-OpenSource-APIs/KaJu-Lang/total?label=downloads&color=success)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/releases)
+[![Licença](https://img.shields.io/github/license/KaJu-OpenSource-APIs/KaJu-Lang?label=licen%C3%A7a&color=blue)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/KaJu-OpenSource-APIs/KaJu-Lang?style=flat)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/stargazers)
+[![Issues](https://img.shields.io/github/issues/KaJu-OpenSource-APIs/KaJu-Lang?label=issues)](https://github.com/KaJu-OpenSource-APIs/KaJu-Lang/issues)
+
+</div>
+
+Os arquivos usam a extensão `.kaju` (ou `.kj`). Veja o kaju em ação:
 
 ```kaju
 funcao saudar(nome) {
